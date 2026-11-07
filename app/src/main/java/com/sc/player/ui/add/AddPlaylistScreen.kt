@@ -57,7 +57,7 @@ fun AddPlaylistScreen(onDone: (String) -> Unit, vm: AddPlaylistViewModel = viewM
             if (maxWidth >= 700.dp) {
                 Row(Modifier.fillMaxSize().padding(48.dp), horizontalArrangement = Arrangement.spacedBy(48.dp)) {
                     Brand(Modifier.weight(0.4f).align(Alignment.CenterVertically))
-                    FormCard(state, vm, Modifier.weight(0.6f).fillMaxSize())
+                    FormCard(state, vm, Modifier.weight(0.6f).fillMaxSize(), true)
                 }
             } else {
                 Column(
@@ -65,7 +65,7 @@ fun AddPlaylistScreen(onDone: (String) -> Unit, vm: AddPlaylistViewModel = viewM
                     verticalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
                     Brand(Modifier.fillMaxWidth())
-                    FormCard(state, vm, Modifier.fillMaxWidth())
+                    FormCard(state, vm, Modifier.fillMaxWidth(), false)
                 }
             }
         }
@@ -91,7 +91,7 @@ private fun Brand(modifier: Modifier) {
 }
 
 @Composable
-private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifier) {
+private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifier, scroll: Boolean) {
     val shape = RoundedCornerShape(32.dp)
     var tab by remember { mutableIntStateOf(0) }
     var url by remember { mutableStateOf("") }
@@ -111,7 +111,7 @@ private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifi
         modifier
             .background(Glass, shape)
             .border(1.dp, GlassBorder, shape)
-            .verticalScroll(rememberScrollState())
+            .then(if (scroll) Modifier.verticalScroll(rememberScrollState()) else Modifier)
             .padding(32.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
