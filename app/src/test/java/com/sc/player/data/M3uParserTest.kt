@@ -1,0 +1,34 @@
+package com.sc.player.data
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
+
+class M3uParserTest {
+    @Test
+    fun parsesAttributesAndName() {
+        val text = """
+            #EXTM3U
+            #EXTINF:-1 tvg-id="a.1" tvg-logo="http://x/l.png" group-title="News, World",Channel One
+            http://host/1.ts
+            #EXTINF:-1,Channel Two
+            #EXTGRP:Sports
+            http://host/2.ts
+        """.trimIndent()
+        val list = M3uParser.parse(text)
+        assertEquals(2, list.size)
+        assertEquals("Channel One", list[0].name)
+        assertEquals("News, World", list[0].group)
+        assertEquals("a.1", list[0].tvgId)
+        assertEquals("http://x/l.png", list[0].logo)
+        assertEquals("Channel Two", list[1].name)
+        assertEquals("Sports", list[1].group)
+        assertNull(list[1].logo)
+    }
+
+    @Test
+    fun ignoresGarbageAndEmpty() {
+        assertEquals(0, M3uParser.parse("").size)
+        assertEquals(0, M3uParser.parse("<html>not a playlist</html>").size)
+    }
+}

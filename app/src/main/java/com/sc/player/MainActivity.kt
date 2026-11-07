@@ -1,0 +1,16 @@
+package com.sc.player
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import com.sc.player.ui.AppNav
+import com.sc.player.ui.theme.SCPlayerTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            SCPlayerTheme { AppNav() }
+        }
+    }
+}
