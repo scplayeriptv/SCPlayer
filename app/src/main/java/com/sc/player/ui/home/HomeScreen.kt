@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,7 +57,7 @@ import com.sc.player.ui.theme.TextMain
 import com.sc.player.ui.theme.TextMuted
 
 @Composable
-fun HomeScreen(playlistId: String) {
+fun HomeScreen(playlistId: String, onPlay: (List<Channel>, Int) -> Unit) {
     val ctx = LocalContext.current
     val repo = remember { PlaylistRepository(ctx.applicationContext) }
     val loaded by produceState<List<Channel>?>(null, playlistId) { value = repo.channels(playlistId) }
@@ -111,7 +111,7 @@ fun HomeScreen(playlistId: String) {
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    items(filtered) { ch -> ChannelCard(ch) }
+                    itemsIndexed(filtered) { i, ch -> ChannelCard(ch) { onPlay(filtered, i) } }
                 }
             }
         }
@@ -177,7 +177,7 @@ private fun CategoryChip(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ChannelCard(ch: Channel) {
+private fun ChannelCard(ch: Channel, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(20.dp)
     Column(
@@ -187,7 +187,7 @@ private fun ChannelCard(ch: Channel) {
             .clip(shape)
             .background(Glass)
             .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
-            .clickable(role = Role.Button) { /* المشغّل في الجزء 3 */ }
+            .clickable(role = Role.Button, onClick = onClick)
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
