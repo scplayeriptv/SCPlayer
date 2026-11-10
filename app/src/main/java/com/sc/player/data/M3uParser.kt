@@ -4,6 +4,18 @@ package com.sc.player.data
 object M3uParser {
     private val attrRegex = Regex("""([\w-]+)="([^"]*)"""")
 
+    /** Index of the first comma that is not inside quotes (it separates attributes from the title). */
+    private fun titleComma(line: String): Int {
+        var inQuotes = false
+        for (i in line.indices) {
+            when (line[i]) {
+                '"' -> inQuotes = !inQuotes
+                ',' -> if (!inQuotes) return i
+            }
+        }
+        return -1
+    }
+
     fun parse(text: String): List<Channel> {
         val out = ArrayList<Channel>()
         var name: String? = null
@@ -18,8 +30,7 @@ object M3uParser {
                 line.startsWith("#EXTINF", ignoreCase = true) -> {
                     val attrs = attrRegex.findAll(line)
                         .associate { it.groupValues[1].lowercase() to it.groupValues[2] }
-                    val from = maxOf(line.lastIndexOf('"'), 0)
-                    val comma = line.indexOf(',', from)
+                    val comma = titleComma(line)
                     val title = if (comma >= 0) line.substring(comma + 1).trim() else ""
                     name = title.ifEmpty { attrs["tvg-name"].orEmpty() }
                     group = attrs["group-title"].orEmpty()
