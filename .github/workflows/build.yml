@@ -3,11 +3,24 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Apply update.zip if present
+        run: |
+          if [ -f update.zip ]; then
+            unzip -o update.zip
+            rm update.zip
+            git config user.name "scplayer-bot"
+            git config user.email "scplayer-bot@users.noreply.github.com"
+            git add -A
+            git commit -m "Apply update.zip" || true
+            git push
+          fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
