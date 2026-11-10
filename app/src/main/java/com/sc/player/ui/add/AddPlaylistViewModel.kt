@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sc.player.data.EmptyPlaylistException
 import com.sc.player.data.HttpStatusException
+import com.sc.player.data.InvalidCredentialsException
 import com.sc.player.data.PlaylistRepository
 import com.sc.player.data.xtreamUrl
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +50,7 @@ class AddPlaylistViewModel(app: Application) : AndroidViewModel(app) {
         is UnknownHostException -> "تعذّر الوصول للسيرفر. راجع الرابط والإنترنت."
         is SocketTimeoutException -> "انتهت مهلة الاتصال. جرّب تاني."
         is HttpStatusException -> "السيرفر رجّع خطأ (${e.code})."
+        is InvalidCredentialsException -> "اسم المستخدم أو كلمة المرور غلط (أو الاشتراك منتهي)."
         is EmptyPlaylistException -> "القائمة مفيهاش قنوات."
         is IllegalArgumentException -> "الرابط غير صحيح."
         else -> "حصل خطأ غير متوقع."
