@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
 
 class HttpStatusException(val code: Int) : Exception("HTTP $code")
 class EmptyPlaylistException : Exception("no channels")
+class InvalidCredentialsException : Exception("bad credentials")
 
 /** Builds the standard Xtream Codes M3U URL from server + credentials. */
 fun xtreamUrl(server: String, user: String, pass: String): String {
@@ -57,7 +58,13 @@ class PlaylistRepository(private val context: Context) {
             client.newCall(request).execute().use { resp ->
                 if (!resp.isSuccessful) throw HttpStatusException(resp.code)
                 val body = resp.body?.string().orEmpty()
-                if (M3uParser.parse(body).isEmpty()) throw EmptyPlaylistException()
+                if (M3uParser.parse(body).isEmpty()) {
+                    // Xtream بيرجّع 200 وجسم فاضي لما اسم المستخدم أو كلمة المرور غلط
+                    if (url.contains("get.php", ignoreCase = true) && url.contains("username=", ignoreCase = true)) {
+                        throw InvalidCredentialsException()
+                    }
+                    throw EmptyPlaylistException()
+                }
                 val playlist = Playlist(UUID.randomUUID().toString(), name, url)
                 listFile(playlist.id).writeText(body)
                 save(playlists() + playlist)
