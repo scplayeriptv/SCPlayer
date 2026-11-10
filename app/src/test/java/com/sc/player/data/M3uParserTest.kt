@@ -31,4 +31,12 @@ class M3uParserTest {
         assertEquals(0, M3uParser.parse("").size)
         assertEquals(0, M3uParser.parse("<html>not a playlist</html>").size)
     }
+
+    @Test
+    fun keepsQuotesInsideTitle() {
+        val list = M3uParser.parse("#EXTM3U\n#EXTINF:-1 group-title=\"A\",Channel \"HD\"\nhttp://h/1.ts")
+        assertEquals(1, list.size)
+        assertEquals("Channel \"HD\"", list[0].name)
+        assertEquals("A", list[0].group)
+    }
 }
