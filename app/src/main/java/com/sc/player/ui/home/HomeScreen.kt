@@ -1,35 +1,30 @@
 package com.sc.player.ui.home
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -40,273 +35,260 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.sc.player.data.Channel
+import com.sc.player.data.Kind
 import com.sc.player.data.PlaylistRepository
 import com.sc.player.data.UserPrefs
+import com.sc.player.data.epg.EpgRepository
+import com.sc.player.data.kind
 import com.sc.player.ui.theme.BrandBrush
 import com.sc.player.ui.theme.Cyan
-import com.sc.player.ui.theme.Glass
 import com.sc.player.ui.theme.GlassBorder
 import com.sc.player.ui.theme.Ink
+import com.sc.player.ui.theme.Panel
+import com.sc.player.ui.theme.SCLogo
 import com.sc.player.ui.theme.ScreenBackground
 import com.sc.player.ui.theme.TextMain
 import com.sc.player.ui.theme.TextMuted
+import com.sc.player.ui.update.UpdatePrompt
 
-private const val FAV_KEY = "__fav__"
-private val Gold = Color(0xFFFBBF24)
+enum class Dest(val label: String, val glyph: String) {
+    Home("Home", "🏠"),
+    LiveTv("Live TV", "📺"),
+    Movies("Movies", "🎬"),
+    Series("Series", "🎞"),
+    Radio("Radio", "📻"),
+    CatchUp("Catch Up", "⏪"),
+    Playlist("Playlist", "📋"),
+    Settings("Settings", "⚙️"),
+    About("About", "ℹ️"),
+}
 
+private fun Context.findActivity(): Activity? {
+    var c: Context? = this
+    while (c is ContextWrapper) {
+        if (c is Activity) return c
+        c = c.baseContext
+    }
+    return null
+}
+
+/** الشاشة الرئيسية: شريط جانبي (شاشات كبيرة/TV) أو شريط سفلي (موبايل) + المحتوى. */
 @Composable
-fun HomeScreen(playlistId: String, onPlay: (List<Channel>, Int) -> Unit) {
+fun HomeScreen(
+    playlistId: String,
+    onPlay: (List<Channel>, Int) -> Unit,
+    onPlaylists: () -> Unit,
+    onGuide: (List<Channel>) -> Unit,
+) {
     val ctx = LocalContext.current
     val repo = remember { PlaylistRepository(ctx.applicationContext) }
     val prefs = remember { UserPrefs(ctx) }
+    val epg = remember { EpgRepository(ctx.applicationContext) }
+    var epgTick by remember { mutableIntStateOf(0) }
     val loaded by produceState<List<Channel>?>(null, playlistId) { value = repo.channels(playlistId) }
 
-    var selected by rememberSaveable { mutableStateOf<String?>(null) }
-    var query by rememberSaveable { mutableStateOf("") }
+    // دليل البرامج بيتحمّل في الخلفية، والواجهة بتتحدّث لما يخلص
+    LaunchedEffect(playlistId) {
+        val p = repo.playlists().firstOrNull { it.id == playlistId } ?: return@LaunchedEffect
+        if (epg.load(p)) epgTick++
+    }
+
+    ScreenBackground {
+        UpdatePrompt()
+        val channels = loaded
+        if (channels == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Loading channels...", color = TextMuted, fontSize = 16.sp)
+            }
+        } else {
+            Shell(channels, epgTick, prefs, onPlay, onPlaylists, onGuide)
+        }
+    }
+}
+
+@Composable
+private fun Shell(
+    channels: List<Channel>,
+    epgTick: Int,
+    prefs: UserPrefs,
+    onPlay: (List<Channel>, Int) -> Unit,
+    onPlaylists: () -> Unit,
+    onGuide: (List<Channel>) -> Unit,
+) {
+    val ctx = LocalContext.current
+    val wide = LocalConfiguration.current.screenWidthDp >= 720
+    var destName by rememberSaveable { mutableStateOf(Dest.Home.name) }
+    val dest = Dest.valueOf(destName)
     var favs by remember { mutableStateOf(prefs.favorites()) }
-    val recentUrls = remember { prefs.recents() }
+    var recentUrls by remember { mutableStateOf(prefs.recents()) }
+
+    val byKind = remember(channels) { channels.groupBy { it.kind() } }
+    val counts = remember(byKind) { Kind.values().associateWith { byKind[it]?.size ?: 0 } }
+    val byUrl = remember(channels) { channels.associateBy { it.url } }
+    val recents = remember(byUrl, recentUrls) { recentUrls.mapNotNull { byUrl[it] } }
 
     fun play(list: List<Channel>, i: Int) {
         prefs.addRecent(list[i].url)
         onPlay(list, i)
     }
 
-    ScreenBackground {
-        val channels = loaded
-        if (channels == null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("جاري تحميل القنوات...", color = TextMuted, fontSize = 16.sp)
+    fun go(d: Dest) {
+        if (d == Dest.Playlist) onPlaylists() else destName = d.name
+    }
+
+    BackHandler(enabled = dest != Dest.Home) { destName = Dest.Home.name }
+
+    val content: @Composable () -> Unit = {
+        when (dest) {
+            Dest.Home -> Dashboard(
+                counts = counts,
+                recents = recents,
+                favs = favs,
+                epgTick = epgTick,
+                wide = wide,
+                canWatch = channels.isNotEmpty(),
+                onOpen = { go(it) },
+                onWatchNow = {
+                    if (recents.isNotEmpty()) play(recents, 0)
+                    else (byKind[Kind.Live]?.takeIf { it.isNotEmpty() } ?: channels).let { if (it.isNotEmpty()) play(it, 0) }
+                },
+                onPlayRecent = { play(recents, it) },
+                onToggleFav = { favs = prefs.toggleFavorite(it) },
+            )
+            Dest.LiveTv, Dest.Movies, Dest.Series, Dest.Radio -> {
+                val kind = when (dest) {
+                    Dest.Movies -> Kind.Movies
+                    Dest.Series -> Kind.Series
+                    Dest.Radio -> Kind.Radio
+                    else -> Kind.Live
+                }
+                ContentScreen(
+                    kind = kind,
+                    items = byKind[kind].orEmpty(),
+                    favs = favs,
+                    epgTick = epgTick,
+                    wide = wide,
+                    onToggleFav = { favs = prefs.toggleFavorite(it) },
+                    onPlay = { list, i -> play(list, i) },
+                    onGuide = onGuide,
+                )
             }
-            return@ScreenBackground
+            Dest.CatchUp -> ComingSoonScreen("Catch Up", "Replay past programs. Needs provider archive support.")
+            Dest.Playlist -> Unit
+            Dest.Settings -> SettingsScreen(
+                onPlaylists = onPlaylists,
+                onAbout = { destName = Dest.About.name },
+                onResetUserData = {
+                    prefs.clearUserData()
+                    favs = prefs.favorites()
+                    recentUrls = prefs.recents()
+                },
+            )
+            Dest.About -> AboutScreen()
         }
+    }
 
-        val groups = remember(channels) { channels.groupingBy { it.group }.eachCount().entries.toList() }
-        val favCount = remember(channels, favs) { channels.count { it.url in favs } }
-        val byUrl = remember(channels) { channels.associateBy { it.url } }
-        val recents = remember(channels) { recentUrls.mapNotNull { byUrl[it] } }
-        val filtered = remember(channels, selected, query, favs) {
-            val q = query.trim()
-            channels.filter {
-                val inCategory = when (selected) {
-                    null -> true
-                    FAV_KEY -> it.url in favs
-                    else -> it.group == selected
-                }
-                inCategory && (q.isEmpty() || it.name.contains(q, ignoreCase = true))
-            }
+    if (wide) {
+        Row(Modifier.fillMaxSize()) {
+            Sidebar(dest, onSelect = { go(it) }, onExit = { ctx.findActivity()?.finish() })
+            Box(Modifier.weight(1f).fillMaxHeight()) { content() }
         }
-        val showRecents = recents.isNotEmpty() && selected == null && query.isBlank()
-
-        Column(Modifier.fillMaxSize().padding(top = 20.dp)) {
-            Header(query = query, onQuery = { query = it }, count = filtered.size)
-
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.padding(vertical = 14.dp),
-            ) {
-                item {
-                    CategoryChip("الكل (${channels.size})", selected == null) { selected = null }
-                }
-                item {
-                    CategoryChip("★ المفضلة ($favCount)", selected == FAV_KEY) { selected = FAV_KEY }
-                }
-                items(groups) { g ->
-                    CategoryChip("${g.key} (${g.value})", selected == g.key) { selected = g.key }
-                }
-            }
-
-            if (filtered.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        if (selected == FAV_KEY) "مفيش مفضلة لسه. اضغط ☆ على أي قناة." else "مفيش قنوات مطابقة.",
-                        color = TextMuted,
-                        fontSize = 16.sp,
-                    )
-                }
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(150.dp),
-                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    if (showRecents) {
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                SectionTitle("آخر ما شاهدته")
-                                LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                                    itemsIndexed(recents) { i, ch ->
-                                        Box(Modifier.width(150.dp)) {
-                                            ChannelCard(
-                                                ch = ch,
-                                                fav = ch.url in favs,
-                                                onToggleFav = { favs = prefs.toggleFavorite(ch.url) },
-                                            ) { play(recents, i) }
-                                        }
-                                    }
-                                }
-                                SectionTitle("كل القنوات")
-                            }
-                        }
-                    }
-                    itemsIndexed(filtered) { i, ch ->
-                        ChannelCard(
-                            ch = ch,
-                            fav = ch.url in favs,
-                            onToggleFav = { favs = prefs.toggleFavorite(ch.url) },
-                        ) { play(filtered, i) }
-                    }
-                }
-            }
+    } else {
+        Column(Modifier.fillMaxSize()) {
+            Box(Modifier.weight(1f).fillMaxWidth()) { content() }
+            BottomBar(dest, onSelect = { go(it) })
         }
     }
 }
 
-@Composable
-private fun SectionTitle(text: String) {
-    Text(text, color = TextMain, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-}
+private val sidebarItems = listOf(
+    Dest.Home, Dest.LiveTv, Dest.Movies, Dest.Series, Dest.Radio,
+    Dest.CatchUp, Dest.Playlist, Dest.Settings, Dest.About,
+)
 
 @Composable
-private fun Header(query: String, onQuery: (String) -> Unit, count: Int) {
-    Column(Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(
-                "SC Player",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.ExtraBold,
-                style = TextStyle(brush = BrandBrush),
-            )
-            OutlinedTextField(
-                value = query,
-                onValueChange = onQuery,
-                placeholder = { Text("ابحث عن قناة...", color = TextMuted) },
-                singleLine = true,
-                shape = RoundedCornerShape(28.dp),
-                modifier = Modifier.weight(1f),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Cyan,
-                    unfocusedBorderColor = GlassBorder,
-                    focusedTextColor = TextMain,
-                    unfocusedTextColor = TextMain,
-                    cursorColor = Cyan,
-                    focusedContainerColor = Glass,
-                    unfocusedContainerColor = Glass,
-                ),
-            )
-        }
-        Text("$count قناة · اضغط ☆ أو اضغط مطوّلًا على القناة للمفضلة", color = TextMuted, fontSize = 13.sp)
-    }
-}
-
-@Composable
-private fun CategoryChip(text: String, selected: Boolean, onClick: () -> Unit) {
-    var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(20.dp)
-    val look = if (selected) Modifier.background(BrandBrush) else Modifier.background(Glass)
-    Box(
+private fun Sidebar(current: Dest, onSelect: (Dest) -> Unit, onExit: () -> Unit) {
+    Column(
         Modifier
-            .onFocusChanged { focused = it.isFocused }
-            .graphicsLayer { scaleX = if (focused) 1.06f else 1f; scaleY = if (focused) 1.06f else 1f }
-            .clip(shape)
-            .then(look)
-            .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
-            .clickable(role = Role.Tab, onClick = onClick)
-            .padding(horizontal = 18.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center,
+            .width(240.dp)
+            .fillMaxHeight()
+            .background(Panel.copy(alpha = 0.85f))
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+        Row(
+            Modifier.padding(bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            SCLogo(44.dp)
+            Column {
+                Text("SC Player", color = TextMain, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                Text("Your IPTV Partner", color = TextMuted, fontSize = 11.sp)
+            }
+        }
+        sidebarItems.forEach { d -> SidebarItem(d.glyph, d.label, d == current) { onSelect(d) } }
+        Box(Modifier.height(10.dp))
+        SidebarItem("⏻", "Exit", false, onClick = onExit)
+    }
+}
+
+@Composable
+private fun SidebarItem(glyph: String, label: String, selected: Boolean, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(14.dp)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .onFocusChanged { focused = it.isFocused }
+            .clip(shape)
+            .then(if (selected) Modifier.background(BrandBrush) else Modifier)
+            .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else if (selected) Color.Transparent else GlassBorder, shape)
+            .clickable(role = Role.Tab, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(glyph, fontSize = 18.sp)
         Text(
-            text,
+            label,
             color = if (selected) Ink else TextMain,
+            fontSize = 15.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-            fontSize = 14.sp,
-            maxLines = 1,
         )
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+private val bottomItems = listOf(Dest.Home, Dest.LiveTv, Dest.Playlist, Dest.Settings)
+
 @Composable
-private fun ChannelCard(ch: Channel, fav: Boolean, onToggleFav: () -> Unit, onClick: () -> Unit) {
-    var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(20.dp)
-    Box(
-        Modifier
-            .onFocusChanged { focused = it.isFocused }
-            .graphicsLayer { scaleX = if (focused) 1.05f else 1f; scaleY = if (focused) 1.05f else 1f }
-            .clip(shape)
-            .background(Glass)
-            .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
-            .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onToggleFav),
+private fun BottomBar(current: Dest, onSelect: (Dest) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().background(Panel).padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
     ) {
-        Column(
-            Modifier.fillMaxWidth().padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Box(Modifier.fillMaxWidth().height(72.dp), contentAlignment = Alignment.Center) {
-                var failed by remember(ch.logo) { mutableStateOf(false) }
-                if (ch.logo == null || failed) {
-                    Box(Modifier.size(60.dp).clip(CircleShape).background(BrandBrush), contentAlignment = Alignment.Center) {
-                        Text(
-                            ch.name.trim().take(1).uppercase(),
-                            color = Ink,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                        )
-                    }
-                } else {
-                    AsyncImage(
-                        model = ch.logo,
-                        contentDescription = ch.name,
-                        contentScale = ContentScale.Fit,
-                        onError = { failed = true },
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
+        bottomItems.forEach { d ->
+            // About/Movies/... بتتفتح من الرئيسية والإعدادات، فبنعلّم أقرب تبويب
+            val active = d == current || (d == Dest.Settings && current == Dest.About) ||
+                (d == Dest.LiveTv && current in listOf(Dest.Movies, Dest.Series, Dest.Radio))
+            Column(
+                Modifier
+                    .weight(1f)
+                    .clickable(role = Role.Tab) { onSelect(d) }
+                    .padding(vertical = 6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(d.glyph, fontSize = 20.sp)
+                Text(d.label, color = if (active) Cyan else TextMuted, fontSize = 11.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
             }
-            Text(
-                ch.name,
-                color = TextMain,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                ch.group,
-                color = TextMuted,
-                fontSize = 11.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
-        }
-        Box(
-            Modifier
-                .align(Alignment.TopStart)
-                .padding(6.dp)
-                .size(36.dp)
-                .clip(CircleShape)
-                .clickable(onClick = onToggleFav),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(if (fav) "★" else "☆", color = if (fav) Gold else TextMuted, fontSize = 20.sp)
         }
     }
 }

@@ -74,6 +74,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.UnrecognizedInputFormatException
 import com.sc.player.data.PlayQueue
+import com.sc.player.data.epg.EpgStore
 import com.sc.player.ui.theme.BrandBrush
 import com.sc.player.ui.theme.Cyan
 import com.sc.player.ui.theme.Glass
@@ -283,6 +284,15 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                             overflow = TextOverflow.Ellipsis,
                         )
                         Text(channel.group, color = TextMuted, fontSize = 12.sp, maxLines = 1)
+                        val nowMs = remember(index) { System.currentTimeMillis() }
+                        val onNow = remember(index) { EpgStore.now(channel, nowMs) }
+                        val onNext = remember(index) { EpgStore.next(channel, nowMs) }
+                        onNow?.let {
+                            Text("الآن: ${it.title}", color = Cyan, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                        onNext?.let {
+                            Text("بعده: ${it.title}", color = TextMuted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                     Text("${index + 1} / ${queue.size}", color = TextMuted, fontSize = 13.sp)
                 }

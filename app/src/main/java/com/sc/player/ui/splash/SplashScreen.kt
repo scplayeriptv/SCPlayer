@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sc.player.ui.theme.BrandBrush
 import com.sc.player.ui.theme.Glass
-import com.sc.player.ui.theme.Ink
+import com.sc.player.ui.theme.SCLogo
 import com.sc.player.ui.theme.ScreenBackground
 import com.sc.player.ui.theme.TextMuted
 import kotlinx.coroutines.delay
@@ -68,20 +68,7 @@ fun SplashScreen(onFinish: () -> Unit) {
                 },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Box(
-                    Modifier.size(104.dp).clip(RoundedCornerShape(30.dp)).background(BrandBrush),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Canvas(Modifier.size(42.dp)) {
-                        val p = Path().apply {
-                            moveTo(size.width * 0.15f, 0f)
-                            lineTo(size.width, size.height / 2f)
-                            lineTo(size.width * 0.15f, size.height)
-                            close()
-                        }
-                        drawPath(p, Ink)
-                    }
-                }
+                SCLogo(120.dp)
                 Spacer(Modifier.height(28.dp))
                 Text("Welcome to", color = TextMuted, fontSize = 22.sp, letterSpacing = 2.sp)
                 Text(

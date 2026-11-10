@@ -39,4 +39,14 @@ class M3uParserTest {
         assertEquals("Channel \"HD\"", list[0].name)
         assertEquals("A", list[0].group)
     }
+
+    @Test
+    fun parsesLargePlaylistFromSequence() {
+        val lines = (0 until 20_000).asSequence().flatMap {
+            sequenceOf("#EXTINF:-1 group-title=\"G${it % 50}\",Ch $it", "http://h/$it.ts")
+        }
+        val list = M3uParser.parse(lines)
+        assertEquals(20_000, list.size)
+        assertEquals("Ch 19999", list.last().name)
+    }
 }

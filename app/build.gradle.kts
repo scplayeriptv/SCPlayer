@@ -4,6 +4,9 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// رقم الـ Build من GitHub Actions (-PappVersionCode=run_number)؛ بيستخدمه التحديث داخل التطبيق
+val buildNumber = (project.findProperty("appVersionCode") as String?)?.toIntOrNull() ?: 1
+
 android {
     namespace = "com.sc.player"
     compileSdk = 34
@@ -12,8 +15,8 @@ android {
         applicationId = "com.sc.player"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = buildNumber
+        versionName = "0.1.$buildNumber"
     }
 
     signingConfigs {

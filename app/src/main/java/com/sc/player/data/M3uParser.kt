@@ -16,14 +16,17 @@ object M3uParser {
         return -1
     }
 
-    fun parse(text: String): List<Channel> {
+    fun parse(text: String): List<Channel> = parse(text.lineSequence())
+
+    /** يحلّل بالسطر (مناسب للملفات الكبيرة من غير ما تتحمّل كلها في الذاكرة). */
+    fun parse(lines: Sequence<String>): List<Channel> {
         val out = ArrayList<Channel>()
         var name: String? = null
         var group = ""
         var logo: String? = null
         var tvgId: String? = null
 
-        for (raw in text.lineSequence()) {
+        for (raw in lines) {
             val line = raw.trim().removePrefix("\uFEFF")
             when {
                 line.isEmpty() -> {}

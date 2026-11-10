@@ -16,6 +16,13 @@ class UserPrefs(context: Context) {
         return cur
     }
 
+    /** القائمة اللي المستخدم فاتحها آخر مرة. */
+    fun activePlaylist(): String? = sp.getString("active", null)
+
+    fun setActive(id: String) {
+        sp.edit().putString("active", id).apply()
+    }
+
     /** آخر القنوات، الأحدث الأول. */
     fun recents(): List<String> =
         sp.getString("recent", "").orEmpty().split("\n").filter { it.isNotBlank() }
@@ -23,6 +30,11 @@ class UserPrefs(context: Context) {
     fun addRecent(url: String) {
         val list = (listOf(url) + recents().filter { it != url }).take(MAX_RECENT)
         sp.edit().putString("recent", list.joinToString("\n")).apply()
+    }
+
+    /** يمسح المفضلة وآخر ما اتشاهد (القوائم نفسها لا تتأثر). */
+    fun clearUserData() {
+        sp.edit().remove("fav").remove("recent").apply()
     }
 
     private companion object {

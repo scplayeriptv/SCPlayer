@@ -15,23 +15,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 
-val Bg = Color(0xFF070A12)
-val TextMain = Color(0xFFEEF2FF)
-val TextMuted = Color(0xFFA5B0C8)
-val Cyan = Color(0xFF67E8F9)
-val Violet = Color(0xFFA78BFA)
-val Ink = Color(0xFF0B0F1A)
-val Glass = Color(0x12FFFFFF)
-val GlassBorder = Color(0x1FFFFFFF)
-val BrandBrush = Brush.linearGradient(listOf(Cyan, Violet))
+val Bg = Color(0xFF080512)
+val Panel = Color(0xFF110A24)
+val TextMain = Color(0xFFF3EFFF)
+val TextMuted = Color(0xFFB4A9D6)
+/** لون التمييز (focus / عناصر نشطة): بنفسجي فاتح. */
+val Cyan = Color(0xFFC4B5FD)
+val Violet = Color(0xFF8B5CF6)
+/** لون النص فوق الخلفية البنفسجية (أبيض). */
+val Ink = Color(0xFFFFFFFF)
+val Glass = Color(0x14FFFFFF)
+val GlassBorder = Color(0x26FFFFFF)
+val Blue = Color(0xFF2563EB)
+val BrandBrush = Brush.linearGradient(listOf(Color(0xFF7C3AED), Color(0xFFA855F7)))
 
 @Composable
 fun SCPlayerTheme(content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         MaterialTheme(
             colorScheme = darkColorScheme(
-                primary = Cyan,
-                secondary = Violet,
+                primary = Violet,
+                secondary = Cyan,
                 background = Bg,
                 surface = Bg,
                 onBackground = TextMain,
@@ -57,7 +61,7 @@ fun ScreenBackground(content: @Composable () -> Unit) {
                     radius = r, center = tr,
                 )
                 drawCircle(
-                    Brush.radialGradient(listOf(Cyan.copy(alpha = 0.22f), Color.Transparent), center = bl, radius = r),
+                    Brush.radialGradient(listOf(Blue.copy(alpha = 0.25f), Color.Transparent), center = bl, radius = r),
                     radius = r, center = bl,
                 )
             },

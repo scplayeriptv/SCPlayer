@@ -3,16 +3,12 @@ package com.sc.player.ui.add
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.sc.player.data.EmptyPlaylistException
-import com.sc.player.data.HttpStatusException
-import com.sc.player.data.InvalidCredentialsException
 import com.sc.player.data.PlaylistRepository
+import com.sc.player.data.friendlyError
 import com.sc.player.data.xtreamUrl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
 
 sealed interface AddState {
     data object Idle : AddState
@@ -41,18 +37,8 @@ class AddPlaylistViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             repo.add(name.ifBlank { "قائمتي" }, url).fold(
                 onSuccess = { _state.value = AddState.Done(it.id) },
-                onFailure = { _state.value = AddState.Error(friendly(it)) },
+                onFailure = { _state.value = AddState.Error(friendlyError(it)) },
             )
         }
-    }
-
-    private fun friendly(e: Throwable): String = when (e) {
-        is UnknownHostException -> "تعذّر الوصول للسيرفر. راجع الرابط والإنترنت."
-        is SocketTimeoutException -> "انتهت مهلة الاتصال. جرّب تاني."
-        is HttpStatusException -> "السيرفر رجّع خطأ (${e.code})."
-        is InvalidCredentialsException -> "اسم المستخدم أو كلمة المرور غلط (أو الاشتراك منتهي)."
-        is EmptyPlaylistException -> "القائمة مفيهاش قنوات."
-        is IllegalArgumentException -> "الرابط غير صحيح."
-        else -> "حصل خطأ غير متوقع."
     }
 }

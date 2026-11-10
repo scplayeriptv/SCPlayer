@@ -51,30 +51,71 @@ class PlaylistRepository(private val context: Context) {
         metaFile.writeText(arr.toString())
     }
 
+    private fun parseFile(f: File): List<Channel> = f.bufferedReader().useLines { M3uParser.parse(it) }
+
+    /**
+     * ينزّل القائمة مباشرة في ملف (من غير ما تتحمّل كلها في الذاكرة)، ويحلّلها بالسطر،
+     * وبعدين يستبدل الملف القديم. يرجّع القنوات.
+     */
+    private fun download(url: String, id: String): List<Channel> {
+        val dest = listFile(id)
+        val tmp = File(dest.parentFile, dest.name + ".tmp")
+        try {
+            val request = Request.Builder()
+                .url(url)
+                .header("User-Agent", "SCPlayer/0.1 (Android)")
+                .build()
+            client.newCall(request).execute().use { resp ->
+                if (!resp.isSuccessful) throw HttpStatusException(resp.code)
+                val body = resp.body ?: throw EmptyPlaylistException()
+                body.byteStream().use { input -> tmp.outputStream().use { out -> input.copyTo(out) } }
+            }
+            val channels = parseFile(tmp)
+            if (channels.isEmpty()) {
+                // Xtream بيرجّع 200 وجسم فاضي لما اسم المستخدم أو كلمة المرور غلط
+                if (url.contains("get.php", ignoreCase = true) && url.contains("username=", ignoreCase = true)) {
+                    throw InvalidCredentialsException()
+                }
+                throw EmptyPlaylistException()
+            }
+            dest.delete()
+            if (!tmp.renameTo(dest)) throw java.io.IOException("could not store playlist")
+            ChannelCache.put(id, dest.lastModified(), channels)
+            return channels
+        } finally {
+            tmp.delete()
+        }
+    }
+
     /** Downloads, validates and stores a playlist. */
     suspend fun add(name: String, url: String): Result<Playlist> = withContext(Dispatchers.IO) {
         runCatching {
-            val request = Request.Builder().url(url).build()
-            client.newCall(request).execute().use { resp ->
-                if (!resp.isSuccessful) throw HttpStatusException(resp.code)
-                val body = resp.body?.string().orEmpty()
-                if (M3uParser.parse(body).isEmpty()) {
-                    // Xtream بيرجّع 200 وجسم فاضي لما اسم المستخدم أو كلمة المرور غلط
-                    if (url.contains("get.php", ignoreCase = true) && url.contains("username=", ignoreCase = true)) {
-                        throw InvalidCredentialsException()
-                    }
-                    throw EmptyPlaylistException()
-                }
-                val playlist = Playlist(UUID.randomUUID().toString(), name, url)
-                listFile(playlist.id).writeText(body)
-                save(playlists() + playlist)
-                playlist
-            }
+            val playlist = Playlist(UUID.randomUUID().toString(), name, url)
+            download(url, playlist.id)
+            save(playlists() + playlist)
+            playlist
         }
+    }
+
+    /** يعيد تحميل قائمة موجودة من رابطها. يرجّع عدد القنوات الجديد. */
+    suspend fun refresh(id: String): Result<Int> = withContext(Dispatchers.IO) {
+        runCatching {
+            val p = playlists().firstOrNull { it.id == id } ?: throw IllegalArgumentException("missing")
+            download(p.url, id).size
+        }
+    }
+
+    fun delete(id: String) {
+        listFile(id).delete()
+        ChannelCache.remove(id)
+        save(playlists().filter { it.id != id })
     }
 
     suspend fun channels(id: String): List<Channel> = withContext(Dispatchers.IO) {
         val f = listFile(id)
-        if (f.exists()) M3uParser.parse(f.readText()) else emptyList()
+        if (!f.exists()) return@withContext emptyList()
+        val stamp = f.lastModified()
+        ChannelCache.get(id, stamp)
+            ?: parseFile(f).also { ChannelCache.put(id, stamp, it) }
     }
 }
