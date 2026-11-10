@@ -60,6 +60,8 @@ fun BrandChip(
             text,
             color = if (selected) Ink else TextMain,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            fontSize = 13.sp,
+            maxLines = 1,
         )
     }
 }
