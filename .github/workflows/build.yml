@@ -28,8 +28,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.9
-      - run: gradle testDebugUnitTest assembleDebug --no-daemon
+      - run: gradle testDebugUnitTest assembleDebug --no-daemon -PappVersionCode=${{ github.run_number }}
       - uses: actions/upload-artifact@v4
         with:
           name: SCPlayer-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+      - name: Publish release (for in-app update)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk SCPlayer.apk
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest SCPlayer.apk --target main --latest \
+            --title "SC Player build ${{ github.run_number }}" \
+            --notes "build ${{ github.run_number }}"
