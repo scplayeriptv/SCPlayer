@@ -1,5 +1,8 @@
 package com.sc.player.ui.home
 
+import androidx.annotation.StringRes
+import com.sc.player.R
+import androidx.compose.ui.res.stringResource
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -44,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import com.sc.player.data.Channel
 import com.sc.player.data.Kind
 import com.sc.player.data.PlaylistRepository
+import com.sc.player.data.ParentalSession
 import com.sc.player.data.UserPrefs
 import com.sc.player.data.epg.EpgRepository
 import com.sc.player.data.kind
@@ -58,19 +62,19 @@ import com.sc.player.ui.theme.TextMain
 import com.sc.player.ui.theme.TextMuted
 import com.sc.player.ui.update.UpdatePrompt
 
-enum class Dest(val label: String, val glyph: String) {
-    Home("Home", "🏠"),
-    LiveTv("Live TV", "📺"),
-    Movies("Movies", "🎬"),
-    Series("Series", "🎞"),
-    Radio("Radio", "📻"),
-    CatchUp("Catch Up", "⏪"),
-    Playlist("Playlist", "📋"),
-    Settings("Settings", "⚙️"),
-    About("About", "ℹ️"),
+enum class Dest(@StringRes val labelRes: Int, val glyph: String) {
+    Home(R.string.nav_home, "🏠"),
+    LiveTv(R.string.nav_live_tv, "📺"),
+    Movies(R.string.nav_movies, "🎬"),
+    Series(R.string.nav_series, "🎞"),
+    Radio(R.string.nav_radio, "📻"),
+    CatchUp(R.string.nav_catch_up, "⏪"),
+    Playlist(R.string.nav_playlist, "📋"),
+    Settings(R.string.nav_settings, "⚙️"),
+    About(R.string.nav_about, "ℹ️"),
 }
 
-private fun Context.findActivity(): Activity? {
+internal fun Context.findActivity(): Activity? {
     var c: Context? = this
     while (c is ContextWrapper) {
         if (c is Activity) return c
@@ -105,16 +109,17 @@ fun HomeScreen(
         val channels = loaded
         if (channels == null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Loading channels...", color = TextMuted, fontSize = 16.sp)
+                Text(stringResource(R.string.loading_channels), color = TextMuted, fontSize = 16.sp)
             }
         } else {
-            Shell(channels, epgTick, prefs, onPlay, onPlaylists, onGuide)
+            Shell(playlistId, channels, epgTick, prefs, onPlay, onPlaylists, onGuide)
         }
     }
 }
 
 @Composable
 private fun Shell(
+    playlistId: String,
     channels: List<Channel>,
     epgTick: Int,
     prefs: UserPrefs,
@@ -129,9 +134,17 @@ private fun Shell(
     var favs by remember { mutableStateOf(prefs.favorites()) }
     var recentUrls by remember { mutableStateOf(prefs.recents()) }
 
-    val byKind = remember(channels) { channels.groupBy { it.kind() } }
+    var lockedGroups by remember { mutableStateOf(prefs.lockedGroups()) }
+    var unlocked by remember { mutableStateOf(ParentalSession.unlocked) }
+    // التصنيفات المقفولة بتختفي من كل القوائم لحد ما القفل يتفتح (Settings → Parental Control)
+    val visible = remember(channels, lockedGroups, unlocked) {
+        if (unlocked || lockedGroups.isEmpty()) channels else channels.filter { it.group !in lockedGroups }
+    }
+    val allGroups = remember(channels) { channels.map { it.group }.distinct().sorted() }
+
+    val byKind = remember(visible) { visible.groupBy { it.kind() } }
     val counts = remember(byKind) { Kind.values().associateWith { byKind[it]?.size ?: 0 } }
-    val byUrl = remember(channels) { channels.associateBy { it.url } }
+    val byUrl = remember(visible) { visible.associateBy { it.url } }
     val recents = remember(byUrl, recentUrls) { recentUrls.mapNotNull { byUrl[it] } }
 
     fun play(list: List<Channel>, i: Int) {
@@ -153,11 +166,11 @@ private fun Shell(
                 favs = favs,
                 epgTick = epgTick,
                 wide = wide,
-                canWatch = channels.isNotEmpty(),
+                canWatch = visible.isNotEmpty(),
                 onOpen = { go(it) },
                 onWatchNow = {
                     if (recents.isNotEmpty()) play(recents, 0)
-                    else (byKind[Kind.Live]?.takeIf { it.isNotEmpty() } ?: channels).let { if (it.isNotEmpty()) play(it, 0) }
+                    else (byKind[Kind.Live]?.takeIf { it.isNotEmpty() } ?: visible).let { if (it.isNotEmpty()) play(it, 0) }
                 },
                 onPlayRecent = { play(recents, it) },
                 onToggleFav = { favs = prefs.toggleFavorite(it) },
@@ -180,9 +193,15 @@ private fun Shell(
                     onGuide = onGuide,
                 )
             }
-            Dest.CatchUp -> ComingSoonScreen("Catch Up", "Replay past programs. Needs provider archive support.")
+            Dest.CatchUp -> ComingSoonScreen(stringResource(R.string.nav_catch_up), stringResource(R.string.catch_up_note))
             Dest.Playlist -> Unit
             Dest.Settings -> SettingsScreen(
+                playlistId = playlistId,
+                groups = allGroups,
+                onParentalChanged = {
+                    lockedGroups = prefs.lockedGroups()
+                    unlocked = ParentalSession.unlocked
+                },
                 onPlaylists = onPlaylists,
                 onAbout = { destName = Dest.About.name },
                 onResetUserData = {
@@ -232,12 +251,12 @@ private fun Sidebar(current: Dest, onSelect: (Dest) -> Unit, onExit: () -> Unit)
             SCLogo(44.dp)
             Column {
                 Text("SC Player", color = TextMain, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-                Text("Your IPTV Partner", color = TextMuted, fontSize = 11.sp)
+                Text(stringResource(R.string.tagline), color = TextMuted, fontSize = 11.sp)
             }
         }
-        sidebarItems.forEach { d -> SidebarItem(d.glyph, d.label, d == current) { onSelect(d) } }
+        sidebarItems.forEach { d -> SidebarItem(d.glyph, stringResource(d.labelRes), d == current) { onSelect(d) } }
         Box(Modifier.height(10.dp))
-        SidebarItem("⏻", "Exit", false, onClick = onExit)
+        SidebarItem("⏻", stringResource(R.string.nav_exit), false, onClick = onExit)
     }
 }
 
@@ -287,7 +306,7 @@ private fun BottomBar(current: Dest, onSelect: (Dest) -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(d.glyph, fontSize = 20.sp)
-                Text(d.label, color = if (active) Cyan else TextMuted, fontSize = 11.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
+                Text(stringResource(d.labelRes), color = if (active) Cyan else TextMuted, fontSize = 11.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
             }
         }
     }

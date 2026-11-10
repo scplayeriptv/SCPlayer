@@ -1,5 +1,7 @@
 package com.sc.player.ui.playlists
 
+import com.sc.player.R
+import androidx.compose.ui.res.stringResource
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,8 +13,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -39,6 +43,8 @@ import com.sc.player.data.Playlist
 import com.sc.player.data.PlaylistRepository
 import com.sc.player.data.friendlyError
 import com.sc.player.ui.theme.BrandBrush
+import com.sc.player.ui.theme.Violet
+import com.sc.player.ui.theme.BackButton
 import com.sc.player.ui.theme.Cyan
 import com.sc.player.ui.theme.Glass
 import com.sc.player.ui.theme.GlassBorder
@@ -69,18 +75,23 @@ fun PlaylistsScreen(
     ScreenBackground {
         Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                ActionPill("رجوع", onClick = onBack)
+                BackButton(onBack)
                 Text(
-                    "قوائمك",
+                    stringResource(R.string.your_playlists),
                     color = TextMain,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.weight(1f),
                 )
-                ActionPill("+ قائمة جديدة", primary = true, onClick = onAdd)
+                ActionPill(stringResource(R.string.new_playlist), primary = true, onClick = onAdd)
             }
             message?.let { Text(it, color = Cyan, fontSize = 14.sp) }
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxSize()) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(340.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
                 items(lists, key = { it.id }) { p ->
                     PlaylistCard(
                         playlist = p,
@@ -93,8 +104,8 @@ fun PlaylistsScreen(
                             message = null
                             scope.launch {
                                 repo.refresh(p.id).fold(
-                                    onSuccess = { message = "اتحدّثت «${p.name}»: $it قناة." },
-                                    onFailure = { message = "فشل التحديث: ${friendlyError(it)}" },
+                                    onSuccess = { message = ctx.getString(R.string.refreshed, p.name, it) },
+                                    onFailure = { message = ctx.getString(R.string.refresh_failed, friendlyError(ctx, it)) },
                                 )
                                 busy = null
                             }
@@ -109,25 +120,25 @@ fun PlaylistsScreen(
     confirmDelete?.let { p ->
         AlertDialog(
             onDismissRequest = { confirmDelete = null },
-            title = { Text("حذف القائمة؟") },
-            text = { Text("هتتحذف «${p.name}» من التطبيق. تقدر تضيفها تاني بنفس الرابط.") },
+            title = { Text(stringResource(R.string.delete_title)) },
+            text = { Text(stringResource(R.string.delete_msg, p.name)) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = null
                     repo.delete(p.id)
                     lists = repo.playlists()
                     if (lists.isEmpty()) onEmpty() else if (p.id == activeId) onOpen(lists.first().id)
-                }) { Text("حذف", color = Danger) }
+                }) { Text(stringResource(R.string.delete), color = Danger) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmDelete = null }) { Text("إلغاء") }
+                TextButton(onClick = { confirmDelete = null }) { Text(stringResource(R.string.cancel)) }
             },
         )
     }
 }
 
-private fun hostOf(url: String): String =
-    runCatching { Uri.parse(url).host }.getOrNull() ?: "رابط مخصص"
+private fun hostOf(url: String, fallback: String): String =
+    runCatching { Uri.parse(url).host }.getOrNull() ?: fallback
 
 @Composable
 private fun PlaylistCard(
@@ -145,27 +156,40 @@ private fun PlaylistCard(
             .fillMaxWidth()
             .clip(shape)
             .background(Glass)
-            .border(1.dp, if (active) Cyan else GlassBorder, shape)
+            .border(if (active) 2.dp else 1.dp, if (active) Violet else GlassBorder, shape)
             .padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(
-                playlist.name,
-                color = TextMain,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
-            )
-            if (active) Text("الحالية", color = Cyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Box(
+                Modifier.size(52.dp).clip(RoundedCornerShape(16.dp)).background(BrandBrush),
+                contentAlignment = Alignment.Center,
+            ) { Text("📡", fontSize = 24.sp) }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    playlist.name,
+                    color = TextMain,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(hostOf(playlist.url, stringResource(R.string.custom_link)), color = TextMuted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            if (active) {
+                Text(
+                    stringResource(R.string.current),
+                    color = Ink,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(BrandBrush).padding(horizontal = 10.dp, vertical = 4.dp),
+                )
+            }
         }
-        Text(hostOf(playlist.url), color = TextMuted, fontSize = 13.sp, maxLines = 1)
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            ActionPill(if (active) "فتح (الحالية)" else "فتح", primary = true, onClick = onOpen)
-            ActionPill(if (refreshing) "جاري التحديث..." else "تحديث", enabled = idle, onClick = onRefresh)
-            ActionPill("حذف", danger = true, enabled = idle, onClick = onDelete)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ActionPill(if (active) stringResource(R.string.open_current) else stringResource(R.string.open), primary = true, onClick = onOpen)
+            ActionPill(if (refreshing) stringResource(R.string.refreshing) else stringResource(R.string.refresh), enabled = idle, onClick = onRefresh)
+            ActionPill(stringResource(R.string.delete), danger = true, enabled = idle, onClick = onDelete)
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.sc.player.ui.home
 
+import com.sc.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,11 +37,10 @@ fun AboutScreen() {
     ) {
         SCLogo(96.dp)
         Text("SC Player", fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, style = TextStyle(brush = BrandBrush))
-        Text("Your IPTV Partner", color = TextMuted, fontSize = 16.sp)
-        Text("Version $version", color = TextMain, fontSize = 14.sp)
+        Text(stringResource(R.string.tagline), color = TextMuted, fontSize = 16.sp)
+        Text(stringResource(R.string.about_version, version), color = TextMain, fontSize = 14.sp)
         Text(
-            "SC Player is a media player only. It does not provide, host or sell any channels or content. " +
-                "Add your own M3U or Xtream playlist from a provider you have the right to use.",
+            stringResource(R.string.about_body),
             color = TextMuted,
             fontSize = 14.sp,
             textAlign = TextAlign.Center,
@@ -56,7 +57,7 @@ fun ComingSoonScreen(title: String, note: String) {
         verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
     ) {
         Text(title, color = TextMain, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
-        Text("Coming soon", style = TextStyle(brush = BrandBrush), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.coming_soon), style = TextStyle(brush = BrandBrush), fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Text(note, color = TextMuted, fontSize = 14.sp, textAlign = TextAlign.Center)
     }
 }

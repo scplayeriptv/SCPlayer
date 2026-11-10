@@ -30,6 +30,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.imageLoader
+import com.sc.player.data.epg.EpgRepository
+import com.sc.player.data.PlaylistRepository
+import com.sc.player.data.ParentalSession
+import com.sc.player.data.UserPrefs
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
+import com.sc.player.data.appLanguages
+import com.sc.player.data.AppLanguage
+import com.sc.player.data.LocaleHelper
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import com.sc.player.R
+import androidx.compose.ui.res.stringResource
 import com.sc.player.data.update.UpdateInfo
 import com.sc.player.data.update.Updater
 import com.sc.player.ui.theme.Cyan
@@ -52,6 +66,9 @@ private fun mb(bytes: Long): String = "%.1f MB".format(bytes / 1048576.0)
 
 @Composable
 fun SettingsScreen(
+    playlistId: String,
+    groups: List<String>,
+    onParentalChanged: () -> Unit,
     onPlaylists: () -> Unit,
     onAbout: () -> Unit,
     onResetUserData: () -> Unit,
@@ -65,6 +82,13 @@ fun SettingsScreen(
     var update by remember { mutableStateOf<UpdateInfo?>(null) }
     var checking by remember { mutableStateOf(false) }
     var resetDone by remember { mutableStateOf(false) }
+    var savedLang by remember { mutableStateOf(LocaleHelper.saved(ctx)) }
+    var showLanguages by remember { mutableStateOf(false) }
+    val prefs = remember { UserPrefs(ctx) }
+    var showParental by remember { mutableStateOf(false) }
+    var parentalTick by remember { mutableStateOf(0) }
+    var showEpg by remember { mutableStateOf(false) }
+    var epgUrl by remember { mutableStateOf(prefs.epgOverride(playlistId).orEmpty()) }
 
     LaunchedEffect(Unit) {
         cache = withContext(Dispatchers.IO) { cacheBytes(ctx) }
@@ -75,13 +99,36 @@ fun SettingsScreen(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        ScreenTitle("Settings")
-
-        SettingRow("Playlists", "Add, switch or remove playlists", onClick = onPlaylists)
+        ScreenTitle(stringResource(R.string.nav_settings))
 
         SettingRow(
-            "Clear Cache",
-            if (cacheLoaded) mb(cache) else "Calculating...",
+            stringResource(R.string.set_language),
+            appLanguages.firstOrNull { it.code == savedLang }?.nativeName ?: stringResource(R.string.set_language_system),
+        ) { showLanguages = true }
+
+        SettingRow(
+            stringResource(R.string.parental_title),
+            // parentalTick بس عشان السطر يتحدّث بعد أي تغيير
+            parentalTick.let {
+                val n = prefs.lockedGroups().size
+                when {
+                    !prefs.hasPin() -> stringResource(R.string.parental_off)
+                    ParentalSession.unlocked -> stringResource(R.string.parental_unlocked)
+                    else -> stringResource(R.string.parental_on, n)
+                }
+            },
+        ) { showParental = true }
+
+        SettingRow(
+            stringResource(R.string.epg_title),
+            if (epgUrl.isBlank()) stringResource(R.string.epg_auto) else epgUrl,
+        ) { showEpg = true }
+
+        SettingRow(stringResource(R.string.nav_playlist), stringResource(R.string.set_playlists_sub), onClick = onPlaylists)
+
+        SettingRow(
+            stringResource(R.string.set_clear_cache),
+            if (cacheLoaded) mb(cache) else stringResource(R.string.calculating),
         ) {
             scope.launch {
                 withContext(Dispatchers.IO) {
@@ -94,8 +141,9 @@ fun SettingsScreen(
         }
 
         SettingRow(
-            "Check for Updates",
-            if (checking) "Checking..." else updateStatus ?: "Installed build ${updater.currentVersionCode()}",
+            stringResource(R.string.set_check_updates),
+            if (checking) stringResource(R.string.checking)
+            else updateStatus ?: stringResource(R.string.installed_build, updater.currentVersionCode().toInt()),
         ) {
             if (!checking) {
                 checking = true
@@ -103,9 +151,9 @@ fun SettingsScreen(
                     val info = updater.check()
                     checking = false
                     if (info == null) {
-                        updateStatus = "You're up to date (build ${updater.currentVersionCode()})"
+                        updateStatus = ctx.getString(R.string.up_to_date, updater.currentVersionCode().toInt())
                     } else {
-                        updateStatus = "Build ${info.versionCode} is available"
+                        updateStatus = ctx.getString(R.string.update_available_build, info.versionCode.toInt())
                         update = info
                     }
                 }
@@ -113,17 +161,96 @@ fun SettingsScreen(
         }
 
         SettingRow(
-            "Reset Favorites & Recents",
-            if (resetDone) "Done" else "Clears your favorites and watch history",
+            stringResource(R.string.set_reset),
+            if (resetDone) stringResource(R.string.done) else stringResource(R.string.set_reset_sub),
         ) {
             onResetUserData()
             resetDone = true
         }
 
-        SettingRow("About", "Version and info", onClick = onAbout)
+        SettingRow(stringResource(R.string.nav_about), stringResource(R.string.set_about_sub), onClick = onAbout)
     }
 
     update?.let { UpdateDialog(it, onDismiss = { update = null }) }
+
+    if (showParental) {
+        ParentalFlow(
+            prefs = prefs,
+            groups = groups,
+            onChanged = {
+                parentalTick++
+                onParentalChanged()
+            },
+            onClose = { showParental = false },
+        )
+    }
+
+    if (showEpg) {
+        var text by remember { mutableStateOf(epgUrl) }
+        val applyEpg: (String) -> Unit = { value ->
+            val url = value.trim()
+            prefs.setEpgOverride(playlistId, url.ifBlank { null })
+            epgUrl = url
+            showEpg = false
+            scope.launch {
+                val repo = EpgRepository(ctx.applicationContext)
+                repo.clearCache(playlistId)
+                PlaylistRepository(ctx.applicationContext).playlists()
+                    .firstOrNull { it.id == playlistId }
+                    ?.let { repo.load(it, force = true) }
+            }
+        }
+        AlertDialog(
+            onDismissRequest = { showEpg = false },
+            title = { Text(stringResource(R.string.epg_title)) },
+            text = {
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    placeholder = { Text(stringResource(R.string.epg_hint)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                )
+            },
+            confirmButton = { TextButton(onClick = { applyEpg(text) }) { Text(stringResource(R.string.save)) } },
+            dismissButton = { TextButton(onClick = { applyEpg("") }) { Text(stringResource(R.string.clear)) } },
+        )
+    }
+
+    if (showLanguages) {
+        val options = listOf<AppLanguage?>(null) + appLanguages
+        AlertDialog(
+            onDismissRequest = { showLanguages = false },
+            title = { Text(stringResource(R.string.set_language)) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    options.forEach { lang ->
+                        val label = lang?.nativeName ?: stringResource(R.string.set_language_system)
+                        val chosen = lang?.code == savedLang
+                        TextButton(
+                            onClick = {
+                                showLanguages = false
+                                if (lang?.code != savedLang) {
+                                    LocaleHelper.save(ctx, lang?.code)
+                                    savedLang = lang?.code
+                                    ctx.findActivity()?.recreate()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                (if (chosen) "✓  " else "") + label,
+                                fontWeight = if (chosen) FontWeight.Bold else FontWeight.Normal,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { showLanguages = false }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
 }
 
 @Composable

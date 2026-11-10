@@ -1,5 +1,6 @@
 package com.sc.player.ui.theme
 
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,7 +32,8 @@ val BrandBrush = Brush.linearGradient(listOf(Color(0xFF7C3AED), Color(0xFFA855F7
 
 @Composable
 fun SCPlayerTheme(content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+    val rtl = LocalConfiguration.current.layoutDirection == android.view.View.LAYOUT_DIRECTION_RTL
+    CompositionLocalProvider(LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr) {
         MaterialTheme(
             colorScheme = darkColorScheme(
                 primary = Violet,

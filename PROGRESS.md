@@ -96,3 +96,40 @@
 - `data/Kind.kt`: تصنيف Live/Movies/Series/Radio من مسار Xtream (/movie/, /series/) أو اسم المجموعة.
 - ملاحظات: صور الـ mockup (شخصيات محمية) لم تُستخدم؛ الـ Hero رسم تجريدي. الشاشات القديمة (Playlists/Guide/Add/Player) لسه نصوصها عربي.
 ## المراحل الجاية: (2) ترجمة/لغة EN-AR وإعادة تصميم Add Server وPlaylists وGuide وPlayer بنفس الستايل، (3) Task 6: Parental Control, QR, EPG يدوي, Playback settings، (4) Task 7: Premium/إعلانات/Play.
+
+## Task 9 — المرحلة 2: تعدد اللغات ✅ (غير مختبر على GitHub)
+- 9 لغات: English (الافتراضي)، العربية، Español، Français، Deutsch، Italiano، Português، Русский، Türkçe — ملفات `res/values-xx/strings.xml` (كل النصوص هناك، مفيش نصوص ثابتة في الكود غير "SC Player"/"LIVE").
+- الاختيار من Settings → Language (أو "System default")؛ بيتحفظ في `sc_user/lang` وبيعمل recreate. `data/Language.kt` (قائمة اللغات + LocaleHelper.wrap) و`MainActivity.attachBaseContext`.
+- اتجاه الواجهة (RTL/LTR) بيتحدد من اللغة تلقائيًا في `Theme.kt`.
+- `friendlyError(ctx, e)` بقت بتاخد Context. اسم المجموعة الافتراضي من الـ parser لسه "أخرى".
+- لإضافة لغة: انسخ values/strings.xml لـ values-xx وترجمه، وأضف السطر في `appLanguages`.
+## الجاي: إعادة تصميم Add Server/Playlists/Guide/Player بنفس ستايل الـ mockup، ثم Task 6 (Parental Control, QR, EPG يدوي).
+
+## Task 9 — الجزء A: Add Server ✅ (غير مختبر)
+- شريط علوي (زر رجوع لو جاي من القوائم، أو الشعار) + رسم سيرفر Canvas + حقول بخلفية زجاجية + زر "✓ Add". AppNav بيمرّر `onBack`.
+## باقي الأجزاء: B Playlists · C Guide · D Player
+
+## Task 9 — الجزء B: Playlists ✅ (غير مختبر)
+- `BackButton` مشترك في Components.kt، شبكة كروت (Adaptive 340dp)، أيقونة 📡 وشارة "Current" وإطار بنفسجي للقائمة النشطة.
+## باقي الأجزاء: C Guide · D Player
+
+## Task 9 — الجزء D: Player ✅ (غير مختبر)
+- زر رجوع دائري، وأزرار تحكم دائرية (⏮ / ⏸▶ كبير بتدرّج بنفسجي / ⏭) بدل أزرار النص. زرّا Retry/Next في شاشة الخطأ زي ما هما.
+## باقي: C Guide
+
+## Task 9 — الجزء C: Guide ✅ (غير مختبر)
+- زر رجوع دائري، شبكة كروت (Adaptive 420dp) بشعار القناة، شريط تقدّم بنفسجي. بكده كل أجزاء Task 9 (A–D) خلصت.
+## الجاي: Task 6 (Parental Control, QR, EPG يدوي, Playback settings) ثم Task 7 (Premium/إعلانات/Play).
+
+## Task 6A — القفل الأبوي + رابط EPG يدوي ✅ (غير مختبر)
+- Settings → Parental Control: إنشاء PIN (4 أرقام، SHA-256 محلي) ثم اختيار تصنيفات مقفولة؛ التصنيفات المقفولة بتختفي من كل القوائم (Home/Live/Movies/Series/Radio/Recents) لحد "Unlock for this session" (`ParentalSession`، بيتصفّر لما التطبيق يتقفل). تغيير/حذف الـ PIN من نفس النافذة. `ui/home/ParentalDialogs.kt`.
+- Settings → Custom guide link: رابط XMLTV لكل قائمة (`UserPrefs.epgOverride`)؛ `EpgRepository.epgUrl` بيفضّله، وبيمسح الكاش ويعيد التحميل.
+- 22 مفتاح ترجمة جديد في الـ 9 لغات.
+- حدود: القفل محلي وبيتخطّى بمسح بيانات التطبيق؛ إعدادات التشغيل (Playback) لسه مش معمولة.
+## الجاي: 6B مسح QR، ثم Task 7.
+
+## Task 6B — مسح QR ✅ (غير مختبر)
+- تبويب Scan QR في Add Server: زر يفتح ماسح Google Code Scanner (`play-services-code-scanner:16.1.0`، من غير صلاحية كاميرا). لو الـ QR فيه رابط http بيتعبّى حقل الرابط ويرجع لتبويب M3U للمراجعة والإضافة؛ غير كده رسالة خطأ.
+- محتاج Google Play services؛ على أجهزة TV/بدون GMS بتظهر رسالة "غير متاح".
+- 3 مفاتيح ترجمة جديدة في الـ 9 لغات.
+## الجاي: Task 7 (Premium/إعلانات/Google Play) + إعدادات التشغيل لو عايز.

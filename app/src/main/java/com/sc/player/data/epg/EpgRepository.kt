@@ -3,6 +3,7 @@ package com.sc.player.data.epg
 import android.content.Context
 import android.net.Uri
 import com.sc.player.data.Playlist
+import com.sc.player.data.UserPrefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -28,6 +29,7 @@ class EpgRepository(private val context: Context) {
 
     /** رابط XMLTV للقائمة لو اتعرف. */
     fun epgUrl(p: Playlist): String? {
+        UserPrefs(context).epgOverride(p.id)?.let { return it }
         if (p.url.contains("get.php", ignoreCase = true)) {
             val u = Uri.parse(p.url)
             val user = u.getQueryParameter("username")
@@ -50,6 +52,11 @@ class EpgRepository(private val context: Context) {
         val first = f.bufferedReader().use { it.readLine() }.orEmpty()
         val m = Regex("""(?:url-tvg|x-tvg-url)="([^"]+)"""", RegexOption.IGNORE_CASE).find(first) ?: return null
         return m.groupValues[1].split(",").first().trim().ifEmpty { null }
+    }
+
+    /** يمسح كاش الدليل (بعد تغيير الرابط) عشان التحميل الجاي يبدأ من جديد. */
+    fun clearCache(id: String) {
+        cacheFile(id).delete()
     }
 
     /** يحمّل الدليل (من الكاش لو لسه جديد). يرجّع true لو فيه دليل متاح دلوقتي. */

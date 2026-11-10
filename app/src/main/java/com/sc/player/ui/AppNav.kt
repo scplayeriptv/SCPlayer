@@ -43,7 +43,10 @@ fun AppNav() {
             })
         }
         composable("add") {
-            AddPlaylistScreen(onDone = { id -> openHome(id) })
+            AddPlaylistScreen(
+                onDone = { id -> openHome(id) },
+                onBack = if (nav.previousBackStackEntry != null) ({ nav.popBackStack() }) else null,
+            )
         }
         composable("playlists") {
             PlaylistsScreen(

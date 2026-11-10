@@ -1,5 +1,7 @@
 package com.sc.player.ui.guide
 
+import com.sc.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,8 +12,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
@@ -32,7 +35,10 @@ import com.sc.player.data.Channel
 import com.sc.player.data.PlayQueue
 import com.sc.player.data.epg.EpgStore
 import com.sc.player.data.epg.Programme
+import com.sc.player.ui.home.ChannelLogo
+import com.sc.player.ui.theme.BackButton
 import com.sc.player.ui.theme.Cyan
+import com.sc.player.ui.theme.Violet
 import com.sc.player.ui.theme.Glass
 import com.sc.player.ui.theme.GlassBorder
 import com.sc.player.ui.theme.ScreenBackground
@@ -51,24 +57,29 @@ fun GuideScreen(onPlay: (Int) -> Unit, onBack: () -> Unit) {
     ScreenBackground {
         Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                GuideButton("رجوع", onBack)
+                BackButton(onBack)
                 Text(
-                    "دليل البرامج",
+                    stringResource(R.string.guide_title),
                     color = TextMain,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.weight(1f),
                 )
-                Text("${queue.size} قناة", color = TextMuted, fontSize = 13.sp)
+                Text(stringResource(R.string.channels_count, queue.size), color = TextMuted, fontSize = 13.sp)
             }
             if (!EpgStore.hasData()) {
                 Text(
-                    "مفيش دليل متاح لهذه القائمة. الدليل بيتحمّل من رابط XMLTV (Xtream بيجيبه لوحده، وM3U لازم يكون فيه url-tvg).",
+                    stringResource(R.string.guide_none),
                     color = TextMuted,
                     fontSize = 14.sp,
                 )
             }
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(420.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
                 itemsIndexed(queue) { i, ch ->
                     GuideRow(
                         ch = ch,
@@ -95,7 +106,7 @@ private fun GuideRow(
 ) {
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(18.dp)
-    Column(
+    Row(
         Modifier
             .onFocusChanged { focused = it.isFocused }
             .fillMaxWidth()
@@ -104,8 +115,10 @@ private fun GuideRow(
             .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
             .clickable(onClick = onClick)
             .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        ChannelLogo(ch, 52.dp, Modifier.align(Alignment.CenterVertically))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             ch.name,
             color = TextMain,
@@ -115,10 +128,10 @@ private fun GuideRow(
             overflow = TextOverflow.Ellipsis,
         )
         if (now == null) {
-            Text("مفيش بيانات برامج لهذه القناة", color = TextMuted, fontSize = 13.sp)
+            Text(stringResource(R.string.guide_no_data_channel), color = TextMuted, fontSize = 13.sp)
         } else {
             Text(
-                "الآن: ${now.title}  (${fmt.format(Date(now.start))} - ${fmt.format(Date(now.stop))})",
+                stringResource(R.string.now_with_time, now.title, fmt.format(Date(now.start)), fmt.format(Date(now.stop))),
                 color = Cyan,
                 fontSize = 13.sp,
                 maxLines = 1,
@@ -128,13 +141,13 @@ private fun GuideRow(
             val fraction = ((nowMs - now.start).toFloat() / total).coerceIn(0f, 1f)
             LinearProgressIndicator(
                 progress = { fraction },
-                color = Cyan,
+                color = Violet,
                 trackColor = GlassBorder,
                 modifier = Modifier.fillMaxWidth(),
             )
             if (next != null) {
                 Text(
-                    "بعده: ${next.title}  (${fmt.format(Date(next.start))})",
+                    stringResource(R.string.next_with_time, next.title, fmt.format(Date(next.start))),
                     color = TextMuted,
                     fontSize = 12.sp,
                     maxLines = 1,
@@ -142,23 +155,6 @@ private fun GuideRow(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun GuideButton(text: String, onClick: () -> Unit) {
-    var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(22.dp)
-    Box(
-        Modifier
-            .onFocusChanged { focused = it.isFocused }
-            .clip(shape)
-            .background(Glass)
-            .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 18.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(text, color = TextMain, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1)
+        }
     }
 }

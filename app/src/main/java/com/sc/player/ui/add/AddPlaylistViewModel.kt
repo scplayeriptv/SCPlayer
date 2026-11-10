@@ -1,5 +1,7 @@
 package com.sc.player.ui.add
 
+import com.sc.player.data.LocaleHelper
+import com.sc.player.R
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,6 +21,7 @@ sealed interface AddState {
 
 class AddPlaylistViewModel(app: Application) : AndroidViewModel(app) {
     private val repo = PlaylistRepository(app)
+    private val text = LocaleHelper.wrap(app)
     private val _state = MutableStateFlow<AddState>(AddState.Idle)
     val state: StateFlow<AddState> = _state
 
@@ -35,9 +38,9 @@ class AddPlaylistViewModel(app: Application) : AndroidViewModel(app) {
         if (_state.value is AddState.Loading) return
         _state.value = AddState.Loading
         viewModelScope.launch {
-            repo.add(name.ifBlank { "قائمتي" }, url).fold(
+            repo.add(name.ifBlank { text.getString(R.string.default_playlist_name) }, url).fold(
                 onSuccess = { _state.value = AddState.Done(it.id) },
-                onFailure = { _state.value = AddState.Error(friendlyError(it)) },
+                onFailure = { _state.value = AddState.Error(friendlyError(text, it)) },
             )
         }
     }

@@ -1,5 +1,13 @@
 package com.sc.player.ui.player
 
+import com.sc.player.R
+import androidx.compose.ui.res.stringResource
+import com.sc.player.ui.theme.BackButton
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -153,7 +161,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     player.prepare()
                     player.playWhenReady = true
                 } else {
-                    error = "تعذّر تشغيل القناة. راجع الرابط أو الإنترنت."
+                    error = ctx.getString(R.string.player_error)
                 }
             }
         }
@@ -252,13 +260,13 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             ) {
                 Text(msg, color = TextMain, fontSize = 16.sp, textAlign = TextAlign.Center)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    PillButton("إعادة المحاولة", primary = true) {
+                    PillButton(stringResource(R.string.retry), primary = true) {
                         error = null
                         buffering = true
                         player.prepare()
                         player.playWhenReady = true
                     }
-                    PillButton("القناة التالية") { next() }
+                    PillButton(stringResource(R.string.next_channel)) { next() }
                 }
             }
         }
@@ -273,7 +281,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    PillButton("رجوع") { onBack() }
+                    BackButton(onBack)
                     Column(Modifier.weight(1f)) {
                         Text(
                             channel.name,
@@ -288,10 +296,10 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                         val onNow = remember(index) { EpgStore.now(channel, nowMs) }
                         val onNext = remember(index) { EpgStore.next(channel, nowMs) }
                         onNow?.let {
-                            Text("الآن: ${it.title}", color = Cyan, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(stringResource(R.string.now_prefix, it.title), color = Cyan, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                         onNext?.let {
-                            Text("بعده: ${it.title}", color = TextMuted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(stringResource(R.string.next_prefix, it.title), color = TextMuted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                     Text("${index + 1} / ${queue.size}", color = TextMuted, fontSize = 13.sp)
@@ -305,9 +313,13 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    PillButton("السابقة") { prev() }
-                    PillButton(if (playing) "إيقاف مؤقت" else "تشغيل", primary = true) { toggle() }
-                    PillButton("التالية") { next() }
+                    RoundButton("⏮", stringResource(R.string.previous)) { prev() }
+                    RoundButton(
+                        if (playing) "⏸" else "▶",
+                        if (playing) stringResource(R.string.pause) else stringResource(R.string.resume),
+                        big = true,
+                    ) { toggle() }
+                    RoundButton("⏭", stringResource(R.string.next)) { next() }
                 }
             }
         }
@@ -335,5 +347,24 @@ private fun PillButton(text: String, primary: Boolean = false, onClick: () -> Un
             fontSize = 14.sp,
             maxLines = 1,
         )
+    }
+}
+
+/** زر تحكم دائري (السابق / تشغيل-إيقاف / التالي). */
+@Composable
+private fun RoundButton(glyph: String, description: String, big: Boolean = false, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    Box(
+        Modifier
+            .size(if (big) 72.dp else 52.dp)
+            .onFocusChanged { focused = it.isFocused }
+            .clip(CircleShape)
+            .background(if (big) BrandBrush else Brush.linearGradient(listOf(Glass, Glass)))
+            .border(if (focused) 3.dp else 1.dp, if (focused) Cyan else GlassBorder, CircleShape)
+            .semantics { contentDescription = description }
+            .clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(glyph, color = Ink, fontSize = if (big) 30.sp else 22.sp)
     }
 }

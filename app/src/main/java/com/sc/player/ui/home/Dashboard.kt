@@ -1,5 +1,8 @@
 package com.sc.player.ui.home
 
+import androidx.annotation.StringRes
+import com.sc.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -51,13 +54,13 @@ import com.sc.player.ui.theme.SCLogo
 import com.sc.player.ui.theme.TextMain
 import com.sc.player.ui.theme.TextMuted
 
-private class Tile(val dest: Dest, val kind: Kind, val emoji: String, val subtitle: String, val from: Color, val to: Color)
+private class Tile(val dest: Dest, val kind: Kind, val emoji: String, @StringRes val subtitleRes: Int, val from: Color, val to: Color)
 
 private val tiles = listOf(
-    Tile(Dest.LiveTv, Kind.Live, "📺", "Watch Live Channels", Color(0xFF8B5CF6), Color(0xFF4C1D95)),
-    Tile(Dest.Movies, Kind.Movies, "🎬", "Watch Movies", Color(0xFF3B82F6), Color(0xFF1E3A8A)),
-    Tile(Dest.Series, Kind.Series, "🎞", "Watch Series", Color(0xFFF97316), Color(0xFFC2410C)),
-    Tile(Dest.Radio, Kind.Radio, "📻", "Listen Radio", Color(0xFF22C55E), Color(0xFF15803D)),
+    Tile(Dest.LiveTv, Kind.Live, "📺", R.string.tile_live_sub, Color(0xFF8B5CF6), Color(0xFF4C1D95)),
+    Tile(Dest.Movies, Kind.Movies, "🎬", R.string.tile_movies_sub, Color(0xFF3B82F6), Color(0xFF1E3A8A)),
+    Tile(Dest.Series, Kind.Series, "🎞", R.string.tile_series_sub, Color(0xFFF97316), Color(0xFFC2410C)),
+    Tile(Dest.Radio, Kind.Radio, "📻", R.string.tile_radio_sub, Color(0xFF22C55E), Color(0xFF15803D)),
 )
 
 @Composable
@@ -98,7 +101,7 @@ internal fun Dashboard(
                 }
             }
         } else {
-            SectionTitle("Categories")
+            SectionTitle(stringResource(R.string.categories))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 tiles.forEach { t ->
                     SmallTile(t, counts[t.kind] ?: 0, Modifier.weight(1f)) { onOpen(t.dest) }
@@ -107,7 +110,7 @@ internal fun Dashboard(
         }
 
         if (recents.isNotEmpty()) {
-            SectionTitle("Continue Watching")
+            SectionTitle(stringResource(R.string.continue_watching))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 itemsIndexed(recents) { i, ch ->
                     Box(Modifier.width(150.dp)) {
@@ -150,22 +153,22 @@ private fun Hero(wide: Boolean, canWatch: Boolean, onWatchNow: () -> Unit) {
     ) {
         Column(Modifier.align(Alignment.CenterStart), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                "Enjoy Unlimited",
+                stringResource(R.string.hero_line1),
                 color = Ink,
                 fontSize = if (wide) 34.sp else 24.sp,
                 fontWeight = FontWeight.ExtraBold,
                 fontStyle = FontStyle.Italic,
             )
             Text(
-                "Entertainment",
+                stringResource(R.string.hero_line2),
                 fontSize = if (wide) 34.sp else 24.sp,
                 fontWeight = FontWeight.ExtraBold,
                 fontStyle = FontStyle.Italic,
                 style = TextStyle(brush = Brush.linearGradient(listOf(Color(0xFFC4B5FD), Color(0xFF7DD3FC)))),
             )
-            Text("Your playlists. Your channels.", color = Ink.copy(alpha = 0.75f), fontSize = 13.sp)
+            Text(stringResource(R.string.hero_sub), color = Ink.copy(alpha = 0.75f), fontSize = 13.sp)
             Box(Modifier.height(4.dp))
-            GradientButton(if (canWatch) "▶  Watch Now" else "Add a playlist", enabled = canWatch, onClick = onWatchNow)
+            GradientButton(if (canWatch) stringResource(R.string.watch_now) else stringResource(R.string.add_playlist_cta), enabled = canWatch, onClick = onWatchNow)
         }
         if (wide) {
             Box(
@@ -206,8 +209,8 @@ private fun BigTile(t: Tile, count: Int, modifier: Modifier, onClick: () -> Unit
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(t.emoji, fontSize = 40.sp)
-            Text(t.kind.title, color = Ink, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
-            Text(t.subtitle, color = Ink.copy(alpha = 0.8f), fontSize = 12.sp)
+            Text(stringResource(t.kind.titleRes), color = Ink, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+            Text(stringResource(t.subtitleRes), color = Ink.copy(alpha = 0.8f), fontSize = 12.sp)
         }
         Text(
             count.toString(),
@@ -240,7 +243,7 @@ private fun SmallTile(t: Tile, count: Int, modifier: Modifier, onClick: () -> Un
         ) {
             Text(t.emoji, fontSize = 28.sp)
         }
-        Text(t.kind.title, color = TextMain, fontSize = 12.sp, maxLines = 1)
+        Text(stringResource(t.kind.titleRes), color = TextMain, fontSize = 12.sp, maxLines = 1)
         Text("$count", color = TextMuted, fontSize = 11.sp)
     }
 }

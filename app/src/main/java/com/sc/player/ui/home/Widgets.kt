@@ -1,5 +1,7 @@
 package com.sc.player.ui.home
 
+import com.sc.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -151,7 +153,7 @@ internal fun ChannelCard(ch: Channel, now: Programme?, fav: Boolean, onToggleFav
                 textAlign = TextAlign.Center,
             )
             Text(
-                now?.let { "Now: ${it.title}" } ?: ch.group,
+                now?.let { stringResource(R.string.now_prefix, it.title) } ?: ch.group,
                 color = if (now != null) Cyan else TextMuted,
                 fontSize = 11.sp,
                 maxLines = 1,
@@ -213,7 +215,7 @@ internal fun ChannelRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                now?.let { "Now: ${it.title}" } ?: ch.group,
+                now?.let { stringResource(R.string.now_prefix, it.title) } ?: ch.group,
                 color = if (now != null) Cyan else TextMuted,
                 fontSize = 12.sp,
                 maxLines = 1,

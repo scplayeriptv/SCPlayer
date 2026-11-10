@@ -1,10 +1,13 @@
 package com.sc.player.data
 
-enum class Kind(val title: String) {
-    Live("Live TV"),
-    Movies("Movies"),
-    Series("Series"),
-    Radio("Radio"),
+import com.sc.player.R
+import androidx.annotation.StringRes
+
+enum class Kind(@StringRes val titleRes: Int) {
+    Live(R.string.nav_live_tv),
+    Movies(R.string.nav_movies),
+    Series(R.string.nav_series),
+    Radio(R.string.nav_radio),
 }
 
 private val radioWords = Regex("radio|إذاعة|اذاعة|راديو", RegexOption.IGNORE_CASE)

@@ -1,5 +1,7 @@
 package com.sc.player.ui.home
 
+import com.sc.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -107,7 +109,9 @@ fun ContentScreen(
         }
     }
     val live = kind == Kind.Live
-    val allLabel = if (live) "All Channels" else "All"
+    val allLabel = if (live) stringResource(R.string.all_channels) else stringResource(R.string.all_items)
+    val favLabel = stringResource(R.string.favorites)
+    val kindTitle = stringResource(kind.titleRes)
 
     Column(Modifier.fillMaxSize().padding(top = 16.dp)) {
         Row(
@@ -115,11 +119,11 @@ fun ContentScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            ScreenTitle(kind.title)
+            ScreenTitle(kindTitle)
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
-                placeholder = { Text("Search...", color = TextMuted) },
+                placeholder = { Text(stringResource(R.string.search_hint), color = TextMuted) },
                 singleLine = true,
                 shape = RoundedCornerShape(28.dp),
                 modifier = Modifier.weight(1f),
@@ -133,7 +137,7 @@ fun ContentScreen(
                     unfocusedContainerColor = Glass,
                 ),
             )
-            if (live) CategoryChip("Guide", false) { onGuide(filtered) }
+            if (live) CategoryChip(stringResource(R.string.guide), false) { onGuide(filtered) }
         }
 
         if (!wide) {
@@ -143,7 +147,7 @@ fun ContentScreen(
                 modifier = Modifier.padding(vertical = 12.dp),
             ) {
                 item { CategoryChip("$allLabel (${items.size})", selected == null) { selected = null } }
-                item { CategoryChip("★ Favorites ($favCount)", selected == FAV_KEY) { selected = FAV_KEY } }
+                item { CategoryChip("$favLabel ($favCount)", selected == FAV_KEY) { selected = FAV_KEY } }
                 items(groups) { g ->
                     CategoryChip("${g.key} (${g.value})", selected == g.key) { selected = g.key }
                 }
@@ -160,7 +164,7 @@ fun ContentScreen(
                     contentPadding = PaddingValues(bottom = 24.dp),
                 ) {
                     item { CategoryRow(allLabel, items.size, selected == null) { selected = null } }
-                    item { CategoryRow("★ Favorites", favCount, selected == FAV_KEY) { selected = FAV_KEY } }
+                    item { CategoryRow(favLabel, favCount, selected == FAV_KEY) { selected = FAV_KEY } }
                     items(groups) { g -> CategoryRow(g.key, g.value, selected == g.key) { selected = g.key } }
                 }
             }
@@ -169,9 +173,9 @@ fun ContentScreen(
                 Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
                     Text(
                         when {
-                            items.isEmpty() -> "Nothing here yet. This playlist has no ${kind.title} items."
-                            selected == FAV_KEY -> "No favorites yet. Tap ☆ on any item."
-                            else -> "No matching results."
+                            items.isEmpty() -> stringResource(R.string.empty_none, kindTitle)
+                            selected == FAV_KEY -> stringResource(R.string.empty_favs)
+                            else -> stringResource(R.string.empty_nomatch)
                         },
                         color = TextMuted,
                         fontSize = 16.sp,
@@ -285,18 +289,18 @@ private fun DetailsPanel(
             }
             if (now != null) {
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("NOW  ${hm(now.start)} - ${hm(now.stop)}", color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.panel_now, hm(now.start), hm(now.stop)), color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     Text(now.title, color = TextMain, fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
             }
             if (next != null) {
                 Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("NEXT  ${hm(next.start)}", color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.panel_next, hm(next.start)), color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     Text(next.title, color = TextMuted, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
             }
-            GradientButton("▶  Play", Modifier.fillMaxWidth(), onClick = onPlay)
-            CategoryChip(if (fav) "★ In Favorites" else "☆ Add to Favorites", fav, onToggleFav)
+            GradientButton(stringResource(R.string.play), Modifier.fillMaxWidth(), onClick = onPlay)
+            CategoryChip(if (fav) stringResource(R.string.in_favorites) else stringResource(R.string.add_favorites), fav, onToggleFav)
         }
     }
 }

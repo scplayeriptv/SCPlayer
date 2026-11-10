@@ -1,5 +1,7 @@
 package com.sc.player.ui.update
 
+import com.sc.player.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -56,10 +58,10 @@ fun UpdateDialog(update: UpdateInfo, onDismiss: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = { if (progress == null) onDismiss() },
-        title = { Text("Update available") },
+        title = { Text(stringResource(R.string.update_title)) },
         text = {
             Column {
-                Text("A newer version of SC Player is available (build ${update.versionCode}). Update now?")
+                Text(stringResource(R.string.update_text, update.versionCode.toInt()))
                 progress?.let { p ->
                     LinearProgressIndicator(
                         progress = { p },
@@ -67,7 +69,7 @@ fun UpdateDialog(update: UpdateInfo, onDismiss: () -> Unit) {
                         trackColor = GlassBorder,
                         modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     )
-                    Text("Downloading ${(p * 100).toInt()}%", color = TextMuted, fontSize = 13.sp)
+                    Text(stringResource(R.string.downloading, (p * 100).toInt()), color = TextMuted, fontSize = 13.sp)
                 }
                 message?.let { Text(it, color = Color(0xFFFCA5A5), fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp)) }
             }
@@ -79,7 +81,7 @@ fun UpdateDialog(update: UpdateInfo, onDismiss: () -> Unit) {
                     message = null
                     if (!updater.canInstall()) {
                         updater.openInstallPermissionSettings()
-                        message = "Enable \"Allow from this source\", then come back and tap Update again."
+                        message = ctx.getString(R.string.allow_install)
                     } else {
                         progress = 0f
                         scope.launch {
@@ -91,16 +93,16 @@ fun UpdateDialog(update: UpdateInfo, onDismiss: () -> Unit) {
                                 },
                                 onFailure = {
                                     progress = null
-                                    message = "Download failed. Try again."
+                                    message = ctx.getString(R.string.download_failed)
                                 },
                             )
                         }
                     }
                 },
-            ) { Text("Update now") }
+            ) { Text(stringResource(R.string.update_now)) }
         },
         dismissButton = {
-            TextButton(enabled = progress == null, onClick = onDismiss) { Text("Later") }
+            TextButton(enabled = progress == null, onClick = onDismiss) { Text(stringResource(R.string.later)) }
         },
     )
 }
