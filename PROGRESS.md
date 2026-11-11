@@ -145,3 +145,5 @@
 - الرئيسية من غير شريط جانبي/سفلي؛ باقي الشاشات فيها الشريط وفيه Home للرجوع. زر Reload بيحدّث القائمة من المصدر.
 - اعتمادية جديدة: `material-icons-extended` (أيقونات TV/Movie/Radio...). مفاتيح ترجمة: change_playlist, tile_reload, reloading, home_playlist.
 - مش منسوخ من أي تطبيق: التصميم والألوان والشعار بتاعتنا؛ "Account/تاريخ الانتهاء" مش موجودين لأن مفيش API لحساب المستخدم لسه.
+
+## إصلاح Build 29: `matchParentSize` اتعمله import غلط في Launcher.kt (هو عضو في BoxScope ومش بيتعمله import) — اتشال الـ import.
