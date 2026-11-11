@@ -137,4 +137,8 @@
     <string name="qr_scan">مسح رمز QR</string>
     <string name="qr_invalid">رمز QR هذا لا يحتوي على رابط قائمة.</string>
     <string name="qr_unavailable">مسح QR غير متاح على هذا الجهاز.</string>
+    <string name="change_playlist">تغيير القائمة</string>
+    <string name="tile_reload">إعادة تحميل</string>
+    <string name="reloading">جاري إعادة التحميل...</string>
+    <string name="home_playlist">القائمة: %1$s</string>
 </resources>

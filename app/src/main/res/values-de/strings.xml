@@ -137,4 +137,8 @@
     <string name="qr_scan">QR-Code scannen</string>
     <string name="qr_invalid">Dieser QR-Code enthält keinen Playlist-Link.</string>
     <string name="qr_unavailable">QR-Scannen ist auf diesem Gerät nicht verfügbar.</string>
+    <string name="change_playlist">Playlist wechseln</string>
+    <string name="tile_reload">Neu laden</string>
+    <string name="reloading">Wird neu geladen...</string>
+    <string name="home_playlist">Playlist: %1$s</string>
 </resources>

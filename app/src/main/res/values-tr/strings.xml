@@ -137,4 +137,8 @@
     <string name="qr_scan">QR kodunu tara</string>
     <string name="qr_invalid">Bu QR kodu bir liste bağlantısı içermiyor.</string>
     <string name="qr_unavailable">Bu cihazda QR tarama kullanılamıyor.</string>
+    <string name="change_playlist">Listeyi değiştir</string>
+    <string name="tile_reload">Yenile</string>
+    <string name="reloading">Yenileniyor...</string>
+    <string name="home_playlist">Liste: %1$s</string>
 </resources>

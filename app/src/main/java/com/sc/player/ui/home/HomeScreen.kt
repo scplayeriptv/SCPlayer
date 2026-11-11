@@ -32,6 +32,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,7 +98,11 @@ fun HomeScreen(
     val prefs = remember { UserPrefs(ctx) }
     val epg = remember { EpgRepository(ctx.applicationContext) }
     var epgTick by remember { mutableIntStateOf(0) }
-    val loaded by produceState<List<Channel>?>(null, playlistId) { value = repo.channels(playlistId) }
+    var reloadKey by remember { mutableIntStateOf(0) }
+    var reloading by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val playlistName = remember(playlistId) { repo.playlists().firstOrNull { it.id == playlistId }?.name.orEmpty() }
+    val loaded by produceState<List<Channel>?>(null, playlistId, reloadKey) { value = repo.channels(playlistId) }
 
     // دليل البرامج بيتحمّل في الخلفية، والواجهة بتتحدّث لما يخلص
     LaunchedEffect(playlistId) {
@@ -112,7 +118,25 @@ fun HomeScreen(
                 Text(stringResource(R.string.loading_channels), color = TextMuted, fontSize = 16.sp)
             }
         } else {
-            Shell(playlistId, channels, epgTick, prefs, onPlay, onPlaylists, onGuide)
+            Shell(
+                playlistId = playlistId,
+                playlistName = playlistName,
+                channels = channels,
+                epgTick = epgTick,
+                prefs = prefs,
+                reloading = reloading,
+                onReload = {
+                    reloading = true
+                    scope.launch {
+                        repo.refresh(playlistId)
+                        reloadKey++
+                        reloading = false
+                    }
+                },
+                onPlay = onPlay,
+                onPlaylists = onPlaylists,
+                onGuide = onGuide,
+            )
         }
     }
 }
@@ -120,9 +144,12 @@ fun HomeScreen(
 @Composable
 private fun Shell(
     playlistId: String,
+    playlistName: String,
     channels: List<Channel>,
     epgTick: Int,
     prefs: UserPrefs,
+    reloading: Boolean,
+    onReload: () -> Unit,
     onPlay: (List<Channel>, Int) -> Unit,
     onPlaylists: () -> Unit,
     onGuide: (List<Channel>) -> Unit,
@@ -156,22 +183,27 @@ private fun Shell(
         if (d == Dest.Playlist) onPlaylists() else destName = d.name
     }
 
+    val version = remember {
+        runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }.getOrNull().orEmpty()
+    }
+
     BackHandler(enabled = dest != Dest.Home) { destName = Dest.Home.name }
 
     val content: @Composable () -> Unit = {
         when (dest) {
-            Dest.Home -> Dashboard(
+            Dest.Home -> Launcher(
+                playlistName = playlistName,
                 counts = counts,
                 recents = recents,
                 favs = favs,
                 epgTick = epgTick,
                 wide = wide,
-                canWatch = visible.isNotEmpty(),
+                reloading = reloading,
+                version = version,
                 onOpen = { go(it) },
-                onWatchNow = {
-                    if (recents.isNotEmpty()) play(recents, 0)
-                    else (byKind[Kind.Live]?.takeIf { it.isNotEmpty() } ?: visible).let { if (it.isNotEmpty()) play(it, 0) }
-                },
+                onGuide = { onGuide(byKind[Kind.Live]?.takeIf { it.isNotEmpty() } ?: visible) },
+                onReload = onReload,
+                onExit = { ctx.findActivity()?.finish() },
                 onPlayRecent = { play(recents, it) },
                 onToggleFav = { favs = prefs.toggleFavorite(it) },
             )
@@ -214,7 +246,10 @@ private fun Shell(
         }
     }
 
-    if (wide) {
+    if (dest == Dest.Home) {
+        // الرئيسية = مشغّل بمربعات، من غير شريط تنقّل
+        Box(Modifier.fillMaxSize()) { content() }
+    } else if (wide) {
         Row(Modifier.fillMaxSize()) {
             Sidebar(dest, onSelect = { go(it) }, onExit = { ctx.findActivity()?.finish() })
             Box(Modifier.weight(1f).fillMaxHeight()) { content() }

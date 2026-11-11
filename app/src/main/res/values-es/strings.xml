@@ -137,4 +137,8 @@
     <string name="qr_scan">Escanear código QR</string>
     <string name="qr_invalid">Este código QR no contiene un enlace de lista.</string>
     <string name="qr_unavailable">El escaneo QR no está disponible en este dispositivo.</string>
+    <string name="change_playlist">Cambiar lista</string>
+    <string name="tile_reload">Recargar</string>
+    <string name="reloading">Recargando...</string>
+    <string name="home_playlist">Lista: %1$s</string>
 </resources>
