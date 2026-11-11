@@ -113,7 +113,7 @@
     <string name="open">Open</string>
     <string name="refreshing">Refreshing...</string>
     <string name="refresh">Refresh</string>
-    <string name="tab_xtream" translatable="false">Xtream Codes</string>
+    <string name="tab_xtream" translatable="false">Xtream</string>
     <string name="parental_title">Parental Control</string>
     <string name="parental_off">Off</string>
     <string name="parental_on">%1$d categories locked</string>

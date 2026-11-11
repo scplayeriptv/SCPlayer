@@ -41,10 +41,10 @@ fun GradientButton(
             .clip(RoundedCornerShape(28.dp))
             .background(BrandBrush)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .padding(horizontal = 28.dp),
+            .padding(horizontal = 20.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, color = Ink, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
+        Text(text, color = Ink, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
 }
 

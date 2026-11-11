@@ -55,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -87,15 +88,15 @@ fun AddPlaylistScreen(
                         Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 24.dp),
                         horizontalArrangement = Arrangement.spacedBy(48.dp),
                     ) {
-                        Brand(Modifier.weight(0.4f).align(Alignment.CenterVertically))
+                        Brand(Modifier.weight(0.4f).align(Alignment.CenterVertically), compact = false)
                         FormCard(state, vm, Modifier.weight(0.6f).fillMaxSize(), true)
                     }
                 } else {
                     Column(
-                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(24.dp),
+                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
                     ) {
-                        Brand(Modifier.fillMaxWidth())
+                        Brand(Modifier.fillMaxWidth(), compact = true)
                         FormCard(state, vm, Modifier.fillMaxWidth(), false)
                     }
                 }
@@ -138,29 +139,49 @@ private fun TopBar(onBack: (() -> Unit)?) {
 }
 
 @Composable
-private fun Brand(modifier: Modifier) {
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        ServerIllustration()
-        Text(
-            "SC Player",
-            fontSize = 36.sp,
-            fontWeight = FontWeight.ExtraBold,
-            style = TextStyle(brush = BrandBrush),
-        )
-        Text(
-            stringResource(R.string.add_brand_text),
-            color = TextMuted,
-            fontSize = 15.sp,
-            lineHeight = 24.sp,
-            textAlign = TextAlign.Center,
-        )
+private fun Brand(modifier: Modifier, compact: Boolean) {
+    if (compact) {
+        Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            ServerIllustration(84.dp)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    "SC Player",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    style = TextStyle(brush = BrandBrush),
+                )
+                Text(
+                    stringResource(R.string.add_brand_text),
+                    color = TextMuted,
+                    fontSize = 13.sp,
+                    lineHeight = 19.sp,
+                )
+            }
+        }
+    } else {
+        Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            ServerIllustration(150.dp)
+            Text(
+                "SC Player",
+                fontSize = 36.sp,
+                fontWeight = FontWeight.ExtraBold,
+                style = TextStyle(brush = BrandBrush),
+            )
+            Text(
+                stringResource(R.string.add_brand_text),
+                color = TextMuted,
+                fontSize = 15.sp,
+                lineHeight = 24.sp,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
 /** رسم سيرفر بسيط: ثلاث وحدات مكدّسة وعلامة + بنفسجية. */
 @Composable
-private fun ServerIllustration() {
-    Canvas(Modifier.size(150.dp)) {
+private fun ServerIllustration(illustrationSize: Dp) {
+    Canvas(Modifier.size(illustrationSize)) {
         val w = size.width
         val h = size.height
         val unitH = h * 0.22f
@@ -202,13 +223,14 @@ private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifi
         else -> false
     }
 
+    val narrow = !scroll
     Column(
         modifier
             .background(Glass, shape)
             .border(1.dp, GlassBorder, shape)
             .then(if (scroll) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-            .padding(32.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+            .padding(if (narrow) 20.dp else 32.dp),
+        verticalArrangement = Arrangement.spacedBy(if (narrow) 16.dp else 20.dp),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             BrandChip(stringResource(R.string.tab_m3u), tab == 0, Modifier.weight(1f)) { tab = 0; vm.clearError() }
@@ -217,18 +239,34 @@ private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifi
         }
 
         when (tab) {
-            0 -> Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Field(stringResource(R.string.field_url), url, Modifier.weight(2f), KeyboardType.Uri) { url = it }
-                Field(stringResource(R.string.field_name), name, Modifier.weight(1f)) { name = it }
-            }
-            1 -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            0 -> if (narrow) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Field(stringResource(R.string.field_url), url, Modifier.fillMaxWidth(), KeyboardType.Uri) { url = it }
+                    Field(stringResource(R.string.field_name), name, Modifier.fillMaxWidth()) { name = it }
+                }
+            } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Field(stringResource(R.string.field_server), server, Modifier.weight(2f), KeyboardType.Uri) { server = it }
+                    Field(stringResource(R.string.field_url), url, Modifier.weight(2f), KeyboardType.Uri) { url = it }
                     Field(stringResource(R.string.field_name), name, Modifier.weight(1f)) { name = it }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Field(stringResource(R.string.field_user), user, Modifier.weight(1f)) { user = it }
-                    Field(stringResource(R.string.field_pass), pass, Modifier.weight(1f), KeyboardType.Password, true) { pass = it }
+            }
+            1 -> if (narrow) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Field(stringResource(R.string.field_server), server, Modifier.fillMaxWidth(), KeyboardType.Uri) { server = it }
+                    Field(stringResource(R.string.field_name), name, Modifier.fillMaxWidth()) { name = it }
+                    Field(stringResource(R.string.field_user), user, Modifier.fillMaxWidth()) { user = it }
+                    Field(stringResource(R.string.field_pass), pass, Modifier.fillMaxWidth(), KeyboardType.Password, true) { pass = it }
+                }
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Field(stringResource(R.string.field_server), server, Modifier.weight(2f), KeyboardType.Uri) { server = it }
+                        Field(stringResource(R.string.field_name), name, Modifier.weight(1f)) { name = it }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Field(stringResource(R.string.field_user), user, Modifier.weight(1f)) { user = it }
+                        Field(stringResource(R.string.field_pass), pass, Modifier.weight(1f), KeyboardType.Password, true) { pass = it }
+                    }
                 }
             }
             else -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -259,7 +297,6 @@ private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifi
             Text(it.message, color = Color(0xFFFCA5A5), fontSize = 14.sp)
         }
 
-        Spacer(Modifier.height(4.dp))
         GradientButton(
             text = if (loading) stringResource(R.string.loading) else "✓  " + stringResource(R.string.add_and_watch),
             modifier = Modifier.fillMaxWidth(),
