@@ -9,6 +9,7 @@ import java.net.UnknownHostException
 fun friendlyError(ctx: Context, e: Throwable): String = when (e) {
     is UnknownHostException -> ctx.getString(R.string.err_host)
     is SocketTimeoutException -> ctx.getString(R.string.err_timeout)
+    is NotXtreamPanelException -> ctx.getString(R.string.err_xtream_404)
     is HttpStatusException -> ctx.getString(R.string.err_http, e.code)
     is InvalidCredentialsException -> ctx.getString(R.string.err_credentials)
     is EmptyPlaylistException -> ctx.getString(R.string.err_empty)

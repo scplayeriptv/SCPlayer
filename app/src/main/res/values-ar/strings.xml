@@ -141,4 +141,5 @@
     <string name="tile_reload">إعادة تحميل</string>
     <string name="reloading">جاري إعادة التحميل...</string>
     <string name="home_playlist">القائمة: %1$s</string>
+    <string name="err_xtream_404">هذا العنوان لا يستجيب كخادم Xtream (404). تحقق من عنوان الخادم والمنفذ (مثل http://host:8080) ومن أن اشتراكك فعّال.</string>
 </resources>

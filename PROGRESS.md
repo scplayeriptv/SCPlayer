@@ -147,3 +147,10 @@
 - مش منسوخ من أي تطبيق: التصميم والألوان والشعار بتاعتنا؛ "Account/تاريخ الانتهاء" مش موجودين لأن مفيش API لحساب المستخدم لسه.
 
 ## إصلاح Build 29: `matchParentSize` اتعمله import غلط في Launcher.kt (هو عضو في BoxScope ومش بيتعمله import) — اتشال الـ import.
+
+## إصلاح دخول Xtream (خطأ 404) ✅ (غير مختبر)
+- الأعراض: Xtream بسيرفر `https://es.egys.gs` + user/pass بيرجّع "The server returned an error (404)" لأن `get.php` مش متاح على العنوان ده.
+- الحل في `PlaylistRepository.download`: لو `get.php` فشل (404/403/فاضي) نجرّب `player_api.php` (فحص الدخول `user_info.auth`) ونبني M3U بنفسنا من `get_live_streams` + `get_vod_streams` (`data/XtreamApi.kt`)، ونجرّب بروتوكول تاني (http ⇄ https) لو مفيش بورت، وUser-Agent تاني (VLC).
+- رسالة خطأ جديدة `err_xtream_404` (9 لغات) لو العنوان مش سيرفر Xtream أصلًا: تلمّح للبورت (مثل :8080) والاشتراك.
+- حدود: المسلسلات (series) مش داخلة في النمط ده (محتاجة طلب لكل مسلسل). مجرّب على سيرفر حقيقي: لا.
+- لا يوجد unit test لـ XtreamApi لأن `Uri`/`org.json` مش متاحين في اختبارات الـ JVM من غير إعداد إضافي (الـ CI بيشغّل testDebugUnitTest).

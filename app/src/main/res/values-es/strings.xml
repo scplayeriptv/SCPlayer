@@ -141,4 +141,5 @@
     <string name="tile_reload">Recargar</string>
     <string name="reloading">Recargando...</string>
     <string name="home_playlist">Lista: %1$s</string>
+    <string name="err_xtream_404">Esta dirección no responde como un servidor Xtream (404). Revisa la dirección y el puerto (por ejemplo http://host:8080) y que tu suscripción esté activa.</string>
 </resources>

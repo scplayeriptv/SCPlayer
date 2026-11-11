@@ -61,23 +61,24 @@ class PlaylistRepository(private val context: Context) {
         val dest = listFile(id)
         val tmp = File(dest.parentFile, dest.name + ".tmp")
         try {
-            val request = Request.Builder()
-                .url(url)
-                .header("User-Agent", "SCPlayer/0.1 (Android)")
-                .build()
-            client.newCall(request).execute().use { resp ->
-                if (!resp.isSuccessful) throw HttpStatusException(resp.code)
-                val body = resp.body ?: throw EmptyPlaylistException()
-                body.byteStream().use { input -> tmp.outputStream().use { out -> input.copyTo(out) } }
+            var channels: List<Channel> = emptyList()
+            var failure: Exception? = null
+            try {
+                fetchTo(url, tmp)
+                channels = parseFile(tmp)
+            } catch (e: HttpStatusException) {
+                failure = e
             }
-            val channels = parseFile(tmp)
             if (channels.isEmpty()) {
-                // Xtream بيرجّع 200 وجسم فاضي لما اسم المستخدم أو كلمة المرور غلط
-                if (url.contains("get.php", ignoreCase = true) && url.contains("username=", ignoreCase = true)) {
-                    throw InvalidCredentialsException()
+                if (isXtreamUrl(url)) {
+                    // get.php مقفول أو بيرجّع 404/فاضي: نجرّب player_api.php (بيفرّق بين باسورد غلط وسيرفر مش Xtream)
+                    buildFromApi(url, tmp)
+                    channels = parseFile(tmp)
+                } else {
+                    throw failure ?: EmptyPlaylistException()
                 }
-                throw EmptyPlaylistException()
             }
+            if (channels.isEmpty()) throw EmptyPlaylistException()
             dest.delete()
             if (!tmp.renameTo(dest)) throw java.io.IOException("could not store playlist")
             ChannelCache.put(id, dest.lastModified(), channels)
@@ -98,6 +99,70 @@ class PlaylistRepository(private val context: Context) {
     }
 
     /** يعيد تحميل قائمة موجودة من رابطها. يرجّع عدد القنوات الجديد. */
+
+    private val userAgents = listOf("SCPlayer/0.1 (Android)", "VLC/3.0.18 LibVLC/3.0.18")
+
+    /** GET بنص كامل؛ لو السيرفر رفض (403/404) بنعيد بـ User-Agent تاني. */
+    private fun httpGet(url: String, sink: (okhttp3.ResponseBody) -> Unit) {
+        var last: HttpStatusException? = null
+        for (ua in userAgents) {
+            val request = Request.Builder().url(url).header("User-Agent", ua).build()
+            client.newCall(request).execute().use { resp ->
+                if (resp.isSuccessful) {
+                    sink(resp.body ?: throw EmptyPlaylistException())
+                    return
+                }
+                last = HttpStatusException(resp.code)
+                if (resp.code != 403 && resp.code != 404) throw last!!
+            }
+        }
+        throw last ?: HttpStatusException(404)
+    }
+
+    private fun fetchTo(url: String, tmp: File) {
+        httpGet(url) { body -> body.byteStream().use { input -> tmp.outputStream().use { out -> input.copyTo(out) } } }
+    }
+
+    private fun apiGet(base: String, user: String, pass: String, action: String?): String {
+        val url = "$base/player_api.php?username=${Uri.encode(user)}&password=${Uri.encode(pass)}" +
+            (action?.let { "&action=$it" } ?: "")
+        var text = ""
+        httpGet(url) { text = it.string() }
+        return text
+    }
+
+    private fun optionalArray(base: String, user: String, pass: String, action: String): JSONArray? =
+        runCatching { JSONArray(apiGet(base, user, pass, action)) }.getOrNull()
+
+    /** يبني ملف M3U من player_api.php لو get.php مش شغّال. */
+    private fun buildFromApi(url: String, tmp: File) {
+        val u = Uri.parse(url)
+        val user = u.getQueryParameter("username") ?: throw InvalidCredentialsException()
+        val pass = u.getQueryParameter("password") ?: throw InvalidCredentialsException()
+        var firstError: Exception? = null
+        for (base in candidateBases(url)) {
+            try {
+                checkAuth(apiGet(base, user, pass, null))
+                val liveCats = optionalArray(base, user, pass, "get_live_categories")
+                val live = optionalArray(base, user, pass, "get_live_streams")
+                val vodCats = optionalArray(base, user, pass, "get_vod_categories")
+                val vod = optionalArray(base, user, pass, "get_vod_streams")
+                tmp.bufferedWriter().use { w -> xtreamToM3u(w, base, user, pass, liveCats, live, vodCats, vod) }
+                return
+            } catch (e: InvalidCredentialsException) {
+                throw e
+            } catch (e: HttpStatusException) {
+                if (firstError == null) firstError = e
+            } catch (e: java.io.IOException) {
+                if (firstError == null) firstError = e
+            }
+        }
+        // مشكلة شبكة حقيقية (DNS/مهلة) نظهرها زي ما هي، وغير كده نقول إن العنوان مش سيرفر Xtream
+        val err = firstError
+        if (err is java.net.UnknownHostException || err is java.net.SocketTimeoutException) throw err
+        throw NotXtreamPanelException()
+    }
+
     suspend fun refresh(id: String): Result<Int> = withContext(Dispatchers.IO) {
         runCatching {
             val p = playlists().firstOrNull { it.id == id } ?: throw IllegalArgumentException("missing")
