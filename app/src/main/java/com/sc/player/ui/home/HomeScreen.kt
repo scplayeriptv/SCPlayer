@@ -187,6 +187,13 @@ private fun Shell(
         runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }.getOrNull().orEmpty()
     }
 
+    LaunchedEffect(Unit) {
+        if (!com.sc.player.data.AutoPlaySession.handled) {
+            com.sc.player.data.AutoPlaySession.handled = true
+            if (prefs.autoPlay() && recents.isNotEmpty()) play(recents, 0)
+        }
+    }
+
     BackHandler(enabled = dest != Dest.Home) { destName = Dest.Home.name }
 
     val content: @Composable () -> Unit = {

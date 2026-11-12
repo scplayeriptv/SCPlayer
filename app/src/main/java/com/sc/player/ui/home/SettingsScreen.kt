@@ -1,6 +1,39 @@
 package com.sc.player.ui.home
 
 import android.content.Context
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextOverflow
+import com.sc.player.ui.theme.BrandBrush
+import com.sc.player.ui.theme.Glass
+import com.sc.player.ui.theme.Ink
+import com.sc.player.ui.theme.Violet
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -95,80 +128,171 @@ fun SettingsScreen(
         cacheLoaded = true
     }
 
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        ScreenTitle(stringResource(R.string.nav_settings))
+    var sectionName by rememberSaveable { mutableStateOf(Section.General.name) }
+    val section = Section.valueOf(sectionName)
+    var autoPlay by remember { mutableStateOf(prefs.autoPlay()) }
+    var hw by remember { mutableStateOf(prefs.hardwareDecoding()) }
+    val wide = LocalConfiguration.current.screenWidthDp >= 720
 
-        SettingRow(
-            stringResource(R.string.set_language),
-            appLanguages.firstOrNull { it.code == savedLang }?.nativeName ?: stringResource(R.string.set_language_system),
-        ) { showLanguages = true }
-
-        SettingRow(
-            stringResource(R.string.parental_title),
-            // parentalTick بس عشان السطر يتحدّث بعد أي تغيير
-            parentalTick.let {
-                val n = prefs.lockedGroups().size
-                when {
-                    !prefs.hasPin() -> stringResource(R.string.parental_off)
-                    ParentalSession.unlocked -> stringResource(R.string.parental_unlocked)
-                    else -> stringResource(R.string.parental_on, n)
+    val rows: @Composable () -> Unit = {
+        when (section) {
+            Section.General -> {
+                SettingRow(
+                    stringResource(R.string.set_language),
+                    null,
+                    value = appLanguages.firstOrNull { it.code == savedLang }?.nativeName ?: stringResource(R.string.set_language_system),
+                ) { showLanguages = true }
+                RowDivider()
+                SettingRow(
+                    stringResource(R.string.set_clear_cache),
+                    null,
+                    value = if (cacheLoaded) mb(cache) else stringResource(R.string.calculating),
+                    icon = Icons.Filled.Delete,
+                ) {
+                    scope.launch {
+                        withContext(Dispatchers.IO) {
+                            ctx.imageLoader.diskCache?.clear()
+                            File(ctx.cacheDir, "updates").deleteRecursively()
+                        }
+                        ctx.imageLoader.memoryCache?.clear()
+                        cache = withContext(Dispatchers.IO) { cacheBytes(ctx) }
+                    }
                 }
-            },
-        ) { showParental = true }
-
-        SettingRow(
-            stringResource(R.string.epg_title),
-            if (epgUrl.isBlank()) stringResource(R.string.epg_auto) else epgUrl,
-        ) { showEpg = true }
-
-        SettingRow(stringResource(R.string.nav_playlist), stringResource(R.string.set_playlists_sub), onClick = onPlaylists)
-
-        SettingRow(
-            stringResource(R.string.set_clear_cache),
-            if (cacheLoaded) mb(cache) else stringResource(R.string.calculating),
-        ) {
-            scope.launch {
-                withContext(Dispatchers.IO) {
-                    ctx.imageLoader.diskCache?.clear()
-                    File(ctx.cacheDir, "updates").deleteRecursively()
+                RowDivider()
+                SettingRow(
+                    stringResource(R.string.set_check_updates),
+                    null,
+                    value = if (checking) stringResource(R.string.checking)
+                    else updateStatus ?: stringResource(R.string.installed_build, updater.currentVersionCode().toInt()),
+                    icon = Icons.Filled.Refresh,
+                ) {
+                    if (!checking) {
+                        checking = true
+                        scope.launch {
+                            val info = updater.check()
+                            checking = false
+                            if (info == null) {
+                                updateStatus = ctx.getString(R.string.up_to_date, updater.currentVersionCode().toInt())
+                            } else {
+                                updateStatus = ctx.getString(R.string.update_available_build, info.versionCode.toInt())
+                                update = info
+                            }
+                        }
+                    }
                 }
-                ctx.imageLoader.memoryCache?.clear()
-                cache = withContext(Dispatchers.IO) { cacheBytes(ctx) }
+                RowDivider()
+                SettingRow(
+                    stringResource(R.string.set_reset),
+                    null,
+                    value = if (resetDone) stringResource(R.string.done) else stringResource(R.string.set_reset_sub),
+                ) {
+                    onResetUserData()
+                    resetDone = true
+                }
+                RowDivider()
+                SettingRow(
+                    stringResource(R.string.set_restore),
+                    null,
+                    value = null,
+                ) {
+                    prefs.restoreDefaults()
+                    autoPlay = prefs.autoPlay()
+                    hw = prefs.hardwareDecoding()
+                }
             }
+            Section.Parental -> SettingRow(
+                stringResource(R.string.parental_title),
+                null,
+                // parentalTick بس عشان السطر يتحدّث بعد أي تغيير
+                value = parentalTick.let {
+                    val n = prefs.lockedGroups().size
+                    when {
+                        !prefs.hasPin() -> stringResource(R.string.parental_off)
+                        ParentalSession.unlocked -> stringResource(R.string.parental_unlocked)
+                        else -> stringResource(R.string.parental_on, n)
+                    }
+                },
+            ) { showParental = true }
+            Section.Playback -> {
+                ToggleRow(stringResource(R.string.set_auto_play), stringResource(R.string.set_auto_play_sub), autoPlay) {
+                    autoPlay = it
+                    prefs.setAutoPlay(it)
+                }
+                RowDivider()
+                ToggleRow(stringResource(R.string.set_hw), stringResource(R.string.set_hw_sub), hw) {
+                    hw = it
+                    prefs.setHardwareDecoding(it)
+                }
+            }
+            Section.Guide -> SettingRow(
+                stringResource(R.string.epg_title),
+                null,
+                value = if (epgUrl.isBlank()) stringResource(R.string.epg_auto) else epgUrl,
+            ) { showEpg = true }
+            Section.Playlists -> SettingRow(
+                stringResource(R.string.nav_playlist),
+                null,
+                value = stringResource(R.string.set_playlists_sub),
+                onClick = onPlaylists,
+            )
+            Section.About -> SettingRow(
+                stringResource(R.string.nav_about),
+                null,
+                value = stringResource(R.string.set_about_sub),
+                onClick = onAbout,
+            )
         }
+    }
 
-        SettingRow(
-            stringResource(R.string.set_check_updates),
-            if (checking) stringResource(R.string.checking)
-            else updateStatus ?: stringResource(R.string.installed_build, updater.currentVersionCode().toInt()),
-        ) {
-            if (!checking) {
-                checking = true
-                scope.launch {
-                    val info = updater.check()
-                    checking = false
-                    if (info == null) {
-                        updateStatus = ctx.getString(R.string.up_to_date, updater.currentVersionCode().toInt())
-                    } else {
-                        updateStatus = ctx.getString(R.string.update_available_build, info.versionCode.toInt())
-                        update = info
+    if (wide) {
+        Row(Modifier.fillMaxSize().padding(24.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+            GlassCard(Modifier.width(280.dp).fillMaxHeight()) {
+                Column(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        stringResource(R.string.nav_settings),
+                        color = TextMain,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.padding(start = 8.dp, top = 6.dp, bottom = 10.dp),
+                    )
+                    Section.values().forEach { s ->
+                        SectionItem(s, s == section) { sectionName = s.name }
                     }
                 }
             }
+            GlassCard(Modifier.weight(1f).fillMaxHeight()) {
+                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 6.dp)) {
+                    Text(
+                        stringResource(section.titleRes),
+                        color = TextMain,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 14.dp, top = 14.dp, bottom = 8.dp),
+                    )
+                    rows()
+                }
+            }
         }
-
-        SettingRow(
-            stringResource(R.string.set_reset),
-            if (resetDone) stringResource(R.string.done) else stringResource(R.string.set_reset_sub),
-        ) {
-            onResetUserData()
-            resetDone = true
+    } else {
+        Column(Modifier.fillMaxSize().padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(Modifier.padding(horizontal = 24.dp)) { ScreenTitle(stringResource(R.string.nav_settings)) }
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(Section.values().toList()) { s ->
+                    SectionChip(stringResource(s.titleRes), s == section) { sectionName = s.name }
+                }
+            }
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
+                GlassCard(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(vertical = 6.dp)) { rows() }
+                }
+            }
         }
-
-        SettingRow(stringResource(R.string.nav_about), stringResource(R.string.set_about_sub), onClick = onAbout)
     }
 
     update?.let { UpdateDialog(it, onDismiss = { update = null }) }
@@ -253,26 +377,126 @@ fun SettingsScreen(
     }
 }
 
+private enum class Section(val titleRes: Int, val icon: ImageVector) {
+    General(R.string.set_sec_general, Icons.Filled.Settings),
+    Parental(R.string.parental_title, Icons.Filled.Lock),
+    Playback(R.string.set_sec_playback, Icons.Filled.PlayArrow),
+    Guide(R.string.set_sec_guide, Icons.Filled.DateRange),
+    Playlists(R.string.nav_playlist, Icons.Filled.VideoLibrary),
+    About(R.string.nav_about, Icons.Filled.Info),
+}
+
 @Composable
-private fun SettingRow(title: String, subtitle: String, onClick: () -> Unit) {
+private fun SectionItem(s: Section, selected: Boolean, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(18.dp)
-    GlassCard(
+    val shape = RoundedCornerShape(16.dp)
+    Row(
         Modifier
             .fillMaxWidth()
             .onFocusChanged { focused = it.isFocused }
-            .border(if (focused) 2.dp else 0.dp, if (focused) Cyan else GlassBorder, shape)
-            .clickable(role = Role.Button, onClick = onClick),
+            .clip(shape)
+            .background(if (selected) BrandBrush else Brush.linearGradient(listOf(Color.Transparent, Color.Transparent)))
+            .border(if (focused) 2.dp else 0.dp, if (focused) Cyan else Color.Transparent, shape)
+            .clickable(role = Role.Tab, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(title, color = TextMain, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                Text(subtitle, color = TextMuted, fontSize = 13.sp)
-            }
-            Text("›", color = TextMuted, fontSize = 24.sp)
+        Icon(s.icon, null, tint = if (selected) Ink else TextMuted, modifier = Modifier.size(20.dp))
+        Text(
+            stringResource(s.titleRes),
+            color = if (selected) Ink else TextMain,
+            fontSize = 15.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+        )
+    }
+}
+
+@Composable
+private fun SectionChip(text: String, selected: Boolean, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(20.dp)
+    Text(
+        text,
+        color = if (selected) Ink else TextMain,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold,
+        maxLines = 1,
+        modifier = Modifier
+            .clip(shape)
+            .background(if (selected) BrandBrush else Brush.linearGradient(listOf(Glass, Glass)))
+            .border(1.dp, if (selected) Color.Transparent else GlassBorder, shape)
+            .clickable(role = Role.Tab, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 9.dp),
+    )
+}
+
+@Composable
+private fun RowDivider() {
+    Box(Modifier.fillMaxWidth().padding(horizontal = 14.dp).height(1.dp).background(GlassBorder))
+}
+
+@Composable
+private fun SettingRow(
+    title: String,
+    subtitle: String?,
+    value: String?,
+    icon: ImageVector? = null,
+    onClick: () -> Unit,
+) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(16.dp)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .onFocusChanged { focused = it.isFocused }
+            .clip(shape)
+            .border(if (focused) 2.dp else 0.dp, if (focused) Cyan else Color.Transparent, shape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(title, color = TextMain, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            subtitle?.let { Text(it, color = TextMuted, fontSize = 13.sp) }
         }
+        value?.let {
+            Text(it, color = TextMuted, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.dp))
+        }
+        if (icon != null) Icon(icon, null, tint = Cyan, modifier = Modifier.size(22.dp))
+        else Text("›", color = TextMuted, fontSize = 24.sp)
+    }
+}
+
+@Composable
+private fun ToggleRow(title: String, subtitle: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(16.dp)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .onFocusChanged { focused = it.isFocused }
+            .clip(shape)
+            .border(if (focused) 2.dp else 0.dp, if (focused) Cyan else Color.Transparent, shape)
+            .clickable(role = Role.Switch) { onChange(!checked) }
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(title, color = TextMain, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text(subtitle, color = TextMuted, fontSize = 13.sp)
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = Violet,
+                checkedThumbColor = Ink,
+                uncheckedTrackColor = Glass,
+                uncheckedThumbColor = TextMuted,
+                uncheckedBorderColor = GlassBorder,
+            ),
+        )
     }
 }

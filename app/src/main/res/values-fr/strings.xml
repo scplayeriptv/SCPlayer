@@ -142,4 +142,12 @@
     <string name="reloading">Rechargement...</string>
     <string name="home_playlist">Playlist : %1$s</string>
     <string name="err_xtream_404">Cette adresse ne répond pas comme un serveur Xtream (404). Vérifiez l\'adresse et le port (par exemple http://host:8080) et que votre abonnement est actif.</string>
+    <string name="set_sec_general">Général</string>
+    <string name="set_sec_playback">Lecture</string>
+    <string name="set_sec_guide">Guide des programmes</string>
+    <string name="set_auto_play">Lecture automatique</string>
+    <string name="set_auto_play_sub">Reprendre la dernière chaîne au lancement</string>
+    <string name="set_hw">Accélération matérielle</string>
+    <string name="set_hw_sub">Utiliser le décodeur vidéo de l\'appareil (désactivez en cas de bugs d\'image)</string>
+    <string name="set_restore">Rétablir les valeurs par défaut</string>
 </resources>

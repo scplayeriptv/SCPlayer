@@ -126,7 +126,15 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             .setAllowCrossProtocolRedirects(true)
             .setConnectTimeoutMs(15_000)
             .setReadTimeoutMs(20_000)
-        ExoPlayer.Builder(ctx)
+        val hw = com.sc.player.data.UserPrefs(ctx).hardwareDecoding()
+        val selector = androidx.media3.exoplayer.mediacodec.MediaCodecSelector { mime, secure, tunneling ->
+            val all = androidx.media3.exoplayer.mediacodec.MediaCodecUtil.getDecoderInfos(mime, secure, tunneling)
+            if (hw) all else all.sortedBy { if (it.softwareOnly) 0 else 1 }
+        }
+        val renderers = androidx.media3.exoplayer.DefaultRenderersFactory(ctx)
+            .setMediaCodecSelector(selector)
+            .setEnableDecoderFallback(true)
+        ExoPlayer.Builder(ctx, renderers)
             .setMediaSourceFactory(DefaultMediaSourceFactory(ctx).setDataSourceFactory(http))
             .build()
     }

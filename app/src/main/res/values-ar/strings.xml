@@ -142,4 +142,12 @@
     <string name="reloading">جاري إعادة التحميل...</string>
     <string name="home_playlist">القائمة: %1$s</string>
     <string name="err_xtream_404">هذا العنوان لا يستجيب كخادم Xtream (404). تحقق من عنوان الخادم والمنفذ (مثل http://host:8080) ومن أن اشتراكك فعّال.</string>
+    <string name="set_sec_general">عام</string>
+    <string name="set_sec_playback">التشغيل</string>
+    <string name="set_sec_guide">دليل البرامج</string>
+    <string name="set_auto_play">تشغيل تلقائي</string>
+    <string name="set_auto_play_sub">استئناف آخر قناة عند فتح التطبيق</string>
+    <string name="set_hw">تسريع الأجهزة</string>
+    <string name="set_hw_sub">استخدام مفكّك الفيديو في الجهاز (أوقفه إذا ظهرت مشاكل في الصورة)</string>
+    <string name="set_restore">استعادة الإعدادات</string>
 </resources>

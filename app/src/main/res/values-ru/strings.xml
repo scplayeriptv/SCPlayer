@@ -142,4 +142,12 @@
     <string name="reloading">Обновление...</string>
     <string name="home_playlist">Плейлист: %1$s</string>
     <string name="err_xtream_404">Этот адрес не отвечает как сервер Xtream (404). Проверьте адрес и порт (например, http://host:8080) и активна ли подписка.</string>
+    <string name="set_sec_general">Общие</string>
+    <string name="set_sec_playback">Воспроизведение</string>
+    <string name="set_sec_guide">Телегид</string>
+    <string name="set_auto_play">Автовоспроизведение</string>
+    <string name="set_auto_play_sub">Продолжать последний канал при запуске</string>
+    <string name="set_hw">Аппаратное ускорение</string>
+    <string name="set_hw_sub">Использовать видеодекодер устройства (отключите при сбоях изображения)</string>
+    <string name="set_restore">Сбросить настройки</string>
 </resources>

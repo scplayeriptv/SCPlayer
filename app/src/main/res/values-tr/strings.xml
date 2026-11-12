@@ -142,4 +142,12 @@
     <string name="reloading">Yenileniyor...</string>
     <string name="home_playlist">Liste: %1$s</string>
     <string name="err_xtream_404">Bu adres bir Xtream sunucusu gibi yanıt vermiyor (404). Sunucu adresini ve portu (örneğin http://host:8080) ve aboneliğinizin aktif olduğunu kontrol edin.</string>
+    <string name="set_sec_general">Genel</string>
+    <string name="set_sec_playback">Oynatma</string>
+    <string name="set_sec_guide">Program rehberi</string>
+    <string name="set_auto_play">Otomatik oynat</string>
+    <string name="set_auto_play_sub">Açılışta son kanalı sürdür</string>
+    <string name="set_hw">Donanım hızlandırma</string>
+    <string name="set_hw_sub">Cihazın video çözücüsünü kullan (görüntü sorunlarında kapatın)</string>
+    <string name="set_restore">Varsayılanlara dön</string>
 </resources>

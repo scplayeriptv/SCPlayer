@@ -60,6 +60,24 @@ class UserPrefs(context: Context) {
         e.apply()
     }
 
+    // ---- التشغيل ----
+    fun autoPlay(): Boolean = sp.getBoolean("auto_play", false)
+
+    fun setAutoPlay(v: Boolean) {
+        sp.edit().putBoolean("auto_play", v).apply()
+    }
+
+    fun hardwareDecoding(): Boolean = sp.getBoolean("hw_decoding", true)
+
+    fun setHardwareDecoding(v: Boolean) {
+        sp.edit().putBoolean("hw_decoding", v).apply()
+    }
+
+    /** يرجّع إعدادات التشغيل للوضع الافتراضي. */
+    fun restoreDefaults() {
+        sp.edit().remove("auto_play").remove("hw_decoding").apply()
+    }
+
     private fun hash(pin: String): String =
         MessageDigest.getInstance("SHA-256").digest("sc:$pin".toByteArray()).joinToString("") { "%02x".format(it) }
 
@@ -77,4 +95,10 @@ class UserPrefs(context: Context) {
 object ParentalSession {
     @Volatile
     var unlocked = false
+}
+
+/** بيشتغل التشغيل التلقائي مرة واحدة بس في كل تشغيل للتطبيق. */
+object AutoPlaySession {
+    @Volatile
+    var handled = false
 }
