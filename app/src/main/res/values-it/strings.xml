@@ -150,4 +150,16 @@
     <string name="set_hw">Accelerazione hardware</string>
     <string name="set_hw_sub">Usa il decoder video del dispositivo (disattiva se ci sono problemi di immagine)</string>
     <string name="set_restore">Ripristina predefiniti</string>
+    <string name="update_size">Dimensione download: %1$s</string>
+    <string name="downloading_size">Download %1$d%% — %2$s / %3$s</string>
+    <string name="update_size_delta">Dimensione download: %1$s (solo modifiche)</string>
+    <string name="notif_playing">Riproduzione in background</string>
+    <string name="notif_stop">Stop</string>
+    <string name="notif_update_downloading">Download dell\'aggiornamento</string>
+    <string name="notif_update_ready">Aggiornamento pronto — tocca per installare</string>
+    <string name="update_bg">Continua in background</string>
+    <string name="set_bg_play">Riproduzione in background</string>
+    <string name="set_bg_play_sub">Continua la riproduzione quando l\'app è ridotta</string>
+    <string name="about_developer">Sviluppatore</string>
+    <string name="about_contact">Contatto</string>
 </resources>

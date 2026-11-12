@@ -2,6 +2,9 @@ package com.sc.player.ui.home
 
 import com.sc.player.R
 import androidx.compose.ui.res.stringResource
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,8 +49,31 @@ fun AboutScreen() {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(stringResource(R.string.about_developer), color = TextMuted, fontSize = 13.sp)
+            Text("Mostafa Mahmoud", color = TextMain, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.about_contact), color = TextMuted, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+            Text(
+                EMAIL,
+                style = TextStyle(brush = BrandBrush),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .clickable {
+                        runCatching {
+                            ctx.startActivity(
+                                Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$EMAIL"))
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                            )
+                        }
+                    }
+                    .padding(8.dp),
+            )
+        }
     }
 }
+
+private const val EMAIL = "Sc.downloder@gmail.com"
 
 @Composable
 fun ComingSoonScreen(title: String, note: String) {

@@ -73,9 +73,15 @@ class UserPrefs(context: Context) {
         sp.edit().putBoolean("hw_decoding", v).apply()
     }
 
+    fun backgroundPlay(): Boolean = sp.getBoolean("bg_play", true)
+
+    fun setBackgroundPlay(v: Boolean) {
+        sp.edit().putBoolean("bg_play", v).apply()
+    }
+
     /** يرجّع إعدادات التشغيل للوضع الافتراضي. */
     fun restoreDefaults() {
-        sp.edit().remove("auto_play").remove("hw_decoding").apply()
+        sp.edit().remove("auto_play").remove("hw_decoding").remove("bg_play").apply()
     }
 
     private fun hash(pin: String): String =

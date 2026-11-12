@@ -152,4 +152,16 @@
     <string name="set_hw">Hardware Acceleration</string>
     <string name="set_hw_sub">Use the device video decoder (turn off if video glitches)</string>
     <string name="set_restore">Restore Defaults</string>
+    <string name="update_size">Download size: %1$s</string>
+    <string name="downloading_size">Downloading %1$d%% — %2$s / %3$s</string>
+    <string name="update_size_delta">Download size: %1$s (changes only)</string>
+    <string name="notif_playing">Playing in the background</string>
+    <string name="notif_stop">Stop</string>
+    <string name="notif_update_downloading">Downloading update</string>
+    <string name="notif_update_ready">Update ready — tap to install</string>
+    <string name="update_bg">Continue in background</string>
+    <string name="set_bg_play">Background Play</string>
+    <string name="set_bg_play_sub">Keep playing when the app is minimized</string>
+    <string name="about_developer">Developer</string>
+    <string name="about_contact">Contact</string>
 </resources>

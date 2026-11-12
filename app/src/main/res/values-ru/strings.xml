@@ -150,4 +150,16 @@
     <string name="set_hw">Аппаратное ускорение</string>
     <string name="set_hw_sub">Использовать видеодекодер устройства (отключите при сбоях изображения)</string>
     <string name="set_restore">Сбросить настройки</string>
+    <string name="update_size">Размер загрузки: %1$s</string>
+    <string name="downloading_size">Загрузка %1$d%% — %2$s / %3$s</string>
+    <string name="update_size_delta">Размер загрузки: %1$s (только изменения)</string>
+    <string name="notif_playing">Воспроизведение в фоне</string>
+    <string name="notif_stop">Стоп</string>
+    <string name="notif_update_downloading">Загрузка обновления</string>
+    <string name="notif_update_ready">Обновление готово — нажмите для установки</string>
+    <string name="update_bg">Продолжить в фоне</string>
+    <string name="set_bg_play">Фоновое воспроизведение</string>
+    <string name="set_bg_play_sub">Продолжать воспроизведение при сворачивании</string>
+    <string name="about_developer">Разработчик</string>
+    <string name="about_contact">Связь</string>
 </resources>

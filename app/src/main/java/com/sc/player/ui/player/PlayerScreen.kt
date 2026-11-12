@@ -135,10 +135,32 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             .setMediaCodecSelector(selector)
             .setEnableDecoderFallback(true)
         ExoPlayer.Builder(ctx, renderers)
+            .setAudioAttributes(
+                androidx.media3.common.AudioAttributes.Builder()
+                    .setUsage(androidx.media3.common.C.USAGE_MEDIA)
+                    .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MOVIE)
+                    .build(),
+                true,
+            )
+            .setHandleAudioBecomingNoisy(true)
+            .setWakeMode(androidx.media3.common.C.WAKE_MODE_NETWORK)
             .setMediaSourceFactory(DefaultMediaSourceFactory(ctx).setDataSourceFactory(http))
             .build()
     }
     DisposableEffect(Unit) { onDispose { player.release() } }
+
+    // تشغيل في الخلفية: خدمة أمامية بإشعار (قابل للإيقاف من الإعدادات)
+    val bgPlay = remember { com.sc.player.data.UserPrefs(ctx).backgroundPlay() }
+    DisposableEffect(player) {
+        com.sc.player.service.PlaybackBridge.stop = { player.pause() }
+        onDispose {
+            com.sc.player.service.PlaybackBridge.stop = null
+            com.sc.player.service.PlaybackService.stop(ctx)
+        }
+    }
+    LaunchedEffect(channel.name) {
+        if (bgPlay) com.sc.player.service.PlaybackService.start(ctx, channel.name)
+    }
 
     DisposableEffect(player) {
         val listener = object : Player.Listener {
@@ -186,7 +208,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
         player.playWhenReady = true
     }
 
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { player.pause() }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { if (!bgPlay) player.pause() }
 
     // ملء الشاشة + بالعرض + الشاشة تفضل منوّرة
     DisposableEffect(Unit) {

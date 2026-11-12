@@ -150,4 +150,16 @@
     <string name="set_hw">تسريع الأجهزة</string>
     <string name="set_hw_sub">استخدام مفكّك الفيديو في الجهاز (أوقفه إذا ظهرت مشاكل في الصورة)</string>
     <string name="set_restore">استعادة الإعدادات</string>
+    <string name="update_size">حجم التحديث: %1$s</string>
+    <string name="downloading_size">جاري التحميل %1$d%% — %2$s / %3$s</string>
+    <string name="update_size_delta">حجم التحديث: %1$s (التغييرات فقط)</string>
+    <string name="notif_playing">التشغيل مستمر في الخلفية</string>
+    <string name="notif_stop">إيقاف</string>
+    <string name="notif_update_downloading">جاري تحميل التحديث</string>
+    <string name="notif_update_ready">التحديث جاهز — اضغط للتثبيت</string>
+    <string name="update_bg">متابعة في الخلفية</string>
+    <string name="set_bg_play">التشغيل في الخلفية</string>
+    <string name="set_bg_play_sub">استمرار التشغيل عند تصغير التطبيق</string>
+    <string name="about_developer">المطوّر</string>
+    <string name="about_contact">للتواصل</string>
 </resources>

@@ -150,4 +150,16 @@
     <string name="set_hw">Accélération matérielle</string>
     <string name="set_hw_sub">Utiliser le décodeur vidéo de l\'appareil (désactivez en cas de bugs d\'image)</string>
     <string name="set_restore">Rétablir les valeurs par défaut</string>
+    <string name="update_size">Taille du téléchargement : %1$s</string>
+    <string name="downloading_size">Téléchargement %1$d%% — %2$s / %3$s</string>
+    <string name="update_size_delta">Taille du téléchargement : %1$s (modifications uniquement)</string>
+    <string name="notif_playing">Lecture en arrière-plan</string>
+    <string name="notif_stop">Arrêter</string>
+    <string name="notif_update_downloading">Téléchargement de la mise à jour</string>
+    <string name="notif_update_ready">Mise à jour prête — touchez pour installer</string>
+    <string name="update_bg">Continuer en arrière-plan</string>
+    <string name="set_bg_play">Lecture en arrière-plan</string>
+    <string name="set_bg_play_sub">Continuer la lecture quand l\'app est réduite</string>
+    <string name="about_developer">Développeur</string>
+    <string name="about_contact">Contact</string>
 </resources>

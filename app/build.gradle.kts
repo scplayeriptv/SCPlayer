@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+    implementation("org.apache.commons:commons-compress:1.26.2")
     implementation(platform("androidx.compose:compose-bom:2024.09.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")

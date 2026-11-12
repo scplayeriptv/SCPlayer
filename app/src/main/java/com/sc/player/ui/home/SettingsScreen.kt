@@ -132,6 +132,7 @@ fun SettingsScreen(
     val section = Section.valueOf(sectionName)
     var autoPlay by remember { mutableStateOf(prefs.autoPlay()) }
     var hw by remember { mutableStateOf(prefs.hardwareDecoding()) }
+    var bg by remember { mutableStateOf(prefs.backgroundPlay()) }
     val wide = LocalConfiguration.current.screenWidthDp >= 720
 
     val rows: @Composable () -> Unit = {
@@ -198,6 +199,7 @@ fun SettingsScreen(
                     prefs.restoreDefaults()
                     autoPlay = prefs.autoPlay()
                     hw = prefs.hardwareDecoding()
+                    bg = prefs.backgroundPlay()
                 }
             }
             Section.Parental -> SettingRow(
@@ -217,6 +219,11 @@ fun SettingsScreen(
                 ToggleRow(stringResource(R.string.set_auto_play), stringResource(R.string.set_auto_play_sub), autoPlay) {
                     autoPlay = it
                     prefs.setAutoPlay(it)
+                }
+                RowDivider()
+                ToggleRow(stringResource(R.string.set_bg_play), stringResource(R.string.set_bg_play_sub), bg) {
+                    bg = it
+                    prefs.setBackgroundPlay(it)
                 }
                 RowDivider()
                 ToggleRow(stringResource(R.string.set_hw), stringResource(R.string.set_hw_sub), hw) {

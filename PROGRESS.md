@@ -162,3 +162,18 @@
 - تسريع الأجهزة: لو اتقفل، `MediaCodecSelector` في PlayerScreen بيقدّم مفكّكات البرمجيات (يفيد لو الصورة بتبوظ). افتراضي: شغّال. بيتطبّق عند فتح المشغّل.
 - مفاتيح UserPrefs جديدة: auto_play, hw_decoding + `restoreDefaults()`. ترجمة ×9 لغات: set_sec_general/playback/guide, set_auto_play(+_sub), set_hw(+_sub), set_restore.
 - ما اتعملش قسم Appearance/Theme لأن مفيش ثيم فاتح حاليًا (مش هنحط صف وهمي).
+
+## شريط التحديث بالحجم ✅ (غير مختبر)
+- نافذة التحديث بتعرض "حجم التحديث: X MB" قبل التحميل، وأثناءه "٪ — المُحمّل / الإجمالي MB" (الحجم من GitHub API). مفاتيح: update_size, downloading_size ×9.
+- التحديث بالفروقات فقط (delta/bsdiff) لسه ما اتعملش: محتاج تعديل build.yml (توليد patch بين الـ APK السابق والجديد) + bspatch داخل التطبيق. مستني قرار المستخدم.
+
+## تحديث بالفروقات (delta) ✅ (غير مختبر) — محتاج لصق build.yml الجديد يدويًا
+- build.yml: بعد البناء ينزّل APK الإصدار المنشور حاليًا، ويطلّع `patch-<قديم>-to-<جديد>.bsdiff` بـ bsdiff4، وينشره مع الـ APK، ويكتب `sha256` في ملاحظات الإصدار. لو فشل الباتش يكمّل بالـ APK كامل.
+- التطبيق: `data/update/BsPatch.kt` (BSDIFF40 + commons-compress للـ bz2). `Updater.check` يدوّر على باتش مطابق لبناء المستخدم الحالي؛ `download` ينزّل الباتش، يطبّقه على APK المثبّت، يتحقق من SHA-256، ولو أي حاجة فشلت يرجع للتحميل الكامل. النافذة بتكتب "(التغييرات فقط)".
+- يشتغل بس لو المثبّت = البناء السابق مباشرة؛ غير كده تحميل كامل. اختبار: BsPatchTest.
+
+## About + تشغيل/تحديث في الخلفية ✅ (غير مختبر)
+- About: اسم المطوّر Mostafa Mahmoud + إيميل التواصل Sc.downloder@gmail.com (ضغطة تفتح تطبيق الإيميل). مفاتيح: about_developer, about_contact.
+- تشغيل في الخلفية: `service/PlaybackService.kt` خدمة أمامية (mediaPlayback) بإشعار فيه زر Stop؛ بتشتغل لما المشغّل يفتح وتتقفل لما يتقفل. PlayerScreen مبقاش يعمل pause عند ON_STOP لو الخيار شغّال، وفيه audio focus + WAKE_MODE_NETWORK + إيقاف عند سحب السماعات. إعداد جديد في Settings → Playback: "Background Play" (افتراضي شغّال، مفتاح `bg_play`). ملاحظة: في الخلفية بيشتغل الصوت بس (الصورة بتوقف لحد ما ترجع للتطبيق).
+- تحديث في الخلفية: `data/update/UpdateManager.kt` (حالة على مستوى التطبيق) + `service/UpdateService.kt` (dataSync) — التحميل بيكمّل حتى لو قفلت النافذة أو خرجت من التطبيق، مع إشعار بنسبة التحميل، وبعد ما يخلص إشعار "التحديث جاهز — اضغط للتثبيت". زر النافذة بقى "متابعة في الخلفية" أثناء التحميل.
+- Manifest: FOREGROUND_SERVICE(+MEDIA_PLAYBACK,+DATA_SYNC), POST_NOTIFICATIONS (بيتطلب عند فتح التطبيق على أندرويد 13+), WAKE_LOCK.

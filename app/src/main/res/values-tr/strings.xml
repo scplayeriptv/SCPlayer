@@ -150,4 +150,16 @@
     <string name="set_hw">Donanım hızlandırma</string>
     <string name="set_hw_sub">Cihazın video çözücüsünü kullan (görüntü sorunlarında kapatın)</string>
     <string name="set_restore">Varsayılanlara dön</string>
+    <string name="update_size">İndirme boyutu: %1$s</string>
+    <string name="downloading_size">İndiriliyor %1$d%% — %2$s / %3$s</string>
+    <string name="update_size_delta">İndirme boyutu: %1$s (yalnızca değişiklikler)</string>
+    <string name="notif_playing">Arka planda oynatılıyor</string>
+    <string name="notif_stop">Durdur</string>
+    <string name="notif_update_downloading">Güncelleme indiriliyor</string>
+    <string name="notif_update_ready">Güncelleme hazır — yüklemek için dokunun</string>
+    <string name="update_bg">Arka planda devam et</string>
+    <string name="set_bg_play">Arka planda oynatma</string>
+    <string name="set_bg_play_sub">Uygulama küçültüldüğünde oynatmaya devam et</string>
+    <string name="about_developer">Geliştirici</string>
+    <string name="about_contact">İletişim</string>
 </resources>
