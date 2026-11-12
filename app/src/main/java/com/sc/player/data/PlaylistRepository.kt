@@ -69,6 +69,12 @@ class PlaylistRepository(private val context: Context) {
             } catch (e: HttpStatusException) {
                 failure = e
             }
+            // get.php عادةً مبيرجّعش المسلسلات: نكمّلها من player_api.php (best effort)
+            if (channels.isNotEmpty() && isXtreamUrl(url) && channels.none { it.kind() == Kind.Series }) {
+                if (runCatching { addSeriesFromApi(url, tmp) }.getOrDefault(false)) {
+                    channels = runCatching { parseFile(tmp) }.getOrDefault(channels)
+                }
+            }
             if (channels.isEmpty()) {
                 if (isXtreamUrl(url)) {
                     // get.php مقفول أو بيرجّع 404/فاضي: نجرّب player_api.php (بيفرّق بين باسورد غلط وسيرفر مش Xtream)
@@ -133,6 +139,24 @@ class PlaylistRepository(private val context: Context) {
 
     private fun optionalArray(base: String, user: String, pass: String, action: String): JSONArray? =
         runCatching { JSONArray(apiGet(base, user, pass, action)) }.getOrNull()
+
+    /** يضيف عناصر المسلسلات لآخر ملف M3U نازل من get.php. بيرجّع true لو اتضاف حاجة. */
+    private fun addSeriesFromApi(url: String, tmp: File): Boolean {
+        val u = Uri.parse(url)
+        val user = u.getQueryParameter("username") ?: return false
+        val pass = u.getQueryParameter("password") ?: return false
+        for (base in candidateBases(url)) {
+            val series = optionalArray(base, user, pass, "get_series") ?: continue
+            if (series.length() == 0) return false
+            val cats = optionalArray(base, user, pass, "get_series_categories")
+            java.io.FileWriter(tmp, true).buffered().use {
+                it.append('\n')
+                writeSeriesEntries(it, base, user, pass, cats, series)
+            }
+            return true
+        }
+        return false
+    }
 
     /** يبني ملف M3U من player_api.php لو get.php مش شغّال. */
     private fun buildFromApi(url: String, tmp: File) {

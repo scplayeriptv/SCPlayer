@@ -198,3 +198,6 @@
 - Manifest: `supportsPictureInPicture` + configChanges. `ui/player/PipState.kt`. MainActivity: `onUserLeaveHint` → يدخل PiP تلقائي لو المشغّل مفتوح والإعداد شغّال؛ `onPictureInPictureModeChanged` يخفي الأزرار أثناء PiP. زر 🖼 في المشغّل يدخل PiP يدويًا (لو الجهاز بيدعمه، مش على أغلب التلفزيونات).
 - إعداد جديد Settings → Playback: "Picture-in-Picture" (افتراضي شغّال). مفاتيح: set_pip, set_pip_sub, player_pip ×9.
 - ملاحظة: في PiP لو المستخدم قفل النافذة والتشغيل في الخلفية شغّال، الصوت بيكمّل.
+
+## إصلاح: المسلسلات = 0 ✅ (غير مختبر)
+- السبب: get.php عند أغلب سيرفرات Xtream بيرجّع القنوات والأفلام بس، فالمسلسلات (اللي كانت بتتضاف من player_api.php في حالة فشل get.php بس) ما كانتش بتظهر. دلوقتي لو القائمة Xtream ومفيش ولا مسلسل بعد get.php، بنجيب get_series/get_series_categories من player_api.php ونضيفهم (`addSeriesFromApi`, `writeSeriesEntries`). لازم Reload بعد التحديث.

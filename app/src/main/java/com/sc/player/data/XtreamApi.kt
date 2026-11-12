@@ -77,21 +77,34 @@ internal fun xtreamToM3u(
     write(liveStreams, categoryMap(liveCategories), "live", null)
     write(vodStreams, categoryMap(vodCategories), "movie", "mp4")
 
-    if (series != null) {
-        val cats = categoryMap(seriesCategories)
-        for (i in 0 until series.length()) {
-            val o = series.optJSONObject(i) ?: continue
-            val id = o.optString("series_id")
-            val name = clean(o.optString("name"))
-            if (id.isEmpty() || name.isEmpty()) continue
-            val group = clean(cats[o.optString("category_id")] ?: "")
-            val cover = clean(o.optString("cover").takeIf { it != "null" } ?: "")
-            out.append("#EXTINF:-1 tvg-logo=\"").append(cover)
-                .append("\" group-title=\"").append(group)
-                .append("\",").append(name).append('\n')
-                .append(base).append("/seriesinfo/").append(u).append('/').append(p)
-                .append('/').append(id).append('\n')
-        }
+    writeSeriesEntries(out, base, user, pass, seriesCategories, series)
+}
+
+/** عنصر واحد لكل مسلسل برابط .../seriesinfo/user/pass/<id> (الحلقات بتتجاب وقت الفتح). */
+internal fun writeSeriesEntries(
+    out: Appendable,
+    base: String,
+    user: String,
+    pass: String,
+    seriesCategories: JSONArray?,
+    series: JSONArray?,
+) {
+    if (series == null) return
+    val u = Uri.encode(user)
+    val p = Uri.encode(pass)
+    val cats = categoryMap(seriesCategories)
+    for (i in 0 until series.length()) {
+        val o = series.optJSONObject(i) ?: continue
+        val id = o.optString("series_id")
+        val name = clean(o.optString("name"))
+        if (id.isEmpty() || name.isEmpty()) continue
+        val group = clean(cats[o.optString("category_id")] ?: "")
+        val cover = clean(o.optString("cover").takeIf { it != "null" } ?: "")
+        out.append("#EXTINF:-1 tvg-logo=\"").append(cover)
+            .append("\" group-title=\"").append(group)
+            .append("\",").append(name).append('\n')
+            .append(base).append("/seriesinfo/").append(u).append('/').append(p)
+            .append('/').append(id).append('\n')
     }
 }
 
