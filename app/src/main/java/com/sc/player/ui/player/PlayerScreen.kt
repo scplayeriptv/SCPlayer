@@ -25,6 +25,9 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -40,6 +43,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -147,7 +153,57 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             .setMediaSourceFactory(DefaultMediaSourceFactory(ctx).setDataSourceFactory(http))
             .build()
     }
-    DisposableEffect(Unit) { onDispose { player.release() } }
+    val prefs = remember { com.sc.player.data.UserPrefs(ctx) }
+    var aspect by remember { mutableIntStateOf(prefs.aspectMode()) }
+    var showOptions by remember { mutableStateOf(false) }
+    var tracks by remember { mutableStateOf(androidx.media3.common.Tracks.EMPTY) }
+    val subtitleView = remember {
+        androidx.media3.ui.SubtitleView(ctx).apply {
+            setUserDefaultStyle()
+            setUserDefaultTextSize()
+        }
+    }
+
+    val inPip by PipState.inPip
+    DisposableEffect(Unit) {
+        PipState.playerActive = true
+        PipState.autoEnter = prefs.pip()
+        onDispose {
+            PipState.playerActive = false
+            PipState.inPip.value = false
+        }
+    }
+    LaunchedEffect(ratio) { PipState.ratio = ratio }
+
+    val positions = remember { com.sc.player.data.PositionStore(ctx) }
+    var position by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+    var isVod by remember { mutableStateOf(false) }
+    var dragging by remember { mutableStateOf(false) }
+
+    // حفظ موضع المشاهدة للأفلام/الحلقات (مش للبث المباشر)
+    fun saveNow() {
+        val id = player.currentMediaItem?.mediaId?.takeIf { it.isNotEmpty() } ?: return
+        val d = player.duration
+        if (player.isCurrentMediaItemLive || d == androidx.media3.common.C.TIME_UNSET || d < 60_000L) return
+        positions.save(id, player.currentPosition, d)
+    }
+    DisposableEffect(Unit) { onDispose { saveNow(); player.release() } }
+    LaunchedEffect(player) {
+        while (true) {
+            delay(500)
+            val d = player.duration
+            duration = if (d == androidx.media3.common.C.TIME_UNSET) 0L else d
+            isVod = !player.isCurrentMediaItemLive && duration >= 60_000L
+            if (!dragging) position = player.currentPosition
+        }
+    }
+    LaunchedEffect(player) {
+        while (true) {
+            delay(10_000)
+            if (player.isPlaying) saveNow()
+        }
+    }
 
     // تشغيل في الخلفية: خدمة أمامية بإشعار (قابل للإيقاف من الإعدادات)
     val bgPlay = remember { com.sc.player.data.UserPrefs(ctx).backgroundPlay() }
@@ -169,6 +225,14 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                 if (state == Player.STATE_READY) error = null
             }
 
+            override fun onTracksChanged(t: androidx.media3.common.Tracks) {
+                tracks = t
+            }
+
+            override fun onCues(cueGroup: androidx.media3.common.text.CueGroup) {
+                subtitleView.setCues(cueGroup.cues)
+            }
+
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 playing = isPlaying
             }
@@ -186,7 +250,12 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                 if (unknownFormat && !triedHls && uri != null) {
                     triedHls = true
                     player.setMediaItem(
-                        MediaItem.Builder().setUri(uri).setMimeType(MimeTypes.APPLICATION_M3U8).build(),
+                        MediaItem.Builder()
+                            .setUri(uri)
+                            .setMediaId(player.currentMediaItem?.mediaId ?: uri.toString())
+                            .setMimeType(MimeTypes.APPLICATION_M3U8)
+                            .build(),
+                        player.currentPosition,
                     )
                     player.prepare()
                     player.playWhenReady = true
@@ -200,15 +269,24 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     }
 
     LaunchedEffect(index) {
+        saveNow() // يحفظ موضع العنصر السابق قبل ما نبدّل
         triedHls = false
         error = null
         buffering = true
-        player.setMediaItem(MediaItem.fromUri(channel.url))
+        position = 0L
+        duration = 0L
+        isVod = false
+        val item = MediaItem.Builder().setUri(channel.url).setMediaId(channel.url).build()
+        val resume = positions.resumeAt(channel.url)
+        if (resume != null) player.setMediaItem(item, resume) else player.setMediaItem(item)
         player.prepare()
         player.playWhenReady = true
     }
 
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { if (!bgPlay) player.pause() }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        saveNow()
+        if (!bgPlay) player.pause()
+    }
 
     // ملء الشاشة + بالعرض + الشاشة تفضل منوّرة
     DisposableEffect(Unit) {
@@ -238,6 +316,12 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     fun poke() { controls = true; touch++ }
     fun next() { index = (index + 1) % queue.size; poke() }
     fun prev() { index = (index - 1 + queue.size) % queue.size; poke() }
+    fun seekBy(ms: Long) {
+        if (!isVod) return
+        player.seekTo((player.currentPosition + ms).coerceIn(0L, duration))
+        position = player.currentPosition
+        poke()
+    }
     fun toggle() {
         if (player.isPlaying) player.pause() else player.play()
         poke()
@@ -260,7 +344,10 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                         if (controls) toggle() else poke()
                         true
                     }
+                    Key.Menu -> { showOptions = true; true }
                     Key.MediaPlayPause -> { toggle(); true }
+                    Key.DirectionRight, Key.MediaFastForward -> if (isVod) { seekBy(10_000); true } else false
+                    Key.DirectionLeft, Key.MediaRewind -> if (isVod) { seekBy(-10_000); true } else false
                     Key.DirectionUp, Key.PageUp -> { next(); true }
                     Key.DirectionDown, Key.PageDown -> { prev(); true }
                     else -> false
@@ -274,10 +361,22 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             },
         contentAlignment = Alignment.Center,
     ) {
-        AndroidView(
-            factory = { c -> SurfaceView(c).also { player.setVideoSurfaceView(it) } },
-            modifier = Modifier.aspectRatio(ratio),
-        )
+        BoxWithConstraints(Modifier.fillMaxSize().clipToBounds(), contentAlignment = Alignment.Center) {
+            val mw = maxWidth
+            val mh = maxHeight
+            val boxRatio = mw / mh
+            // 0 = Fit (الصورة كاملة)، 1 = Stretch (تملأ الشاشة)، 2 = Zoom (تقص الأطراف)
+            val (w, h) = when (aspect) {
+                1 -> mw to mh
+                2 -> if (boxRatio > ratio) mw to mw / ratio else mh * ratio to mh
+                else -> if (boxRatio > ratio) mh * ratio to mh else mw to mw / ratio
+            }
+            AndroidView(
+                factory = { c -> SurfaceView(c).also { player.setVideoSurfaceView(it) } },
+                modifier = Modifier.requiredSize(w, h),
+            )
+            AndroidView(factory = { subtitleView }, modifier = Modifier.fillMaxSize())
+        }
 
         if (buffering && error == null) {
             CircularProgressIndicator(color = Cyan)
@@ -301,7 +400,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             }
         }
 
-        AnimatedVisibility(visible = controls, enter = fadeIn(), exit = fadeOut()) {
+        AnimatedVisibility(visible = controls && !inPip, enter = fadeIn(), exit = fadeOut()) {
             Box(Modifier.fillMaxSize()) {
                 Row(
                     Modifier
@@ -333,27 +432,73 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                         }
                     }
                     Text("${index + 1} / ${queue.size}", color = TextMuted, fontSize = 13.sp)
+                    if (PipState.supported(ctx)) {
+                        RoundButton("🖼", stringResource(R.string.player_pip)) { ctx.findActivity()?.let { PipState.enter(it) } }
+                    }
+                    RoundButton("⚙", stringResource(R.string.player_options)) { showOptions = true; poke() }
                 }
-                Row(
+                Column(
                     Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xCC000000))))
-                        .padding(horizontal = 20.dp, vertical = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    RoundButton("⏮", stringResource(R.string.previous)) { prev() }
-                    RoundButton(
-                        if (playing) "⏸" else "▶",
-                        if (playing) stringResource(R.string.pause) else stringResource(R.string.resume),
-                        big = true,
-                    ) { toggle() }
-                    RoundButton("⏭", stringResource(R.string.next)) { next() }
+                    if (isVod) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(clock(position), color = TextMuted, fontSize = 12.sp)
+                            Slider(
+                                value = position.toFloat().coerceIn(0f, duration.toFloat()),
+                                onValueChange = { dragging = true; position = it.toLong(); poke() },
+                                onValueChangeFinished = { player.seekTo(position); dragging = false },
+                                valueRange = 0f..duration.toFloat(),
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Cyan,
+                                    activeTrackColor = Cyan,
+                                    inactiveTrackColor = GlassBorder,
+                                ),
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(clock(duration), color = TextMuted, fontSize = 12.sp)
+                        }
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RoundButton("⏮", stringResource(R.string.previous)) { prev() }
+                        if (isVod) RoundButton("⏪", stringResource(R.string.player_back10)) { seekBy(-10_000) }
+                        RoundButton(
+                            if (playing) "⏸" else "▶",
+                            if (playing) stringResource(R.string.pause) else stringResource(R.string.resume),
+                            big = true,
+                        ) { toggle() }
+                        if (isVod) RoundButton("⏩", stringResource(R.string.player_fwd10)) { seekBy(10_000) }
+                        RoundButton("⏭", stringResource(R.string.next)) { next() }
+                    }
                 }
             }
         }
     }
+
+    if (showOptions && !inPip) {
+        PlayerOptionsDialog(
+            player = player,
+            tracks = tracks,
+            aspect = aspect,
+            onAspect = { aspect = it; prefs.setAspectMode(it) },
+            onDismiss = { showOptions = false },
+        )
+    }
+}
+
+private fun clock(ms: Long): String {
+    val s = (ms / 1000).coerceAtLeast(0)
+    val h = s / 3600
+    val m = (s % 3600) / 60
+    val sec = s % 60
+    return if (h > 0) "%d:%02d:%02d".format(h, m, sec) else "%02d:%02d".format(m, sec)
 }
 
 @Composable

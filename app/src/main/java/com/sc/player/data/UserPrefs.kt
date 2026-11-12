@@ -73,6 +73,19 @@ class UserPrefs(context: Context) {
         sp.edit().putBoolean("hw_decoding", v).apply()
     }
 
+    /** 0 = Fit، 1 = Stretch، 2 = Zoom. */
+    fun aspectMode(): Int = sp.getInt("aspect", 0)
+
+    fun setAspectMode(v: Int) {
+        sp.edit().putInt("aspect", v).apply()
+    }
+
+    fun pip(): Boolean = sp.getBoolean("pip", true)
+
+    fun setPip(v: Boolean) {
+        sp.edit().putBoolean("pip", v).apply()
+    }
+
     fun backgroundPlay(): Boolean = sp.getBoolean("bg_play", true)
 
     fun setBackgroundPlay(v: Boolean) {
@@ -81,7 +94,7 @@ class UserPrefs(context: Context) {
 
     /** يرجّع إعدادات التشغيل للوضع الافتراضي. */
     fun restoreDefaults() {
-        sp.edit().remove("auto_play").remove("hw_decoding").remove("bg_play").apply()
+        sp.edit().remove("auto_play").remove("hw_decoding").remove("bg_play").remove("pip").remove("aspect").apply()
     }
 
     private fun hash(pin: String): String =

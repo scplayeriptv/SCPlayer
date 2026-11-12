@@ -36,7 +36,7 @@ private fun categoryMap(arr: JSONArray?): Map<String, String> {
 
 /**
  * يحوّل ردود player_api.php (قنوات مباشرة + أفلام) لنص M3U عادي نقدر نحلّله بنفس الـ parser.
- * المسلسلات مش داخلة: كل حلقة محتاجة طلب منفصل (get_series_info).
+ * المسلسلات بتدخل كعنصر واحد لكل مسلسل برابط .../seriesinfo/user/pass/<id>؛ الحلقات بتتجاب وقت الفتح (get_series_info).
  */
 internal fun xtreamToM3u(
     out: Appendable,
@@ -47,6 +47,8 @@ internal fun xtreamToM3u(
     liveStreams: JSONArray?,
     vodCategories: JSONArray?,
     vodStreams: JSONArray?,
+    seriesCategories: JSONArray? = null,
+    series: JSONArray? = null,
 ) {
     val u = Uri.encode(user)
     val p = Uri.encode(pass)
@@ -74,6 +76,23 @@ internal fun xtreamToM3u(
 
     write(liveStreams, categoryMap(liveCategories), "live", null)
     write(vodStreams, categoryMap(vodCategories), "movie", "mp4")
+
+    if (series != null) {
+        val cats = categoryMap(seriesCategories)
+        for (i in 0 until series.length()) {
+            val o = series.optJSONObject(i) ?: continue
+            val id = o.optString("series_id")
+            val name = clean(o.optString("name"))
+            if (id.isEmpty() || name.isEmpty()) continue
+            val group = clean(cats[o.optString("category_id")] ?: "")
+            val cover = clean(o.optString("cover").takeIf { it != "null" } ?: "")
+            out.append("#EXTINF:-1 tvg-logo=\"").append(cover)
+                .append("\" group-title=\"").append(group)
+                .append("\",").append(name).append('\n')
+                .append(base).append("/seriesinfo/").append(u).append('/').append(p)
+                .append('/').append(id).append('\n')
+        }
+    }
 }
 
 /** هل رد player_api.php معناه دخول ناجح؟ بيرمي InvalidCredentialsException لو لأ، أو HttpStatusException لو الرد مش لسيرفر Xtream. */

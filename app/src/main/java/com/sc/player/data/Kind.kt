@@ -22,7 +22,7 @@ fun Channel.kind(): Kind {
     val u = url.lowercase()
     return when {
         "/movie/" in u -> Kind.Movies
-        "/series/" in u -> Kind.Series
+        "/series/" in u || "/seriesinfo/" in u -> Kind.Series
         radioWords.containsMatchIn(group) -> Kind.Radio
         movieWords.containsMatchIn(group) -> Kind.Movies
         seriesWords.containsMatchIn(group) -> Kind.Series

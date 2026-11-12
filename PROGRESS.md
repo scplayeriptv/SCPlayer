@@ -177,3 +177,24 @@
 - تشغيل في الخلفية: `service/PlaybackService.kt` خدمة أمامية (mediaPlayback) بإشعار فيه زر Stop؛ بتشتغل لما المشغّل يفتح وتتقفل لما يتقفل. PlayerScreen مبقاش يعمل pause عند ON_STOP لو الخيار شغّال، وفيه audio focus + WAKE_MODE_NETWORK + إيقاف عند سحب السماعات. إعداد جديد في Settings → Playback: "Background Play" (افتراضي شغّال، مفتاح `bg_play`). ملاحظة: في الخلفية بيشتغل الصوت بس (الصورة بتوقف لحد ما ترجع للتطبيق).
 - تحديث في الخلفية: `data/update/UpdateManager.kt` (حالة على مستوى التطبيق) + `service/UpdateService.kt` (dataSync) — التحميل بيكمّل حتى لو قفلت النافذة أو خرجت من التطبيق، مع إشعار بنسبة التحميل، وبعد ما يخلص إشعار "التحديث جاهز — اضغط للتثبيت". زر النافذة بقى "متابعة في الخلفية" أثناء التحميل.
 - Manifest: FOREGROUND_SERVICE(+MEDIA_PLAYBACK,+DATA_SYNC), POST_NOTIFICATIONS (بيتطلب عند فتح التطبيق على أندرويد 13+), WAKE_LOCK.
+
+## مسلسلات Xtream + بحث شامل + معلومات الحساب ✅ (غير مختبر)
+- المسلسلات: لما get.php يفشل ونبني القائمة من player_api.php، بنضيف `get_series_categories` + `get_series` كعناصر برابط `.../seriesinfo/user/pass/<id>` (`isSeriesEntry`, `Kind.kt` بيصنّفها Series). الضغط على مسلسل بيفتح `SeriesScreen` (مواسم + حلقات من `get_series_info` عن طريق `data/XtreamClient.kt`)، والحلقة بتتشغّل بقائمة باقي حلقات الموسم (روابط `.../series/user/pass/<id>.<ext>`). لازم المستخدم يعمل Reload للقائمة عشان المسلسلات تظهر. القوائم اللي get.php شغّال فيها أصلًا فيها الحلقات في الـ M3U زي ما كانت.
+- بحث شامل: Dest.Search (شريط جانبي + مربع في الرئيسية) بيدوّر في كل القنوات والأفلام والمسلسلات والراديو (حرفين على الأقل، لحد 300 نتيجة). البحث جوّه كل قسم كان موجود من قبل.
+- معلومات الحساب: قسم Account في Settings (user_info من player_api.php): الحالة، تاريخ الانتهاء + الأيام المتبقية، الاتصالات الحالية/الأقصى، تجريبي/كامل. لقوائم Xtream بس.
+- ترجمة ×9 (19 مفتاح جديد: acc_*, series_*, nav_search, search_prompt, set_sec_account).
+- حدود: لا اختبار على سيرفر حقيقي؛ parseSeriesInfo بيفترض الشكل القياسي لـ get_series_info (episodes كـ object مفاتيحه أرقام المواسم أو array). مفيش JVM test لأن org.json/Uri مش متاحين في الـ JVM.
+
+## الجزء A: استكمال المشاهدة + شريط تقدّم للأفلام ✅ (غير مختبر)
+- `data/PositionStore.kt`: يحفظ موضع كل فيلم/حلقة (مفتاحه الرابط، آخر 150)، كل 10 ثواني أثناء التشغيل وعند تغيير العنصر/الإيقاف/الخروج. بيكمّل من الموضع لو أكبر من 10 ثواني، وبيمسحه لو فاضل أقل من 30 ثانية. للبث المباشر مفيش حفظ.
+- PlayerScreen: MediaItem بـ mediaId = الرابط؛ شريط تقدّم (Slider) + الوقت + أزرار ⏪/⏩ 10 ثواني للأفلام والحلقات فقط (isVod: مش live والمدة ≥ دقيقة). ريموت التلفزيون: يمين/يسار = ±10 ثواني للـ VOD. زر "Reset favorites" بيمسح المواضع المحفوظة كمان. مفاتيح: player_back10, player_fwd10 ×9.
+
+## الجزء B: صوت/ترجمة/نسبة الصورة ✅ (غير مختبر)
+- زر ⚙ في شريط المشغّل (أو زر Menu في الريموت) يفتح `PlayerOptionsDialog`: اختيار مسار الصوت (لو أكتر من مسار)، الترجمة (Off + المسارات المدمجة)، ونسبة الصورة Fit / Stretch / Zoom (محفوظة في UserPrefs `aspect`).
+- إضافة dependency `media3-ui:1.4.1` عشان `SubtitleView` يعرض الترجمة فوق الفيديو. حجم السطح بيتحسب بـ BoxWithConstraints + requiredSize.
+- مفاتيح ×9: player_options/audio/subtitles/off/track, player_aspect, aspect_fit/stretch/zoom.
+
+## الجزء C: صورة داخل صورة (PiP) ✅ (غير مختبر)
+- Manifest: `supportsPictureInPicture` + configChanges. `ui/player/PipState.kt`. MainActivity: `onUserLeaveHint` → يدخل PiP تلقائي لو المشغّل مفتوح والإعداد شغّال؛ `onPictureInPictureModeChanged` يخفي الأزرار أثناء PiP. زر 🖼 في المشغّل يدخل PiP يدويًا (لو الجهاز بيدعمه، مش على أغلب التلفزيونات).
+- إعداد جديد Settings → Playback: "Picture-in-Picture" (افتراضي شغّال). مفاتيح: set_pip, set_pip_sub, player_pip ×9.
+- ملاحظة: في PiP لو المستخدم قفل النافذة والتشغيل في الخلفية شغّال، الصوت بيكمّل.

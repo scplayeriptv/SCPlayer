@@ -147,7 +147,11 @@ class PlaylistRepository(private val context: Context) {
                 val live = optionalArray(base, user, pass, "get_live_streams")
                 val vodCats = optionalArray(base, user, pass, "get_vod_categories")
                 val vod = optionalArray(base, user, pass, "get_vod_streams")
-                tmp.bufferedWriter().use { w -> xtreamToM3u(w, base, user, pass, liveCats, live, vodCats, vod) }
+                val seriesCats = optionalArray(base, user, pass, "get_series_categories")
+                val series = optionalArray(base, user, pass, "get_series")
+                tmp.bufferedWriter().use { w ->
+                    xtreamToM3u(w, base, user, pass, liveCats, live, vodCats, vod, seriesCats, series)
+                }
                 return
             } catch (e: InvalidCredentialsException) {
                 throw e

@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sc.player.data.Channel
+import com.sc.player.data.isSeriesEntry
 import com.sc.player.data.Kind
 import com.sc.player.data.PlaylistRepository
 import com.sc.player.data.ParentalSession
@@ -70,6 +71,7 @@ enum class Dest(@StringRes val labelRes: Int, val glyph: String) {
     Movies(R.string.nav_movies, "🎬"),
     Series(R.string.nav_series, "🎞"),
     Radio(R.string.nav_radio, "📻"),
+    Search(R.string.nav_search, "🔍"),
     CatchUp(R.string.nav_catch_up, "⏪"),
     Playlist(R.string.nav_playlist, "📋"),
     Settings(R.string.nav_settings, "⚙️"),
@@ -174,12 +176,20 @@ private fun Shell(
     val byUrl = remember(visible) { visible.associateBy { it.url } }
     val recents = remember(byUrl, recentUrls) { recentUrls.mapNotNull { byUrl[it] } }
 
+    var openSeries by remember { mutableStateOf<Channel?>(null) }
+
     fun play(list: List<Channel>, i: Int) {
+        // عنصر مسلسل (مش حلقة) → نفتح شاشة المواسم بدل التشغيل
+        if (isSeriesEntry(list[i].url)) {
+            openSeries = list[i]
+            return
+        }
         prefs.addRecent(list[i].url)
         onPlay(list, i)
     }
 
     fun go(d: Dest) {
+        openSeries = null
         if (d == Dest.Playlist) onPlaylists() else destName = d.name
     }
 
@@ -195,8 +205,13 @@ private fun Shell(
     }
 
     BackHandler(enabled = dest != Dest.Home) { destName = Dest.Home.name }
+    BackHandler(enabled = openSeries != null) { openSeries = null }
 
-    val content: @Composable () -> Unit = {
+    val content: @Composable () -> Unit = content@{
+        openSeries?.let { entry ->
+            SeriesScreen(entry, onBack = { openSeries = null }, onPlay = { l, i -> play(l, i) })
+            return@content
+        }
         when (dest) {
             Dest.Home -> Launcher(
                 playlistName = playlistName,
@@ -232,6 +247,13 @@ private fun Shell(
                     onGuide = onGuide,
                 )
             }
+            Dest.Search -> SearchScreen(
+                items = visible,
+                favs = favs,
+                epgTick = epgTick,
+                onToggleFav = { favs = prefs.toggleFavorite(it) },
+                onPlay = { list, i -> play(list, i) },
+            )
             Dest.CatchUp -> ComingSoonScreen(stringResource(R.string.nav_catch_up), stringResource(R.string.catch_up_note))
             Dest.Playlist -> Unit
             Dest.Settings -> SettingsScreen(
@@ -270,7 +292,7 @@ private fun Shell(
 }
 
 private val sidebarItems = listOf(
-    Dest.Home, Dest.LiveTv, Dest.Movies, Dest.Series, Dest.Radio,
+    Dest.Home, Dest.LiveTv, Dest.Movies, Dest.Series, Dest.Radio, Dest.Search,
     Dest.CatchUp, Dest.Playlist, Dest.Settings, Dest.About,
 )
 

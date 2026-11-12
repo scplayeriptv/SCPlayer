@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
@@ -67,6 +68,9 @@ import com.sc.player.data.epg.EpgRepository
 import com.sc.player.data.PlaylistRepository
 import com.sc.player.data.ParentalSession
 import com.sc.player.data.UserPrefs
+import com.sc.player.data.AccountInfo
+import com.sc.player.data.NotXtreamPanelException
+import com.sc.player.data.XtreamClient
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
@@ -133,6 +137,15 @@ fun SettingsScreen(
     var autoPlay by remember { mutableStateOf(prefs.autoPlay()) }
     var hw by remember { mutableStateOf(prefs.hardwareDecoding()) }
     var bg by remember { mutableStateOf(prefs.backgroundPlay()) }
+    var pip by remember { mutableStateOf(prefs.pip()) }
+    // بيانات الحساب: null = بيتحمّل، Result = جاهز
+    var account by remember { mutableStateOf<Result<AccountInfo>?>(null) }
+    LaunchedEffect(section == Section.Account, playlistId) {
+        if (section == Section.Account && account == null) {
+            val url = PlaylistRepository(ctx.applicationContext).playlists().firstOrNull { it.id == playlistId }?.url.orEmpty()
+            account = XtreamClient(ctx.applicationContext).accountInfo(url)
+        }
+    }
     val wide = LocalConfiguration.current.screenWidthDp >= 720
 
     val rows: @Composable () -> Unit = {
@@ -187,6 +200,7 @@ fun SettingsScreen(
                     null,
                     value = if (resetDone) stringResource(R.string.done) else stringResource(R.string.set_reset_sub),
                 ) {
+                    com.sc.player.data.PositionStore(ctx).clear()
                     onResetUserData()
                     resetDone = true
                 }
@@ -200,6 +214,44 @@ fun SettingsScreen(
                     autoPlay = prefs.autoPlay()
                     hw = prefs.hardwareDecoding()
                     bg = prefs.backgroundPlay()
+                    pip = prefs.pip()
+                }
+            }
+            Section.Account -> {
+                val acc = account
+                when {
+                    acc == null -> InfoRow(stringResource(R.string.set_sec_account), stringResource(R.string.acc_loading))
+                    acc?.isFailure == true -> InfoRow(
+                        stringResource(R.string.set_sec_account),
+                        if (acc?.exceptionOrNull() is NotXtreamPanelException) stringResource(R.string.acc_not_xtream)
+                        else stringResource(R.string.acc_failed),
+                    )
+                    else -> {
+                        val a = acc!!.getOrThrow()
+                        InfoRow(stringResource(R.string.acc_status), a.status.ifBlank { "—" })
+                        RowDivider()
+                        val exp = a.expires
+                        InfoRow(
+                            stringResource(R.string.acc_expires),
+                            if (exp == null) stringResource(R.string.acc_unlimited) else {
+                                val ms = exp * 1000
+                                val date = java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM).format(java.util.Date(ms))
+                                val days = ((ms - System.currentTimeMillis()) / 86_400_000L).toInt()
+                                if (days < 0) "$date — " + stringResource(R.string.acc_expired)
+                                else "$date — " + stringResource(R.string.acc_days_left, days)
+                            },
+                        )
+                        RowDivider()
+                        InfoRow(
+                            stringResource(R.string.acc_connections),
+                            "${a.activeConnections ?: "—"} / ${a.maxConnections ?: "—"}",
+                        )
+                        RowDivider()
+                        InfoRow(
+                            stringResource(R.string.acc_type),
+                            stringResource(if (a.trial) R.string.acc_trial else R.string.acc_full),
+                        )
+                    }
                 }
             }
             Section.Parental -> SettingRow(
@@ -224,6 +276,11 @@ fun SettingsScreen(
                 ToggleRow(stringResource(R.string.set_bg_play), stringResource(R.string.set_bg_play_sub), bg) {
                     bg = it
                     prefs.setBackgroundPlay(it)
+                }
+                RowDivider()
+                ToggleRow(stringResource(R.string.set_pip), stringResource(R.string.set_pip_sub), pip) {
+                    pip = it
+                    prefs.setPip(it)
                 }
                 RowDivider()
                 ToggleRow(stringResource(R.string.set_hw), stringResource(R.string.set_hw_sub), hw) {
@@ -386,6 +443,7 @@ fun SettingsScreen(
 
 private enum class Section(val titleRes: Int, val icon: ImageVector) {
     General(R.string.set_sec_general, Icons.Filled.Settings),
+    Account(R.string.set_sec_account, Icons.Filled.AccountCircle),
     Parental(R.string.parental_title, Icons.Filled.Lock),
     Playback(R.string.set_sec_playback, Icons.Filled.PlayArrow),
     Guide(R.string.set_sec_guide, Icons.Filled.DateRange),
@@ -435,6 +493,18 @@ private fun SectionChip(text: String, selected: Boolean, onClick: () -> Unit) {
             .clickable(role = Role.Tab, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 9.dp),
     )
+}
+
+@Composable
+private fun InfoRow(title: String, value: String) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text(title, color = TextMain, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Text(value, color = TextMuted, fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.End, modifier = Modifier.weight(1.4f))
+    }
 }
 
 @Composable

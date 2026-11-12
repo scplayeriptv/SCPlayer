@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Icon
@@ -108,6 +109,7 @@ internal fun Launcher(
     val series = stringResource(R.string.nav_series)
     val radio = stringResource(R.string.nav_radio)
     val guide = stringResource(R.string.guide)
+    val search = stringResource(R.string.nav_search)
     val playlists = stringResource(R.string.change_playlist)
     val reload = if (reloading) stringResource(R.string.reloading) else stringResource(R.string.tile_reload)
     val settings = stringResource(R.string.nav_settings)
@@ -143,6 +145,7 @@ internal fun Launcher(
                 }
                 Column(Modifier.weight(1.7f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     val m = Modifier.weight(1f).fillMaxWidth()
+                    Tile3D(search, Icons.Filled.Search, Blue, TileStyle.Action, m) { onOpen(Dest.Search) }
                     Tile3D(playlists, Icons.AutoMirrored.Filled.PlaylistPlay, Pink, TileStyle.Action, m) { onOpen(Dest.Playlist) }
                     Tile3D(reload, Icons.Filled.Refresh, Slate, TileStyle.Action, m) { if (!reloading) onReload() }
                     Tile3D(settings, Icons.Filled.Settings, Slate, TileStyle.Action, m) { onOpen(Dest.Settings) }
@@ -175,6 +178,7 @@ internal fun Launcher(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Tile3D(radio, Icons.Filled.Radio, Green, TileStyle.Card, Modifier.weight(1f).height(120.dp), badge = counts[Kind.Radio]?.toString()) { onOpen(Dest.Radio) }
                 Tile3D(guide, Icons.Filled.CalendarMonth, Teal, TileStyle.Card, Modifier.weight(1f).height(120.dp)) { onGuide() }
+                Tile3D(search, Icons.Filled.Search, Blue, TileStyle.Card, Modifier.weight(1f).height(120.dp)) { onOpen(Dest.Search) }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 val m = Modifier.weight(1f).height(88.dp)
