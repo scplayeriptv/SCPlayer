@@ -37,8 +37,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          NEW=${{ github.run_number }}
           cp app/build/outputs/apk/debug/app-debug.apk SCPlayer.apk
+          SHA=$(sha256sum SCPlayer.apk | cut -d' ' -f1)
+          ASSETS="SCPlayer.apk"
+          # باتش فروقات بين الإصدار المنشور حاليًا والجديد (لو فشل نكمّل بالـ APK الكامل بس)
+          OLD=$(gh release view latest --json name -q .name 2>/dev/null | grep -oE '[0-9]+$' || true)
+          if [ -n "$OLD" ] && gh release download latest -p SCPlayer.apk -O old.apk; then
+            PATCH="patch-${OLD}-to-${NEW}.bsdiff"
+            if python3 -m venv pv && pv/bin/pip install bsdiff4 \
+               && pv/bin/python -c "import bsdiff4; bsdiff4.file_diff('old.apk','SCPlayer.apk','$PATCH')"; then
+              ASSETS="$ASSETS $PATCH"
+            fi
+          fi
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest SCPlayer.apk --target main --latest \
-            --title "SC Player build ${{ github.run_number }}" \
-            --notes "build ${{ github.run_number }}"
+          gh release create latest $ASSETS --target main --latest \
+            --title "SC Player build $NEW" \
+            --notes "$(printf 'build %s\nsha256 %s' "$NEW" "$SHA")"
