@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import com.sc.player.R
 import com.sc.player.data.Channel
 import com.sc.player.data.Kind
+import com.sc.player.data.Profile
 import com.sc.player.ui.theme.BrandBrush
 import com.sc.player.ui.theme.SCLogo
 import com.sc.player.ui.theme.TextMuted
@@ -103,6 +104,8 @@ internal fun Launcher(
     onExit: () -> Unit,
     onPlayRecent: (Int) -> Unit,
     onToggleFav: (String) -> Unit,
+    profile: Profile,
+    onProfile: () -> Unit,
 ) {
     val live = stringResource(R.string.nav_live_tv)
     val movies = stringResource(R.string.nav_movies)
@@ -120,6 +123,7 @@ internal fun Launcher(
         Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 14.dp)) {
             Box(Modifier.fillMaxWidth().height(56.dp), contentAlignment = Alignment.Center) {
                 Brand()
+                ProfileChip(profile, onProfile, Modifier.align(Alignment.CenterStart).widthIn(max = 200.dp))
                 Text(
                     status,
                     color = TextMuted,
@@ -167,6 +171,7 @@ internal fun Launcher(
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Brand()
                 Text(status, color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                ProfileChip(profile, onProfile, Modifier.padding(top = 4.dp))
             }
             Tile3D(live, Icons.Filled.LiveTv, Purple, TileStyle.Hero, Modifier.fillMaxWidth().height(170.dp), badge = counts[Kind.Live]?.toString()) {
                 onOpen(Dest.LiveTv)

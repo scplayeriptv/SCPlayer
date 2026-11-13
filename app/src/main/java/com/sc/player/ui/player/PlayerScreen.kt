@@ -125,6 +125,9 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     var touch by remember { mutableIntStateOf(0) }
     var triedHls by remember { mutableStateOf(false) }
     var ratio by remember { mutableFloatStateOf(16f / 9f) }
+    var showList by remember { mutableStateOf(false) }
+    var numberBuffer by remember { mutableStateOf("") }
+    var lastIndex by remember { mutableIntStateOf(-1) }
 
     val player = remember {
         val http = DefaultHttpDataSource.Factory()
@@ -314,8 +317,29 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     }
 
     fun poke() { controls = true; touch++ }
-    fun next() { index = (index + 1) % queue.size; poke() }
-    fun prev() { index = (index - 1 + queue.size) % queue.size; poke() }
+    fun switchTo(i: Int) {
+        if (i != index) {
+            lastIndex = index
+            index = i
+        }
+        poke()
+    }
+    fun next() = switchTo((index + 1) % queue.size)
+    fun prev() = switchTo((index - 1 + queue.size) % queue.size)
+    fun recall() { if (lastIndex in queue.indices) switchTo(lastIndex) }
+    fun commitNumber() {
+        val n = numberBuffer.toIntOrNull()
+        numberBuffer = ""
+        if (n != null && n in 1..queue.size) switchTo(n - 1)
+    }
+    // الرقم بيتنفّذ تلقائي بعد ثانية ونص من آخر رقم
+    LaunchedEffect(numberBuffer) {
+        if (numberBuffer.isNotEmpty()) {
+            delay(1500)
+            commitNumber()
+        }
+    }
+    androidx.activity.compose.BackHandler(enabled = showList) { showList = false }
     fun seekBy(ms: Long) {
         if (!isVod) return
         player.seekTo((player.currentPosition + ms).coerceIn(0L, duration))
@@ -328,7 +352,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     }
 
     val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focus.requestFocus() }
+    LaunchedEffect(showList) { if (!showList) runCatching { focus.requestFocus() } }
 
     Box(
         Modifier
@@ -337,26 +361,41 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             .focusRequester(focus)
             .focusable()
             .onKeyEvent { ev ->
-                if (ev.type != KeyEventType.KeyUp) {
+                if (showList || ev.type != KeyEventType.KeyUp) {
                     false
                 } else when (ev.key) {
                     Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
-                        if (controls) toggle() else poke()
+                        if (numberBuffer.isNotEmpty()) commitNumber()
+                        else if (controls) toggle() else poke()
                         true
                     }
                     Key.Menu -> { showOptions = true; true }
                     Key.MediaPlayPause -> { toggle(); true }
                     Key.DirectionRight, Key.MediaFastForward -> if (isVod) { seekBy(10_000); true } else false
-                    Key.DirectionLeft, Key.MediaRewind -> if (isVod) { seekBy(-10_000); true } else false
+                    Key.DirectionLeft -> if (isVod) { seekBy(-10_000); true } else { showList = true; true }
+                    Key.MediaRewind -> if (isVod) { seekBy(-10_000); true } else false
+                    Key.LastChannel -> { recall(); true }
+                    Key.ChannelUp -> { next(); true }
+                    Key.ChannelDown -> { prev(); true }
                     Key.DirectionUp, Key.PageUp -> { next(); true }
                     Key.DirectionDown, Key.PageDown -> { prev(); true }
-                    else -> false
+                    else -> {
+                        val d = digitOf(ev.key)
+                        if (d != null) {
+                            if (numberBuffer.length < 4) numberBuffer += d
+                            true
+                        } else false
+                    }
                 }
             }
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
-                    controls = !controls
-                    touch++
+                    if (showList) {
+                        showList = false
+                    } else {
+                        controls = !controls
+                        touch++
+                    }
                 })
             },
         contentAlignment = Alignment.Center,
@@ -435,6 +474,9 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     if (PipState.supported(ctx)) {
                         RoundButton("🖼", stringResource(R.string.player_pip)) { ctx.findActivity()?.let { PipState.enter(it) } }
                     }
+                    if (queue.size > 1) {
+                        RoundButton("☰", stringResource(R.string.player_channels)) { showList = true; poke() }
+                    }
                     RoundButton("⚙", stringResource(R.string.player_options)) { showOptions = true; poke() }
                 }
                 Column(
@@ -467,6 +509,9 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        if (lastIndex in queue.indices) {
+                            RoundButton("↩", stringResource(R.string.player_last)) { recall() }
+                        }
                         RoundButton("⏮", stringResource(R.string.previous)) { prev() }
                         if (isVod) RoundButton("⏪", stringResource(R.string.player_back10)) { seekBy(-10_000) }
                         RoundButton(
@@ -480,6 +525,18 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                 }
             }
         }
+
+        if (numberBuffer.isNotEmpty() && !inPip) {
+            NumberBadge(numberBuffer, Modifier.align(Alignment.TopEnd).padding(28.dp))
+        }
+        if (showList && !inPip) {
+            ChannelListPanel(
+                queue = queue,
+                current = index,
+                onPick = { switchTo(it); showList = false },
+                modifier = Modifier.align(Alignment.CenterStart),
+            )
+        }
     }
 
     if (showOptions && !inPip) {
@@ -491,6 +548,20 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             onDismiss = { showOptions = false },
         )
     }
+}
+
+private fun digitOf(k: Key): Int? = when (k) {
+    Key.Zero, Key.NumPad0 -> 0
+    Key.One, Key.NumPad1 -> 1
+    Key.Two, Key.NumPad2 -> 2
+    Key.Three, Key.NumPad3 -> 3
+    Key.Four, Key.NumPad4 -> 4
+    Key.Five, Key.NumPad5 -> 5
+    Key.Six, Key.NumPad6 -> 6
+    Key.Seven, Key.NumPad7 -> 7
+    Key.Eight, Key.NumPad8 -> 8
+    Key.Nine, Key.NumPad9 -> 9
+    else -> null
 }
 
 private fun clock(ms: Long): String {

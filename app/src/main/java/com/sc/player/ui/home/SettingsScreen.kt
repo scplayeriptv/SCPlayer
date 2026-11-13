@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -106,6 +107,7 @@ fun SettingsScreen(
     playlistId: String,
     groups: List<String>,
     onParentalChanged: () -> Unit,
+    onProfileChanged: () -> Unit,
     onPlaylists: () -> Unit,
     onAbout: () -> Unit,
     onResetUserData: () -> Unit,
@@ -138,6 +140,9 @@ fun SettingsScreen(
     var hw by remember { mutableStateOf(prefs.hardwareDecoding()) }
     var bg by remember { mutableStateOf(prefs.backgroundPlay()) }
     var pip by remember { mutableStateOf(prefs.pip()) }
+    var profilesTick by remember { mutableStateOf(0) }
+    var editingProfile by remember { mutableStateOf<com.sc.player.data.Profile?>(null) }
+    var addingProfile by remember { mutableStateOf(false) }
     // بيانات الحساب: null = بيتحمّل، Result = جاهز
     var account by remember { mutableStateOf<Result<AccountInfo>?>(null) }
     LaunchedEffect(section == Section.Account, playlistId) {
@@ -254,6 +259,21 @@ fun SettingsScreen(
                     }
                 }
             }
+            Section.Profiles -> {
+                val all = profilesTick.let { prefs.profiles() }
+                val activeId = profilesTick.let { prefs.activeProfile().id }
+                all.forEach { p ->
+                    SettingRow(
+                        "${p.avatarEmoji()}  ${p.displayName()}",
+                        if (p.kids) stringResource(R.string.profile_kids_badge) else null,
+                        value = if (p.id == activeId) stringResource(R.string.profile_active) else null,
+                    ) { editingProfile = p }
+                    RowDivider()
+                }
+                if (all.size < com.sc.player.data.UserPrefs.MAX_PROFILES) {
+                    SettingRow(stringResource(R.string.profile_add), null, value = null) { addingProfile = true }
+                }
+            }
             Section.Parental -> SettingRow(
                 stringResource(R.string.parental_title),
                 null,
@@ -361,6 +381,16 @@ fun SettingsScreen(
 
     update?.let { UpdateDialog(it, onDismiss = { update = null }) }
 
+    if (editingProfile != null || addingProfile) {
+        ProfileEditDialog(
+            prefs = prefs,
+            initial = editingProfile,
+            isActive = editingProfile?.id == prefs.activeProfile().id,
+            onChanged = { profilesTick++; onProfileChanged() },
+            onClose = { editingProfile = null; addingProfile = false },
+        )
+    }
+
     if (showParental) {
         ParentalFlow(
             prefs = prefs,
@@ -444,6 +474,7 @@ fun SettingsScreen(
 private enum class Section(val titleRes: Int, val icon: ImageVector) {
     General(R.string.set_sec_general, Icons.Filled.Settings),
     Account(R.string.set_sec_account, Icons.Filled.AccountCircle),
+    Profiles(R.string.set_sec_profiles, Icons.Filled.Person),
     Parental(R.string.parental_title, Icons.Filled.Lock),
     Playback(R.string.set_sec_playback, Icons.Filled.PlayArrow),
     Guide(R.string.set_sec_guide, Icons.Filled.DateRange),

@@ -134,7 +134,7 @@ fun ParentalFlow(
 }
 
 @Composable
-private fun PinDialog(title: String, error: String?, onDismiss: () -> Unit, onSubmit: (String) -> Unit) {
+internal fun PinDialog(title: String, error: String?, onDismiss: () -> Unit, onSubmit: (String) -> Unit) {
     var pin by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,

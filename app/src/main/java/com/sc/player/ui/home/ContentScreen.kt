@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -109,6 +112,7 @@ fun ContentScreen(
         }
     }
     val live = kind == Kind.Live
+    val posters = kind == Kind.Movies || kind == Kind.Series
     val allLabel = if (live) stringResource(R.string.all_channels) else stringResource(R.string.all_items)
     val favLabel = stringResource(R.string.favorites)
     val kindTitle = stringResource(kind.titleRes)
@@ -183,6 +187,23 @@ fun ContentScreen(
                         modifier = Modifier.padding(24.dp),
                     )
                 }
+            } else if (posters) {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(if (wide) 140.dp else 110.dp),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    contentPadding = PaddingValues(start = if (wide) 0.dp else 24.dp, end = 24.dp, bottom = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    gridItemsIndexed(filtered) { i, ch ->
+                        PosterCard(
+                            ch = ch,
+                            fav = ch.url in favs,
+                            onFocus = { highlighted = ch },
+                            onToggleFav = { onToggleFav(ch.url) },
+                        ) { onPlay(filtered, i) }
+                    }
+                }
             } else {
                 LazyColumn(
                     Modifier.weight(1f).fillMaxHeight(),
@@ -206,7 +227,7 @@ fun ContentScreen(
                 }
             }
 
-            if (huge) {
+            if (huge && !posters) {
                 val shown = highlighted?.takeIf { h -> filtered.any { it === h } } ?: filtered.firstOrNull()
                 Box(Modifier.width(320.dp).fillMaxHeight().padding(end = 24.dp, bottom = 24.dp)) {
                     if (shown != null) {

@@ -26,7 +26,56 @@ internal fun parseSeriesRef(url: String): SeriesRef? {
 
 class Episode(val season: Int, val number: Int, val title: String, val url: String, val image: String?, val duration: String?)
 
-class SeriesDetails(val plot: String, val cover: String?, val seasons: Map<Int, List<Episode>>)
+/** بيانات العرض لفيلم أو مسلسل (كلها اختيارية). */
+class MediaInfo(
+    val plot: String = "",
+    val poster: String? = null,
+    val backdrop: String? = null,
+    val year: String = "",
+    val rating: String = "",
+    val genre: String = "",
+    val cast: String = "",
+    val director: String = "",
+    val duration: String = "",
+    val trailer: String = "",
+)
+
+class SeriesDetails(val plot: String, val cover: String?, val seasons: Map<Int, List<Episode>>, val meta: MediaInfo = MediaInfo())
+
+private val vodRefRx = Regex("^(.*)/movie/([^/]+)/([^/]+)/(\\d+)\\.[^/.]*$")
+
+internal fun parseVodRef(url: String): SeriesRef? {
+    val m = vodRefRx.find(url) ?: return null
+    fun dec(s: String) = runCatching { URLDecoder.decode(s, "UTF-8") }.getOrDefault(s)
+    return SeriesRef(m.groupValues[1], dec(m.groupValues[2]), dec(m.groupValues[3]), m.groupValues[4])
+}
+
+private fun firstUrl(o: JSONObject, key: String): String? {
+    val a = o.optJSONArray(key)
+    val v = if (a != null && a.length() > 0) a.optString(0) else o.optString(key)
+    return v.takeIf { it.isNotBlank() && it != "null" && it.startsWith("http") }
+}
+
+/** يقرأ بلوك "info" من get_vod_info أو get_series_info. */
+internal fun parseMediaInfo(info: JSONObject?): MediaInfo {
+    if (info == null) return MediaInfo()
+    val rating = info.str("rating").ifBlank {
+        info.str("rating_5based").toDoubleOrNull()?.let { "%.1f".format(it * 2) }.orEmpty()
+    }.let { r -> r.toDoubleOrNull()?.takeIf { it > 0 }?.let { "%.1f".format(it) }.orEmpty() }
+    val date = info.str("releasedate").ifBlank { info.str("releaseDate") }.ifBlank { info.str("year") }
+    return MediaInfo(
+        plot = info.str("plot").ifBlank { info.str("description") },
+        poster = firstUrl(info, "movie_image") ?: firstUrl(info, "cover"),
+        backdrop = firstUrl(info, "backdrop_path"),
+        year = Regex("(19|20)\\d{2}").find(date)?.value.orEmpty(),
+        rating = rating,
+        genre = info.str("genre"),
+        cast = info.str("cast").ifBlank { info.str("actors") },
+        director = info.str("director"),
+        duration = info.str("duration"),
+        trailer = info.str("youtube_trailer"),
+    )
+}
 
 class AccountInfo(
     val status: String,
@@ -78,7 +127,7 @@ internal fun parseSeriesInfo(json: String, ref: SeriesRef, fallbackCover: String
         else -> Unit
     }
     seasons.values.forEach { l -> l.sortBy { it.number } }
-    return SeriesDetails(plot, cover, seasons)
+    return SeriesDetails(plot, cover, seasons, parseMediaInfo(info))
 }
 
 /** طلبات Xtream اللي بتحصل وقت الاستخدام (تفاصيل مسلسل، بيانات الحساب). */
@@ -114,6 +163,14 @@ class XtreamClient(@Suppress("UNUSED_PARAMETER") context: Context) {
             val ref = parseSeriesRef(entry.url) ?: throw IllegalArgumentException("not a series entry")
             val json = api(ref.base, ref.user, ref.pass, "&action=get_series_info&series_id=${ref.id}")
             parseSeriesInfo(json, ref, entry.logo)
+        }
+    }
+
+    suspend fun vodInfo(entry: Channel): Result<MediaInfo> = withContext(Dispatchers.IO) {
+        runCatching {
+            val ref = parseVodRef(entry.url) ?: throw IllegalArgumentException("not an xtream movie")
+            val json = api(ref.base, ref.user, ref.pass, "&action=get_vod_info&vod_id=${ref.id}")
+            parseMediaInfo(JSONObject(json).optJSONObject("info"))
         }
     }
 

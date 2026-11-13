@@ -120,14 +120,13 @@ private fun SeriesBody(entry: Channel, d: SeriesDetails, onPlay: (List<Channel>,
         }
     }
 
-    if (d.plot.isNotBlank()) {
-        Text(
-            d.plot,
-            color = TextMuted,
-            fontSize = 13.sp,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 24.dp),
+    Box(Modifier.padding(horizontal = 24.dp)) {
+        MediaHeader(
+            title = entry.name,
+            poster = d.meta.poster ?: d.cover ?: entry.logo,
+            meta = if (d.meta.plot.isBlank() && d.plot.isNotBlank()) com.sc.player.data.MediaInfo(plot = d.plot) else d.meta,
+            posterWidth = 90.dp,
+            plotLines = 4,
         )
     }
     LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {

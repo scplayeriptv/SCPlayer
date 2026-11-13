@@ -201,3 +201,31 @@
 
 ## إصلاح: المسلسلات = 0 ✅ (غير مختبر)
 - السبب: get.php عند أغلب سيرفرات Xtream بيرجّع القنوات والأفلام بس، فالمسلسلات (اللي كانت بتتضاف من player_api.php في حالة فشل get.php بس) ما كانتش بتظهر. دلوقتي لو القائمة Xtream ومفيش ولا مسلسل بعد get.php، بنجيب get_series/get_series_categories من player_api.php ونضيفهم (`addSeriesFromApi`, `writeSeriesEntries`). لازم Reload بعد التحديث.
+
+## ميزة 1: تبديل القنوات من المشغّل ✅ (غير مختبر)
+- `ui/player/ChannelListPanel.kt`: قائمة القنوات فوق الفيديو (زر ☰ في الشريط العلوي، أو سهم يسار على الريموت للبث المباشر). اختيار قناة يبدّل فورًا من غير ما تخرج.
+- أرقام الريموت: كتابة رقم (لحد 4 خانات) = ترتيب القناة في القائمة الحالية، بيتنفّذ بعد 1.5 ثانية أو بـ OK. ChannelUp/ChannelDown = التالي/السابق. زر "↩" و Key.LastChannel = القناة السابقة.
+- مفاتيح ×9: player_channels, player_last.
+
+## ميزة 2: بوسترات وتفاصيل الأفلام والمسلسلات ✅ (غير مختبر)
+- Movies/Series في ContentScreen بقت شبكة بوسترات (`Posters.kt`: PosterCard بشريط تقدّم المشاهدة). Live/Radio لسه قوائم.
+- `MovieDetailsScreen`: بوستر + backdrop + سنة/مدة/تقييم/نوع/قصة/ممثلين/مخرج + تشغيل/كمّل من X + مفضلة + تريلر (يوتيوب). البيانات من `get_vod_info` عبر `XtreamClient.vodInfo` (من غير TMDB ولا مفتاح)؛ لو القائمة مش Xtream بيعرض الاسم والصورة بس.
+- شاشة المسلسل بقى فيها رأس تفاصيل (`MediaHeader`) من info بتاع get_series_info. `parseMediaInfo`, `MediaInfo`.
+- الفتح: openItem في HomeScreen: فيلم → تفاصيل، مسلسل → شاشته، غيره → تشغيل. "Continue Watching" في الرئيسية لسه بيشغّل مباشرة.
+- مفاتيح ×9: det_resume, det_trailer, det_cast, det_director.
+
+## إصلاح: قنوات لايف ظاهرة في قسم الأفلام ✅ (غير مختبر)
+- السبب: `Kind.kt` كان بيخمّن من اسم المجموعة ("GO BOX CINEMA" فيها cinema) حتى لو الرابط بث مباشر. دلوقتي رابط البث المباشر (/live/ أو .ts أو .m3u8 أو host/user/pass/id) بيفضل Live؛ /movie/ و /series/ لسه الأقوى، والراديو من اسم المجموعة. تعديل KindTest + اختبار جديد.
+
+## ميزة 3: بروفايلات ✅ (غير مختبر)
+- `Profile(id,name,kids,avatar)` في UserPrefs.kt؛ لحد 6 بروفايلات. المفضلة والـ Recent منفصلة لكل بروفايل (`fav_<id>`, `recent_<id>`؛ الرئيسي "main" بيحافظ على المفاتيح القديمة).
+- `ProfileScreens.kt`: شاشة "مين بيتفرج؟"، حوار تعديل (اسم/أفاتار/بروفايل أطفال/استخدم/حذف)، `ProfileChip` في الرئيسية.
+- بروفايل الأطفال: بيخبّي المجموعات المقفولة حتى لو اتفتحت، والإعدادات والخروج منه محتاجين PIN لو متحدد.
+- Settings → Profiles. مفاتيح ×9: set_sec_profiles, profile_*.
+- محدودية: مواضع المشاهدة (PositionStore) والـ PIN والمجموعات المقفولة مشتركة بين الكل.
+
+## ميزة 4: دليل برامج بجدول زمني + تذكيرات ✅ (غير مختبر)
+- `GuideScreen.kt` اتعاد كتابته: شبكة قنوات × وقت (12 ساعة، من قبل الآن بنص ساعة)، خط أحمر للوقت الحالي، سكرول أفقي مشترك. ضغط على برنامج حالي = تشغيل القناة؛ غيره = تفاصيل + "ذكّرني" / "شاهد القناة".
+- `ReminderStore` + `ReminderReceiver` + `BootReceiver`: إشعار قبل البرنامج بدقيقتين (AlarmManager غير دقيق، ممكن يتأخر دقائق) وبيتعاد جدولته بعد إعادة تشغيل الجهاز. زر 🔔 في الدليل بيعرض كل التذكيرات.
+- محدودية: الضغط على الإشعار بيفتح التطبيق بس (من غير تشغيل القناة).
+- مفاتيح ×9: guide_reminders, guide_remind, guide_remind_off, guide_reminder_set, guide_watch, guide_no_reminders, notif_reminder_title, notif_reminder_text.

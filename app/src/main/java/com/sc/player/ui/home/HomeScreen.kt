@@ -165,9 +165,42 @@ private fun Shell(
 
     var lockedGroups by remember { mutableStateOf(prefs.lockedGroups()) }
     var unlocked by remember { mutableStateOf(ParentalSession.unlocked) }
-    // التصنيفات المقفولة بتختفي من كل القوائم لحد ما القفل يتفتح (Settings → Parental Control)
-    val visible = remember(channels, lockedGroups, unlocked) {
-        if (unlocked || lockedGroups.isEmpty()) channels else channels.filter { it.group !in lockedGroups }
+
+    // البروفايلات: مفضلة وسجل منفصلين لكل بروفايل، وبروفايل الأطفال بيفضل مخفي عنه التصنيفات المقفولة
+    var profile by remember { mutableStateOf(prefs.activeProfile()) }
+    var needPick by remember { mutableStateOf(prefs.profiles().size > 1 && !com.sc.player.data.ProfileSession.chosen) }
+    var showSwitcher by remember { mutableStateOf(false) }
+    var pinForProfile by remember { mutableStateOf<com.sc.player.data.Profile?>(null) }
+    var pinError by remember { mutableStateOf<String?>(null) }
+    var settingsPinOk by remember { mutableStateOf(false) }
+    var settingsPin by remember { mutableStateOf(false) }
+    val kids = profile.kids
+    fun refreshProfile() {
+        profile = prefs.activeProfile()
+        favs = prefs.favorites()
+        recentUrls = prefs.recents()
+        settingsPinOk = false
+    }
+    fun applyProfile(p: com.sc.player.data.Profile) {
+        prefs.setActiveProfile(p.id)
+        com.sc.player.data.ProfileSession.chosen = true
+        refreshProfile()
+        needPick = false
+        showSwitcher = false
+        if (destName == Dest.Settings.name) destName = Dest.Home.name
+    }
+    fun pickProfile(p: com.sc.player.data.Profile) {
+        // الخروج من بروفايل الأطفال محتاج PIN لو متحدد
+        if (p.id != profile.id && profile.kids && prefs.hasPin()) {
+            pinError = null
+            pinForProfile = p
+        } else {
+            applyProfile(p)
+        }
+    }
+
+    val visible = remember(channels, lockedGroups, unlocked, kids) {
+        if ((unlocked && !kids) || lockedGroups.isEmpty()) channels else channels.filter { it.group !in lockedGroups }
     }
     val allGroups = remember(channels) { channels.map { it.group }.distinct().sorted() }
 
@@ -177,6 +210,7 @@ private fun Shell(
     val recents = remember(byUrl, recentUrls) { recentUrls.mapNotNull { byUrl[it] } }
 
     var openSeries by remember { mutableStateOf<Channel?>(null) }
+    var openDetails by remember { mutableStateOf<Pair<List<Channel>, Int>?>(null) }
 
     fun play(list: List<Channel>, i: Int) {
         // عنصر مسلسل (مش حلقة) → نفتح شاشة المواسم بدل التشغيل
@@ -190,6 +224,12 @@ private fun Shell(
 
     fun go(d: Dest) {
         openSeries = null
+        openDetails = null
+        if (d == Dest.Settings && kids && prefs.hasPin() && !settingsPinOk) {
+            pinError = null
+            settingsPin = true
+            return
+        }
         if (d == Dest.Playlist) onPlaylists() else destName = d.name
     }
 
@@ -197,8 +237,8 @@ private fun Shell(
         runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }.getOrNull().orEmpty()
     }
 
-    LaunchedEffect(Unit) {
-        if (!com.sc.player.data.AutoPlaySession.handled) {
+    LaunchedEffect(needPick) {
+        if (!needPick && !com.sc.player.data.AutoPlaySession.handled) {
             com.sc.player.data.AutoPlaySession.handled = true
             if (prefs.autoPlay() && recents.isNotEmpty()) play(recents, 0)
         }
@@ -206,8 +246,26 @@ private fun Shell(
 
     BackHandler(enabled = dest != Dest.Home) { destName = Dest.Home.name }
     BackHandler(enabled = openSeries != null) { openSeries = null }
+    BackHandler(enabled = openDetails != null) { openDetails = null }
+
+    // من القوائم/البحث: الفيلم يفتح تفاصيله، والباقي يتشغّل (المسلسل بيفتح شاشته من play)
+    fun openItem(list: List<Channel>, i: Int) {
+        val ch = list[i]
+        if (!isSeriesEntry(ch.url) && ch.kind() == Kind.Movies) openDetails = list to i else play(list, i)
+    }
 
     val content: @Composable () -> Unit = content@{
+        openDetails?.let { (list, i) ->
+            MovieDetailsScreen(
+                list = list,
+                index = i,
+                fav = list[i].url in favs,
+                onToggleFav = { favs = prefs.toggleFavorite(list[i].url) },
+                onBack = { openDetails = null },
+                onPlay = { play(list, i) },
+            )
+            return@content
+        }
         openSeries?.let { entry ->
             SeriesScreen(entry, onBack = { openSeries = null }, onPlay = { l, i -> play(l, i) })
             return@content
@@ -228,6 +286,8 @@ private fun Shell(
                 onExit = { ctx.findActivity()?.finish() },
                 onPlayRecent = { play(recents, it) },
                 onToggleFav = { favs = prefs.toggleFavorite(it) },
+                profile = profile,
+                onProfile = { showSwitcher = true },
             )
             Dest.LiveTv, Dest.Movies, Dest.Series, Dest.Radio -> {
                 val kind = when (dest) {
@@ -243,7 +303,7 @@ private fun Shell(
                     epgTick = epgTick,
                     wide = wide,
                     onToggleFav = { favs = prefs.toggleFavorite(it) },
-                    onPlay = { list, i -> play(list, i) },
+                    onPlay = { list, i -> openItem(list, i) },
                     onGuide = onGuide,
                 )
             }
@@ -252,7 +312,7 @@ private fun Shell(
                 favs = favs,
                 epgTick = epgTick,
                 onToggleFav = { favs = prefs.toggleFavorite(it) },
-                onPlay = { list, i -> play(list, i) },
+                onPlay = { list, i -> openItem(list, i) },
             )
             Dest.CatchUp -> ComingSoonScreen(stringResource(R.string.nav_catch_up), stringResource(R.string.catch_up_note))
             Dest.Playlist -> Unit
@@ -264,6 +324,7 @@ private fun Shell(
                     unlocked = ParentalSession.unlocked
                 },
                 onPlaylists = onPlaylists,
+                onProfileChanged = { refreshProfile() },
                 onAbout = { destName = Dest.About.name },
                 onResetUserData = {
                     prefs.clearUserData()
@@ -275,7 +336,16 @@ private fun Shell(
         }
     }
 
-    if (dest == Dest.Home) {
+    androidx.activity.compose.BackHandler(enabled = showSwitcher && !needPick) { showSwitcher = false }
+
+    if (needPick || showSwitcher) {
+        ProfilePickerScreen(
+            profiles = prefs.profiles(),
+            activeId = profile.id,
+            onPick = { pickProfile(it) },
+            onCancel = if (showSwitcher && !needPick) ({ showSwitcher = false }) else null,
+        )
+    } else if (dest == Dest.Home) {
         // الرئيسية = مشغّل بمربعات، من غير شريط تنقّل
         Box(Modifier.fillMaxSize()) { content() }
     } else if (wide) {
@@ -287,6 +357,36 @@ private fun Shell(
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.weight(1f).fillMaxWidth()) { content() }
             BottomBar(dest, onSelect = { go(it) })
+        }
+    }
+
+    pinForProfile?.let { target ->
+        PinDialog(
+            title = stringResource(R.string.profile_pin_leave),
+            error = pinError,
+            onDismiss = { pinForProfile = null },
+        ) { pin ->
+            if (prefs.checkPin(pin)) {
+                pinForProfile = null
+                applyProfile(target)
+            } else {
+                pinError = ctx.getString(R.string.pin_wrong)
+            }
+        }
+    }
+    if (settingsPin) {
+        PinDialog(
+            title = stringResource(R.string.profile_pin_settings),
+            error = pinError,
+            onDismiss = { settingsPin = false },
+        ) { pin ->
+            if (prefs.checkPin(pin)) {
+                settingsPin = false
+                settingsPinOk = true
+                destName = Dest.Settings.name
+            } else {
+                pinError = ctx.getString(R.string.pin_wrong)
+            }
         }
     }
 }
