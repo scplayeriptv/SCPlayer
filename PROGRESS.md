@@ -255,3 +255,5 @@
 - `ui/onboarding/OnboardingScreen.kt`: 4 صفحات (HorizontalPager) بتظهر أول تشغيل بس بعد الـ Splash (قوايمك/Live-Movies-Series/الدليل والتذكيرات/بروفايلات-Multi-view-ثيمات). تخطّي/التالي/يلا نبدأ، نقط مؤشر، إيموجي بيطفو (infinite transition)، تلاشي/تصغير للصفحات الجانبية. زر الرجوع يرجّع صفحة. الفلاج `UserPrefs.onboarded()`.
 - AppNav: `afterIntro()` (نفس منطق الـ Splash القديم)، وNavHost بقى فيه fade بين كل الشاشات (260ms/180ms).
 - محدودية: المستخدمين الحاليين هيشوفوا الـ onboarding مرة واحدة بعد التحديث. مفاتيح ×9: onb_next/skip/start، onb1..4_title/body.
+
+## إصلاح Build 39: علامة `&` في strings.xml (onb3_title في values و values-de) لازم تتكتب `&amp;` — اتصلّحت، وكل ملفات الـ strings اتفحصت إنها XML سليم (parse).

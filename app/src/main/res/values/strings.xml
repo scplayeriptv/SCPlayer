@@ -255,7 +255,7 @@
     <string name="onb1_body">SC Player plays your own M3U or Xtream playlist. No content is included — add your server and you\'re set.</string>
     <string name="onb2_title">Live TV, movies and series</string>
     <string name="onb2_body">Browse by category, search everything at once, and pick up where you left off.</string>
-    <string name="onb3_title">Program guide & reminders</string>
+    <string name="onb3_title">Program guide &amp; reminders</string>
     <string name="onb3_body">See what\'s on in a timeline grid and get a reminder before your favourite show starts.</string>
     <string name="onb4_title">More ways to watch</string>
     <string name="onb4_body">Profiles for the family, a kids profile with PIN, multi-view for up to 4 channels, and themes to make it yours.</string>
