@@ -98,6 +98,8 @@ import com.sc.player.ui.theme.TextMain
 import com.sc.player.ui.theme.TextMuted
 import kotlinx.coroutines.delay
 
+private const val MAX_RECONNECT = 5
+
 private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
@@ -128,6 +130,9 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     var showList by remember { mutableStateOf(false) }
     var numberBuffer by remember { mutableStateOf("") }
     var lastIndex by remember { mutableIntStateOf(-1) }
+    var attempt by remember { mutableIntStateOf(0) }
+    var retryKey by remember { mutableIntStateOf(0) }
+    var stats by remember { mutableStateOf("") }
 
     val player = remember {
         val http = DefaultHttpDataSource.Factory()
@@ -143,7 +148,13 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
         val renderers = androidx.media3.exoplayer.DefaultRenderersFactory(ctx)
             .setMediaCodecSelector(selector)
             .setEnableDecoderFallback(true)
+        val lc = when (com.sc.player.data.UserPrefs(ctx).bufferMode()) {
+            0 -> androidx.media3.exoplayer.DefaultLoadControl.Builder().setBufferDurationsMs(5_000, 15_000, 1_000, 2_000)
+            2 -> androidx.media3.exoplayer.DefaultLoadControl.Builder().setBufferDurationsMs(30_000, 120_000, 2_500, 5_000)
+            else -> androidx.media3.exoplayer.DefaultLoadControl.Builder()
+        }.build()
         ExoPlayer.Builder(ctx, renderers)
+            .setLoadControl(lc)
             .setAudioAttributes(
                 androidx.media3.common.AudioAttributes.Builder()
                     .setUsage(androidx.media3.common.C.USAGE_MEDIA)
@@ -157,6 +168,8 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             .build()
     }
     val prefs = remember { com.sc.player.data.UserPrefs(ctx) }
+    val autoReconnect = remember { prefs.autoReconnect() }
+    val showStats = remember { prefs.showStats() }
     var aspect by remember { mutableIntStateOf(prefs.aspectMode()) }
     var showOptions by remember { mutableStateOf(false) }
     var tracks by remember { mutableStateOf(androidx.media3.common.Tracks.EMPTY) }
@@ -190,6 +203,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
         val d = player.duration
         if (player.isCurrentMediaItemLive || d == androidx.media3.common.C.TIME_UNSET || d < 60_000L) return
         positions.save(id, player.currentPosition, d)
+        queue.firstOrNull { it.url == id }?.let { com.sc.player.data.WatchNext.update(ctx, it, player.currentPosition, d) }
     }
     DisposableEffect(Unit) { onDispose { saveNow(); player.release() } }
     LaunchedEffect(player) {
@@ -225,6 +239,13 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
                 buffering = state == Player.STATE_BUFFERING
+                // بث انقطع (TS من غير مدة معروفة بينتهي لما الاتصال يقفل) → إعادة اتصال تلقائي
+                if (state == Player.STATE_ENDED && autoReconnect && attempt < MAX_RECONNECT &&
+                    (player.isCurrentMediaItemLive || player.duration == androidx.media3.common.C.TIME_UNSET)
+                ) {
+                    attempt++
+                    retryKey++
+                }
                 if (state == Player.STATE_READY) error = null
             }
 
@@ -262,6 +283,9 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     )
                     player.prepare()
                     player.playWhenReady = true
+                } else if (autoReconnect && attempt < MAX_RECONNECT) {
+                    attempt++
+                    retryKey++
                 } else {
                     error = ctx.getString(R.string.player_error)
                 }
@@ -271,7 +295,48 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
         onDispose { player.removeListener(listener) }
     }
 
+    // إعادة اتصال تلقائي مع مهلة بتزيد (2ث، 4ث، ...)
+    LaunchedEffect(retryKey) {
+        if (retryKey > 0) {
+            buffering = true
+            delay(attempt * 2000L)
+            if (player.isCurrentMediaItemLive || player.duration == androidx.media3.common.C.TIME_UNSET) {
+                player.seekToDefaultPosition()
+            }
+            player.prepare()
+            player.playWhenReady = true
+        }
+    }
+    // لو اشتغل 20 ثانية متواصل نصفّر العدّاد
+    LaunchedEffect(playing) {
+        if (playing) {
+            delay(20_000)
+            attempt = 0
+        }
+    }
+    // إحصائيات التشغيل (اختياري من الإعدادات)
+    LaunchedEffect(player, showStats) {
+        if (!showStats) return@LaunchedEffect
+        val meter = androidx.media3.exoplayer.upstream.DefaultBandwidthMeter.getSingletonInstance(ctx)
+        while (true) {
+            val vf = player.videoFormat
+            val af = player.audioFormat
+            val dropped = player.videoDecoderCounters?.let { it.ensureUpdated(); it.droppedBufferCount } ?: 0
+            val ahead = ((player.bufferedPosition - player.currentPosition).coerceAtLeast(0)) / 1000.0
+            stats = buildString {
+                append("Video: ").append(vf?.let { "${it.width}x${it.height} ${it.sampleMimeType?.substringAfter('/') ?: ""}" } ?: "-")
+                vf?.bitrate?.takeIf { it > 0 }?.let { append(" · ${it / 1000} kbps") }
+                append("\nAudio: ").append(af?.sampleMimeType?.substringAfter('/') ?: "-")
+                append("\nBuffer: ").append("%.1f s".format(ahead))
+                append("\nNetwork: ").append("%.1f Mbps".format(meter.bitrateEstimate / 1_000_000.0))
+                append("\nDropped frames: ").append(dropped)
+            }
+            delay(1000)
+        }
+    }
+
     LaunchedEffect(index) {
+        attempt = 0
         saveNow() // يحفظ موضع العنصر السابق قبل ما نبدّل
         triedHls = false
         error = null
@@ -417,8 +482,28 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             AndroidView(factory = { subtitleView }, modifier = Modifier.fillMaxSize())
         }
 
-        if (buffering && error == null) {
-            CircularProgressIndicator(color = Cyan)
+        if ((buffering || attempt > 0) && error == null) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CircularProgressIndicator(color = Cyan)
+                if (attempt > 0) {
+                    Text(stringResource(R.string.player_reconnecting, attempt, MAX_RECONNECT), color = TextMain, fontSize = 13.sp)
+                }
+            }
+        }
+
+        if (showStats && stats.isNotEmpty() && !inPip) {
+            Text(
+                stats,
+                color = TextMain,
+                fontSize = 11.sp,
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 76.dp, end = 12.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0x99000000))
+                    .padding(8.dp),
+            )
         }
 
         error?.let { msg ->

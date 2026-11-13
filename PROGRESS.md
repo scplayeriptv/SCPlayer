@@ -229,3 +229,29 @@
 - `ReminderStore` + `ReminderReceiver` + `BootReceiver`: إشعار قبل البرنامج بدقيقتين (AlarmManager غير دقيق، ممكن يتأخر دقائق) وبيتعاد جدولته بعد إعادة تشغيل الجهاز. زر 🔔 في الدليل بيعرض كل التذكيرات.
 - محدودية: الضغط على الإشعار بيفتح التطبيق بس (من غير تشغيل القناة).
 - مفاتيح ×9: guide_reminders, guide_remind, guide_remind_off, guide_reminder_set, guide_watch, guide_no_reminders, notif_reminder_title, notif_reminder_text.
+
+## ميزة 5: صف "Continue Watching" في Android TV ✅ (غير مختبر)
+- `data/WatchNext.kt`: بيكتب في Watch Next provider (`TvContract.WatchNextPrograms`، Android 8+ وأجهزة TV بس، أي فشل بيتتجاهل). بيتحدّث كل ~30 ثانية من `saveNow` في PlayerScreen، وبيتشال لما الفيلم/الحلقة تخلص أو يتقفل قبل 10 ثواني.
+- الضغط على الكارت بيفتح التطبيق بـ Intent فيه (url, name, logo) → `MainActivity.readDeepLink` → `DeepLink.item` → HomeScreen بيشغّله (بعد اختيار البروفايل). MainActivity بقت `singleTop`.
+- محدودية: بيشتغل للأفلام/الحلقات بس (مش البث المباشر)؛ لو الصف ما ظهرش على جهاز معيّن ممكن تكون الصلاحية/النظام (بيعتمد على launcher الجهاز).
+
+## ميزة 6: Multi-view ✅ (غير مختبر)
+- `ui/multi/MultiViewScreen.kt`، route "multi" في AppNav، وتايل جديد في الرئيسية (Multi-view). لحد 4 قنوات (شبكة 2×2) أو 2.
+- كل خانة ExoPlayer مستقل؛ الصوت للخانة المختارة بس (🔊). ضغط على خانة فاضية = اختيار قناة (بحث)؛ على خانة غير مختارة = تختار صوتها؛ على المختارة = قائمة (غيّر/ملء الشاشة/شيل).
+- محدودية: 4 فيديوهات مع بعض تقيلة على الأجهزة الضعيفة (المفكّكات). خانات Multi-view مش بتتحفظ بين الفتحات.
+- مفاتيح ×9: multi_view, multi_pick, multi_change, multi_remove, multi_fullscreen, multi_add.
+
+## ميزة 7: استرجاع تلقائي + البافر + إحصائيات ✅ (غير مختبر)
+- إعادة اتصال تلقائي في PlayerScreen: عند خطأ تشغيل أو انقطاع بث (ENDED لبث مباشر/TS من غير مدة) بيحاول لحد 5 مرات بمهلة 2ث، 4ث، ... وبيظهر "Reconnecting n/5". العدّاد بيتصفّر بعد 20 ثانية تشغيل متواصل أو تغيير القناة. بعد آخر محاولة بتظهر شاشة الخطأ (إعادة/التالي).
+- Settings → Playback: "Auto reconnect" (افتراضي شغّال)، "Buffer size" (صغير 5-15ث / عادي افتراضي Media3 / كبير 30-120ث، بالضغط بيتبدّل)، "Playback stats" (دقة/كودك/بت ريت/بافر/سرعة الشبكة/فريمات مفقودة فوق الفيديو، أعلى اليمين).
+- الإعدادات بتتقرأ لما المشغّل يتفتح (غيّرها قبل ما تفتح قناة). مفاتيح ×9: set_reconnect(+_sub), set_buffer(+_sub), buffer_low/normal/high, set_stats(+_sub), player_reconnecting. restoreDefaults بيشملهم.
+
+## ميزة 9: ثيمات وألوان ✅ (غير مختبر)
+- `ui/theme/Theme.kt`: `AppTheme` (Violet الافتراضي، Ocean، Emerald، Sunset، Rose، AMOLED أسود) + `ThemeState.current` (Compose state). الألوان Bg/Panel/Cyan/Violet/Blue/BrandBrush بقت getters بتقرأ الثيم الحالي، فكل الشاشات بتتحدّث فورًا من غير ما نلمس باقي الملفات.
+- Settings → General → صف "Theme" بدواير ملوّنة (`ThemePicker.kt`)، بيتحفظ في `UserPrefs.theme()` وبيتحمّل في `MainActivity.onCreate`. تينتات الـ focus الثابتة (A855F7) اتحوّلت للثيم.
+- محدودية: مربّعات الرئيسية (Live=بنفسجي، Movies=أزرق...) والشعار ولوجو شاشة الإضافة ليهم ألوانهم الثابتة ومش بيتغيّروا؛ استعادة الافتراضي مش بترجّع الثيم. مفاتيح ×9: set_theme, theme_violet/ocean/emerald/sunset/rose/amoled.
+
+## ميزة 10: Onboarding + حركات ✅ (غير مختبر)
+- `ui/onboarding/OnboardingScreen.kt`: 4 صفحات (HorizontalPager) بتظهر أول تشغيل بس بعد الـ Splash (قوايمك/Live-Movies-Series/الدليل والتذكيرات/بروفايلات-Multi-view-ثيمات). تخطّي/التالي/يلا نبدأ، نقط مؤشر، إيموجي بيطفو (infinite transition)، تلاشي/تصغير للصفحات الجانبية. زر الرجوع يرجّع صفحة. الفلاج `UserPrefs.onboarded()`.
+- AppNav: `afterIntro()` (نفس منطق الـ Splash القديم)، وNavHost بقى فيه fade بين كل الشاشات (260ms/180ms).
+- محدودية: المستخدمين الحاليين هيشوفوا الـ onboarding مرة واحدة بعد التحديث. مفاتيح ×9: onb_next/skip/start، onb1..4_title/body.

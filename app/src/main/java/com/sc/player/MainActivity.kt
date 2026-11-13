@@ -12,6 +12,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import android.content.Intent
+import com.sc.player.data.Channel
+import com.sc.player.data.DeepLink
+import com.sc.player.data.WatchNext
 import com.sc.player.ui.AppNav
 import com.sc.player.ui.theme.SCPlayerTheme
 
@@ -28,9 +32,23 @@ class MainActivity : ComponentActivity() {
             registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
                 .launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+        com.sc.player.ui.theme.ThemeState.current = com.sc.player.ui.theme.AppTheme.byId(com.sc.player.data.UserPrefs(this).theme())
+        readDeepLink(intent)
         setContent {
             SCPlayerTheme { AppNav() }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        readDeepLink(intent)
+    }
+
+    private fun readDeepLink(i: Intent?) {
+        val url = i?.getStringExtra(WatchNext.EXTRA_URL) ?: return
+        i.removeExtra(WatchNext.EXTRA_URL)
+        DeepLink.item.value = Channel(i.getStringExtra(WatchNext.EXTRA_NAME).orEmpty(), url, "", i.getStringExtra(WatchNext.EXTRA_LOGO), null)
     }
 
     // خروج المستخدم (زر الهوم) أثناء المشغّل → صورة داخل صورة

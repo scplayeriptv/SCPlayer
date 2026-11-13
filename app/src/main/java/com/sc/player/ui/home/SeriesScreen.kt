@@ -152,7 +152,7 @@ private fun EpisodeRow(ep: Episode, ch: Channel, onClick: () -> Unit) {
             .fillMaxWidth()
             .onFocusChanged { focused = it.isFocused }
             .clip(shape)
-            .background(if (focused) androidx.compose.ui.graphics.Color(0x33A855F7) else Glass)
+            .background(if (focused) com.sc.player.ui.theme.Violet.copy(alpha = 0.2f) else Glass)
             .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
             .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp),

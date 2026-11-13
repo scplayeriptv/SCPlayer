@@ -79,7 +79,7 @@ internal fun ChannelListPanel(
                     .clip(shape)
                     .background(
                         when {
-                            focused -> Color(0x33A855F7)
+                            focused -> com.sc.player.ui.theme.Violet.copy(alpha = 0.2f)
                             selected -> Color(0x22FFFFFF)
                             else -> Color.Transparent
                         },

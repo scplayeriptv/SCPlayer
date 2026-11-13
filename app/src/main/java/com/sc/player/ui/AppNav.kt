@@ -14,6 +14,11 @@ import com.sc.player.data.UserPrefs
 import com.sc.player.ui.add.AddPlaylistScreen
 import com.sc.player.ui.guide.GuideScreen
 import com.sc.player.ui.home.HomeScreen
+import com.sc.player.ui.multi.MultiViewScreen
+import com.sc.player.ui.onboarding.OnboardingScreen
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import com.sc.player.ui.player.PlayerScreen
 import com.sc.player.ui.playlists.PlaylistsScreen
 import com.sc.player.ui.splash.SplashScreen
@@ -30,16 +35,37 @@ fun AppNav() {
         nav.navigate("home/$id") { popUpTo(nav.graph.id) { inclusive = true } }
     }
 
-    NavHost(nav, startDestination = "splash") {
+    fun afterIntro() {
+        val all = PlaylistRepository(ctx.applicationContext).playlists()
+        val target = all.firstOrNull { it.id == prefs.activePlaylist() } ?: all.firstOrNull()
+        if (target == null) {
+            nav.navigate("add") { popUpTo(nav.graph.id) { inclusive = true } }
+        } else {
+            openHome(target.id)
+        }
+    }
+
+    NavHost(
+        nav,
+        startDestination = "splash",
+        enterTransition = { fadeIn(tween(260)) },
+        exitTransition = { fadeOut(tween(180)) },
+        popEnterTransition = { fadeIn(tween(260)) },
+        popExitTransition = { fadeOut(tween(180)) },
+    ) {
         composable("splash") {
             SplashScreen(onFinish = {
-                val all = PlaylistRepository(ctx.applicationContext).playlists()
-                val target = all.firstOrNull { it.id == prefs.activePlaylist() } ?: all.firstOrNull()
-                if (target == null) {
-                    nav.navigate("add") { popUpTo("splash") { inclusive = true } }
+                if (!prefs.onboarded()) {
+                    nav.navigate("onboarding") { popUpTo("splash") { inclusive = true } }
                 } else {
-                    openHome(target.id)
+                    afterIntro()
                 }
+            })
+        }
+        composable("onboarding") {
+            OnboardingScreen(onDone = {
+                prefs.setOnboarded()
+                afterIntro()
             })
         }
         composable("add") {
@@ -69,6 +95,16 @@ fun AppNav() {
                     PlayQueue.list = list
                     nav.navigate("guide")
                 },
+                onMulti = { list ->
+                    PlayQueue.list = list
+                    nav.navigate("multi")
+                },
+            )
+        }
+        composable("multi") {
+            MultiViewScreen(
+                onFullscreen = { i -> nav.navigate("player/$i") },
+                onBack = { nav.popBackStack() },
             )
         }
         composable("guide") {

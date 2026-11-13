@@ -141,9 +141,40 @@ class UserPrefs(context: Context) {
         sp.edit().putBoolean("bg_play", v).apply()
     }
 
+    fun onboarded(): Boolean = sp.getBoolean("onboarded", false)
+
+    fun setOnboarded() {
+        sp.edit().putBoolean("onboarded", true).apply()
+    }
+
+    fun theme(): String = sp.getString("theme", "violet") ?: "violet"
+
+    fun setTheme(id: String) {
+        sp.edit().putString("theme", id).apply()
+    }
+
+    fun autoReconnect(): Boolean = sp.getBoolean("auto_reconnect", true)
+
+    fun setAutoReconnect(v: Boolean) {
+        sp.edit().putBoolean("auto_reconnect", v).apply()
+    }
+
+    /** حجم البافر: 0 = صغير (تأخير أقل)، 1 = عادي، 2 = كبير (ثبات أكتر). */
+    fun bufferMode(): Int = sp.getInt("buffer_mode", 1).coerceIn(0, 2)
+
+    fun setBufferMode(v: Int) {
+        sp.edit().putInt("buffer_mode", v).apply()
+    }
+
+    fun showStats(): Boolean = sp.getBoolean("show_stats", false)
+
+    fun setShowStats(v: Boolean) {
+        sp.edit().putBoolean("show_stats", v).apply()
+    }
+
     /** يرجّع إعدادات التشغيل للوضع الافتراضي. */
     fun restoreDefaults() {
-        sp.edit().remove("auto_play").remove("hw_decoding").remove("bg_play").remove("pip").remove("aspect").apply()
+        sp.edit().remove("auto_reconnect").remove("buffer_mode").remove("show_stats").remove("auto_play").remove("hw_decoding").remove("bg_play").remove("pip").remove("aspect").apply()
     }
 
     private fun hash(pin: String): String =

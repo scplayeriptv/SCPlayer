@@ -94,6 +94,7 @@ fun HomeScreen(
     onPlay: (List<Channel>, Int) -> Unit,
     onPlaylists: () -> Unit,
     onGuide: (List<Channel>) -> Unit,
+    onMulti: (List<Channel>) -> Unit,
 ) {
     val ctx = LocalContext.current
     val repo = remember { PlaylistRepository(ctx.applicationContext) }
@@ -138,6 +139,7 @@ fun HomeScreen(
                 onPlay = onPlay,
                 onPlaylists = onPlaylists,
                 onGuide = onGuide,
+                onMulti = onMulti,
             )
         }
     }
@@ -155,6 +157,7 @@ private fun Shell(
     onPlay: (List<Channel>, Int) -> Unit,
     onPlaylists: () -> Unit,
     onGuide: (List<Channel>) -> Unit,
+    onMulti: (List<Channel>) -> Unit,
 ) {
     val ctx = LocalContext.current
     val wide = LocalConfiguration.current.screenWidthDp >= 720
@@ -222,6 +225,15 @@ private fun Shell(
         onPlay(list, i)
     }
 
+    // تشغيل عنصر جاي من صف Continue Watching بتاع Android TV
+    val deep = com.sc.player.data.DeepLink.item.value
+    LaunchedEffect(deep, needPick) {
+        if (deep != null && !needPick) {
+            com.sc.player.data.DeepLink.item.value = null
+            play(listOf(deep), 0)
+        }
+    }
+
     fun go(d: Dest) {
         openSeries = null
         openDetails = null
@@ -282,6 +294,7 @@ private fun Shell(
                 version = version,
                 onOpen = { go(it) },
                 onGuide = { onGuide(byKind[Kind.Live]?.takeIf { it.isNotEmpty() } ?: visible) },
+                onMulti = { onMulti(byKind[Kind.Live]?.takeIf { it.isNotEmpty() } ?: visible) },
                 onReload = onReload,
                 onExit = { ctx.findActivity()?.finish() },
                 onPlayRecent = { play(recents, it) },

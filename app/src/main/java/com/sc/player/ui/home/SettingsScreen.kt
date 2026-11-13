@@ -140,6 +140,9 @@ fun SettingsScreen(
     var hw by remember { mutableStateOf(prefs.hardwareDecoding()) }
     var bg by remember { mutableStateOf(prefs.backgroundPlay()) }
     var pip by remember { mutableStateOf(prefs.pip()) }
+    var reconnect by remember { mutableStateOf(prefs.autoReconnect()) }
+    var bufferMode by remember { mutableStateOf(prefs.bufferMode()) }
+    var stats by remember { mutableStateOf(prefs.showStats()) }
     var profilesTick by remember { mutableStateOf(0) }
     var editingProfile by remember { mutableStateOf<com.sc.player.data.Profile?>(null) }
     var addingProfile by remember { mutableStateOf(false) }
@@ -161,6 +164,8 @@ fun SettingsScreen(
                     null,
                     value = appLanguages.firstOrNull { it.code == savedLang }?.nativeName ?: stringResource(R.string.set_language_system),
                 ) { showLanguages = true }
+                RowDivider()
+                ThemePicker(prefs)
                 RowDivider()
                 SettingRow(
                     stringResource(R.string.set_clear_cache),
@@ -220,6 +225,9 @@ fun SettingsScreen(
                     hw = prefs.hardwareDecoding()
                     bg = prefs.backgroundPlay()
                     pip = prefs.pip()
+                    reconnect = prefs.autoReconnect()
+                    bufferMode = prefs.bufferMode()
+                    stats = prefs.showStats()
                 }
             }
             Section.Account -> {
@@ -306,6 +314,31 @@ fun SettingsScreen(
                 ToggleRow(stringResource(R.string.set_hw), stringResource(R.string.set_hw_sub), hw) {
                     hw = it
                     prefs.setHardwareDecoding(it)
+                }
+                RowDivider()
+                ToggleRow(stringResource(R.string.set_reconnect), stringResource(R.string.set_reconnect_sub), reconnect) {
+                    reconnect = it
+                    prefs.setAutoReconnect(it)
+                }
+                RowDivider()
+                SettingRow(
+                    stringResource(R.string.set_buffer),
+                    stringResource(R.string.set_buffer_sub),
+                    value = stringResource(
+                        when (bufferMode) {
+                            0 -> R.string.buffer_low
+                            2 -> R.string.buffer_high
+                            else -> R.string.buffer_normal
+                        },
+                    ),
+                ) {
+                    bufferMode = (bufferMode + 1) % 3
+                    prefs.setBufferMode(bufferMode)
+                }
+                RowDivider()
+                ToggleRow(stringResource(R.string.set_stats), stringResource(R.string.set_stats_sub), stats) {
+                    stats = it
+                    prefs.setShowStats(it)
                 }
             }
             Section.Guide -> SettingRow(

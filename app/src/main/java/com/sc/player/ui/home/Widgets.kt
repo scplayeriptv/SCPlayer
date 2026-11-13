@@ -197,7 +197,7 @@ internal fun ChannelRow(
                 if (it.isFocused) onFocus()
             }
             .clip(shape)
-            .background(if (focused) Color(0x33A855F7) else Glass)
+            .background(if (focused) com.sc.player.ui.theme.Violet.copy(alpha = 0.2f) else Glass)
             .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
             .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onToggleFav)
             .padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),

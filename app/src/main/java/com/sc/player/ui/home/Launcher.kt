@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Radio
@@ -100,6 +101,7 @@ internal fun Launcher(
     version: String,
     onOpen: (Dest) -> Unit,
     onGuide: () -> Unit,
+    onMulti: () -> Unit,
     onReload: () -> Unit,
     onExit: () -> Unit,
     onPlayRecent: (Int) -> Unit,
@@ -112,6 +114,7 @@ internal fun Launcher(
     val series = stringResource(R.string.nav_series)
     val radio = stringResource(R.string.nav_radio)
     val guide = stringResource(R.string.guide)
+    val multi = stringResource(R.string.multi_view)
     val search = stringResource(R.string.nav_search)
     val playlists = stringResource(R.string.change_playlist)
     val reload = if (reloading) stringResource(R.string.reloading) else stringResource(R.string.tile_reload)
@@ -145,6 +148,7 @@ internal fun Launcher(
                     Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                         Tile3D(radio, Icons.Filled.Radio, Green, TileStyle.Card, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Radio]?.toString()) { onOpen(Dest.Radio) }
                         Tile3D(guide, Icons.Filled.CalendarMonth, Teal, TileStyle.Card, Modifier.weight(1f).fillMaxHeight()) { onGuide() }
+                        Tile3D(multi, Icons.Filled.GridView, Pink, TileStyle.Card, Modifier.weight(1f).fillMaxHeight()) { onMulti() }
                     }
                 }
                 Column(Modifier.weight(1.7f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -183,6 +187,7 @@ internal fun Launcher(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Tile3D(radio, Icons.Filled.Radio, Green, TileStyle.Card, Modifier.weight(1f).height(120.dp), badge = counts[Kind.Radio]?.toString()) { onOpen(Dest.Radio) }
                 Tile3D(guide, Icons.Filled.CalendarMonth, Teal, TileStyle.Card, Modifier.weight(1f).height(120.dp)) { onGuide() }
+                Tile3D(multi, Icons.Filled.GridView, Pink, TileStyle.Card, Modifier.weight(1f).height(120.dp)) { onMulti() }
                 Tile3D(search, Icons.Filled.Search, Blue, TileStyle.Card, Modifier.weight(1f).height(120.dp)) { onOpen(Dest.Search) }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
