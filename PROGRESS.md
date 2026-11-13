@@ -270,3 +270,7 @@
 - SettingRow: لو القيمة أطول من 18 حرف بتنزل تحت العنوان بدل ما تعصر العنوان (حالة "Reset Favorites & Recents" و"Installed build…").
 - عناوين مجموعات صغيرة (`GroupLabel`): General → المظهر / الصيانة / إعادة الضبط؛ Playback → التشغيل / الأداء / التشخيص. مفاتيح ×9: set_grp_*.
 - ThemePicker: العنوان والاسم في سطر واحد، والدواير الـ6 موزّعة بالتساوي (SpaceBetween، 38dp) ومبقتش بتتقطع.
+
+## تنظيم الرئيسية (موبايل) ✅ (غير مختبر)
+- Launcher (narrow): Live (150dp) + Movies/Series (112dp)، ثم مجموعتين بعناوين صغيرة: TOOLS (Radio/Guide/Multi-view/Search) و MANAGE (Playlist/Reload/Settings/Exit) بنفس حجم Mini (92dp) — كل الأسماء بتتكتب في سطرين بدل الاقتطاع ("Multi-view"، "Change Playlist").
+- شارة Radio بتختفي لما العدد 0 (موبايل وواسع). مفاتيح ×9: grp_tools, grp_manage. تخطيط الشاشات الواسعة (TV) ما اتغيّرش غير الشارة.

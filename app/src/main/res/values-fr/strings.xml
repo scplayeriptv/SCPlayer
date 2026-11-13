@@ -267,4 +267,6 @@
     <string name="set_grp_playback">LECTURE</string>
     <string name="set_grp_performance">PERFORMANCES</string>
     <string name="set_grp_diag">DIAGNOSTIC</string>
+    <string name="grp_tools">OUTILS</string>
+    <string name="grp_manage">GÉRER</string>
 </resources>

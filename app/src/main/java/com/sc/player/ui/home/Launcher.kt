@@ -146,7 +146,7 @@ internal fun Launcher(
                         Tile3D(series, Icons.Filled.VideoLibrary, Orange, TileStyle.Card, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Series]?.toString()) { onOpen(Dest.Series) }
                     }
                     Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                        Tile3D(radio, Icons.Filled.Radio, Green, TileStyle.Card, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Radio]?.toString()) { onOpen(Dest.Radio) }
+                        Tile3D(radio, Icons.Filled.Radio, Green, TileStyle.Card, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Radio]?.takeIf { it > 0 }?.toString()) { onOpen(Dest.Radio) }
                         Tile3D(guide, Icons.Filled.CalendarMonth, Teal, TileStyle.Card, Modifier.weight(1f).fillMaxHeight()) { onGuide() }
                         Tile3D(multi, Icons.Filled.GridView, Pink, TileStyle.Card, Modifier.weight(1f).fillMaxHeight()) { onMulti() }
                     }
@@ -177,21 +177,24 @@ internal fun Launcher(
                 Text(status, color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 ProfileChip(profile, onProfile, Modifier.padding(top = 4.dp))
             }
-            Tile3D(live, Icons.Filled.LiveTv, Purple, TileStyle.Hero, Modifier.fillMaxWidth().height(170.dp), badge = counts[Kind.Live]?.toString()) {
+            Tile3D(live, Icons.Filled.LiveTv, Purple, TileStyle.Hero, Modifier.fillMaxWidth().height(150.dp), badge = counts[Kind.Live]?.toString()) {
                 onOpen(Dest.LiveTv)
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                Tile3D(movies, Icons.Filled.Movie, Blue, TileStyle.Card, Modifier.weight(1f).height(120.dp), badge = counts[Kind.Movies]?.toString()) { onOpen(Dest.Movies) }
-                Tile3D(series, Icons.Filled.VideoLibrary, Orange, TileStyle.Card, Modifier.weight(1f).height(120.dp), badge = counts[Kind.Series]?.toString()) { onOpen(Dest.Series) }
+                Tile3D(movies, Icons.Filled.Movie, Blue, TileStyle.Card, Modifier.weight(1f).height(112.dp), badge = counts[Kind.Movies]?.toString()) { onOpen(Dest.Movies) }
+                Tile3D(series, Icons.Filled.VideoLibrary, Orange, TileStyle.Card, Modifier.weight(1f).height(112.dp), badge = counts[Kind.Series]?.toString()) { onOpen(Dest.Series) }
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                Tile3D(radio, Icons.Filled.Radio, Green, TileStyle.Card, Modifier.weight(1f).height(120.dp), badge = counts[Kind.Radio]?.toString()) { onOpen(Dest.Radio) }
-                Tile3D(guide, Icons.Filled.CalendarMonth, Teal, TileStyle.Card, Modifier.weight(1f).height(120.dp)) { onGuide() }
-                Tile3D(multi, Icons.Filled.GridView, Pink, TileStyle.Card, Modifier.weight(1f).height(120.dp)) { onMulti() }
-                Tile3D(search, Icons.Filled.Search, Blue, TileStyle.Card, Modifier.weight(1f).height(120.dp)) { onOpen(Dest.Search) }
-            }
+            GroupHeader(stringResource(R.string.grp_tools))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                val m = Modifier.weight(1f).height(88.dp)
+                val m = Modifier.weight(1f).height(92.dp)
+                Tile3D(radio, Icons.Filled.Radio, Green, TileStyle.Mini, m, badge = counts[Kind.Radio]?.takeIf { it > 0 }?.toString()) { onOpen(Dest.Radio) }
+                Tile3D(guide, Icons.Filled.CalendarMonth, Teal, TileStyle.Mini, m) { onGuide() }
+                Tile3D(multi, Icons.Filled.GridView, Pink, TileStyle.Mini, m) { onMulti() }
+                Tile3D(search, Icons.Filled.Search, Blue, TileStyle.Mini, m) { onOpen(Dest.Search) }
+            }
+            GroupHeader(stringResource(R.string.grp_manage))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                val m = Modifier.weight(1f).height(92.dp)
                 Tile3D(playlists, Icons.AutoMirrored.Filled.PlaylistPlay, Pink, TileStyle.Mini, m) { onOpen(Dest.Playlist) }
                 Tile3D(reload, Icons.Filled.Refresh, Slate, TileStyle.Mini, m) { if (!reloading) onReload() }
                 Tile3D(settings, Icons.Filled.Settings, Slate, TileStyle.Mini, m) { onOpen(Dest.Settings) }
@@ -210,6 +213,18 @@ internal fun Launcher(
             Text("v$version", color = TextMuted, fontSize = 12.sp, modifier = Modifier.align(Alignment.End))
         }
     }
+}
+
+@Composable
+private fun GroupHeader(text: String) {
+    Text(
+        text,
+        color = TextMuted,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.sp,
+        modifier = Modifier.padding(start = 4.dp, top = 2.dp),
+    )
 }
 
 @Composable
@@ -351,8 +366,10 @@ private fun Tile3D(
                     color = Color.White,
                     fontSize = labelSize,
                     fontWeight = FontWeight.ExtraBold,
-                    maxLines = 1,
+                    maxLines = if (style == TileStyle.Mini) 2 else 1,
                     overflow = TextOverflow.Ellipsis,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    lineHeight = if (style == TileStyle.Mini) 13.sp else androidx.compose.ui.unit.TextUnit.Unspecified,
                     style = TextStyle(shadow = Shadow(Color.Black.copy(alpha = 0.45f), Offset(0f, 3f), 6f)),
                 )
             }

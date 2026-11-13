@@ -267,4 +267,6 @@
     <string name="set_grp_playback">REPRODUCCIÓN</string>
     <string name="set_grp_performance">RENDIMIENTO</string>
     <string name="set_grp_diag">DIAGNÓSTICO</string>
+    <string name="grp_tools">HERRAMIENTAS</string>
+    <string name="grp_manage">GESTIONAR</string>
 </resources>

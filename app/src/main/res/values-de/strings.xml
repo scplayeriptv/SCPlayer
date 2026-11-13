@@ -267,4 +267,6 @@
     <string name="set_grp_playback">WIEDERGABE</string>
     <string name="set_grp_performance">LEISTUNG</string>
     <string name="set_grp_diag">DIAGNOSE</string>
+    <string name="grp_tools">WERKZEUGE</string>
+    <string name="grp_manage">VERWALTEN</string>
 </resources>

@@ -267,4 +267,6 @@
     <string name="set_grp_playback">REPRODUÇÃO</string>
     <string name="set_grp_performance">DESEMPENHO</string>
     <string name="set_grp_diag">DIAGNÓSTICO</string>
+    <string name="grp_tools">FERRAMENTAS</string>
+    <string name="grp_manage">GERENCIAR</string>
 </resources>

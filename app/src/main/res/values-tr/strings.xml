@@ -267,4 +267,6 @@
     <string name="set_grp_playback">OYNATMA</string>
     <string name="set_grp_performance">PERFORMANS</string>
     <string name="set_grp_diag">TANI</string>
+    <string name="grp_tools">ARAÇLAR</string>
+    <string name="grp_manage">YÖNET</string>
 </resources>

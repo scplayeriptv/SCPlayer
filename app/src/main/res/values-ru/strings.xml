@@ -267,4 +267,6 @@
     <string name="set_grp_playback">ВОСПРОИЗВЕДЕНИЕ</string>
     <string name="set_grp_performance">ПРОИЗВОДИТЕЛЬНОСТЬ</string>
     <string name="set_grp_diag">ДИАГНОСТИКА</string>
+    <string name="grp_tools">ИНСТРУМЕНТЫ</string>
+    <string name="grp_manage">УПРАВЛЕНИЕ</string>
 </resources>

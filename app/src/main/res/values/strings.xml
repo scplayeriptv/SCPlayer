@@ -269,4 +269,6 @@
     <string name="set_grp_playback">PLAYBACK</string>
     <string name="set_grp_performance">PERFORMANCE</string>
     <string name="set_grp_diag">DIAGNOSTICS</string>
+    <string name="grp_tools">TOOLS</string>
+    <string name="grp_manage">MANAGE</string>
 </resources>

@@ -267,4 +267,6 @@
     <string name="set_grp_playback">التشغيل</string>
     <string name="set_grp_performance">الأداء</string>
     <string name="set_grp_diag">التشخيص</string>
+    <string name="grp_tools">أدوات</string>
+    <string name="grp_manage">إدارة</string>
 </resources>
