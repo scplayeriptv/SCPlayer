@@ -257,4 +257,14 @@
     <string name="onb3_body">Voyez ce qui passe dans une grille horaire et soyez prévenu avant votre émission préférée.</string>
     <string name="onb4_title">Plus de façons de regarder</string>
     <string name="onb4_body">Profils pour la famille, profil enfant avec PIN, multi-vue jusqu\'à 4 chaînes et thèmes à votre goût.</string>
+    <string name="cast_title">Diffuser sur un appareil</string>
+    <string name="cast_none">Recherche d\'appareils Cast sur votre Wi-Fi… Le téléphone et la TV/Chromecast doivent être sur le même réseau.</string>
+    <string name="cast_casting">Diffusion sur %1$s</string>
+    <string name="cast_stop">Arrêter la diffusion</string>
+    <string name="set_grp_appearance">APPARENCE</string>
+    <string name="set_grp_maintenance">MAINTENANCE</string>
+    <string name="set_grp_reset">RÉINITIALISATION</string>
+    <string name="set_grp_playback">LECTURE</string>
+    <string name="set_grp_performance">PERFORMANCES</string>
+    <string name="set_grp_diag">DIAGNOSTIC</string>
 </resources>

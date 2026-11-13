@@ -259,4 +259,14 @@
     <string name="onb3_body">See what\'s on in a timeline grid and get a reminder before your favourite show starts.</string>
     <string name="onb4_title">More ways to watch</string>
     <string name="onb4_body">Profiles for the family, a kids profile with PIN, multi-view for up to 4 channels, and themes to make it yours.</string>
+    <string name="cast_title">Cast to device</string>
+    <string name="cast_none">Searching for Cast devices on your Wi-Fi… Make sure the phone and the TV/Chromecast are on the same network.</string>
+    <string name="cast_casting">Casting to %1$s</string>
+    <string name="cast_stop">Stop casting</string>
+    <string name="set_grp_appearance">APPEARANCE</string>
+    <string name="set_grp_maintenance">MAINTENANCE</string>
+    <string name="set_grp_reset">RESET</string>
+    <string name="set_grp_playback">PLAYBACK</string>
+    <string name="set_grp_performance">PERFORMANCE</string>
+    <string name="set_grp_diag">DIAGNOSTICS</string>
 </resources>

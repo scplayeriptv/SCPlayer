@@ -48,15 +48,17 @@ private fun AppTheme.nameRes() = when (this) {
 internal fun ThemePicker(prefs: UserPrefs) {
     val current = ThemeState.current
     Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(stringResource(R.string.set_theme), color = TextMain, fontSize = 16.sp)
-        Text(stringResource(current.nameRes()), color = TextMuted, fontSize = 12.sp)
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(stringResource(R.string.set_theme), color = TextMain, fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+            Text(stringResource(current.nameRes()), color = TextMuted, fontSize = 14.sp)
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             AppTheme.values().forEach { t ->
                 var focused by remember { mutableStateOf(false) }
                 val sel = t == current
                 Box(
                     Modifier
-                        .size(40.dp)
+                        .size(38.dp)
                         .onFocusChanged { focused = it.isFocused }
                         .clip(CircleShape)
                         .background(Brush.linearGradient(listOf(t.grad1, t.grad2)))

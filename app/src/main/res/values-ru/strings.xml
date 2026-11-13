@@ -257,4 +257,14 @@
     <string name="onb3_body">Смотрите, что идёт, на временной сетке и получайте напоминание перед любимой передачей.</string>
     <string name="onb4_title">Больше возможностей</string>
     <string name="onb4_body">Профили для семьи, детский профиль с PIN, мультиэкран до 4 каналов и темы на ваш вкус.</string>
+    <string name="cast_title">Трансляция на устройство</string>
+    <string name="cast_none">Поиск устройств Cast в Wi-Fi… Телефон и ТВ/Chromecast должны быть в одной сети.</string>
+    <string name="cast_casting">Трансляция на %1$s</string>
+    <string name="cast_stop">Остановить трансляцию</string>
+    <string name="set_grp_appearance">ВНЕШНИЙ ВИД</string>
+    <string name="set_grp_maintenance">ОБСЛУЖИВАНИЕ</string>
+    <string name="set_grp_reset">СБРОС</string>
+    <string name="set_grp_playback">ВОСПРОИЗВЕДЕНИЕ</string>
+    <string name="set_grp_performance">ПРОИЗВОДИТЕЛЬНОСТЬ</string>
+    <string name="set_grp_diag">ДИАГНОСТИКА</string>
 </resources>

@@ -257,4 +257,14 @@
     <string name="onb3_body">Sieh im Zeitraster, was läuft, und lass dich vor deiner Lieblingssendung erinnern.</string>
     <string name="onb4_title">Mehr Möglichkeiten</string>
     <string name="onb4_body">Profile für die Familie, Kinderprofil mit PIN, Multi-View für bis zu 4 Sender und Designs nach deinem Geschmack.</string>
+    <string name="cast_title">Auf Gerät übertragen</string>
+    <string name="cast_none">Suche nach Cast-Geräten im WLAN… Handy und TV/Chromecast müssen im selben Netzwerk sein.</string>
+    <string name="cast_casting">Übertragung auf %1$s</string>
+    <string name="cast_stop">Übertragung beenden</string>
+    <string name="set_grp_appearance">DARSTELLUNG</string>
+    <string name="set_grp_maintenance">WARTUNG</string>
+    <string name="set_grp_reset">ZURÜCKSETZEN</string>
+    <string name="set_grp_playback">WIEDERGABE</string>
+    <string name="set_grp_performance">LEISTUNG</string>
+    <string name="set_grp_diag">DIAGNOSE</string>
 </resources>

@@ -257,4 +257,14 @@
     <string name="onb3_body">شوف إيه اللي بيتعرض في جدول زمني، واتنبّه قبل ما برنامجك المفضل يبدأ.</string>
     <string name="onb4_title">طرق أكتر للمشاهدة</string>
     <string name="onb4_body">بروفايلات للعيلة، بروفايل أطفال بكود PIN، متعدد الشاشات لحد 4 قنوات، وثيمات تظبطه على ذوقك.</string>
+    <string name="cast_title">اعرض على جهاز (Cast)</string>
+    <string name="cast_none">بدوّر على أجهزة Cast في الواي فاي… اتأكد إن الموبايل والتليفزيون/الكروم كاست على نفس الشبكة.</string>
+    <string name="cast_casting">بيعرض على %1$s</string>
+    <string name="cast_stop">أوقف العرض</string>
+    <string name="set_grp_appearance">المظهر</string>
+    <string name="set_grp_maintenance">الصيانة</string>
+    <string name="set_grp_reset">إعادة الضبط</string>
+    <string name="set_grp_playback">التشغيل</string>
+    <string name="set_grp_performance">الأداء</string>
+    <string name="set_grp_diag">التشخيص</string>
 </resources>

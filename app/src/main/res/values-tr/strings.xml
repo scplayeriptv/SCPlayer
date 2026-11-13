@@ -257,4 +257,14 @@
     <string name="onb3_body">Zaman çizelgesinde yayınları görün, sevdiğiniz program başlamadan önce hatırlatma alın.</string>
     <string name="onb4_title">Daha fazla izleme yolu</string>
     <string name="onb4_body">Aile için profiller, PIN\'li çocuk profili, 4 kanala kadar çoklu görünüm ve size özel temalar.</string>
+    <string name="cast_title">Cihaza yansıt</string>
+    <string name="cast_none">Wi-Fi\'de Cast cihazları aranıyor… Telefon ve TV/Chromecast aynı ağda olmalı.</string>
+    <string name="cast_casting">%1$s cihazına yansıtılıyor</string>
+    <string name="cast_stop">Yansıtmayı durdur</string>
+    <string name="set_grp_appearance">GÖRÜNÜM</string>
+    <string name="set_grp_maintenance">BAKIM</string>
+    <string name="set_grp_reset">SIFIRLAMA</string>
+    <string name="set_grp_playback">OYNATMA</string>
+    <string name="set_grp_performance">PERFORMANS</string>
+    <string name="set_grp_diag">TANI</string>
 </resources>

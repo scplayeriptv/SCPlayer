@@ -257,3 +257,16 @@
 - محدودية: المستخدمين الحاليين هيشوفوا الـ onboarding مرة واحدة بعد التحديث. مفاتيح ×9: onb_next/skip/start، onb1..4_title/body.
 
 ## إصلاح Build 39: علامة `&` في strings.xml (onb3_title في values و values-de) لازم تتكتب `&amp;` — اتصلّحت، وكل ملفات الـ strings اتفحصت إنها XML سليم (parse).
+
+## ميزة 11: Google Cast ✅ (غير مختبر)
+- Dependencies جديدة: media3-cast 1.4.1، play-services-cast-framework 21.5.0، mediarouter 1.7.0. `cast/CastOptionsProvider.kt` (Default Media Receiver — من غير تسجيل) + meta-data في الـ Manifest.
+- `cast/CastHelper.kt`: بيلفّ CastContext/CastPlayer (null على TV أو من غير Play Services → الزر مش بيظهر) + `CastDialog` بقايمة الأجهزة بتاعتنا (من MediaRouter) لأن MediaRouteButton بيحتاج ثيم AppCompat والتطبيق مش كده.
+- في المشغّل: زر 📡 في الشريط العلوي → اختيار جهاز → الفيديو المحلي بيتوقف والـ Cast بيكمّل من نفس الموضع (للأفلام)، ولوحة "بيعرض على X" فيها Play/Pause وإيقاف. تغيير القناة أثناء الـ Cast بيبعت القناة الجديدة. إيقاف الـ Cast أو الخروج من المشغّل بيقفل الجلسة ويرجّع التشغيل المحلي.
+- روابط Xtream المباشرة `.../live/.../id.ts` بتتحوّل لـ `.m3u8` للـ Cast (الـ Chromecast مش بيشغّل TS خام). MIME: m3u8/mkv/webm/mp4 حسب الامتداد.
+- محدودية: الـ Chromecast بيفتح الرابط بنفسه (لازم يوصل للسيرفر وما يكونش مربوط بـ IP واحد)، بعض السيرفرات بتمنعه؛ مفيش seek أثناء الـ Cast؛ الصيغ/الكودكات غير المدعومة (مثلاً H.265/AC3 على بعض الأجهزة) ممكن ما تشتغلش؛ بعد Cast للـ VOD الرجوع للمحلي بيكمّل من آخر موضع محلي مش موضع الـ Cast. غير مختبر على جهاز Cast حقيقي.
+- مفاتيح ×9: cast_title, cast_none, cast_casting, cast_stop.
+
+## تنظيم الإعدادات ✅ (غير مختبر)
+- SettingRow: لو القيمة أطول من 18 حرف بتنزل تحت العنوان بدل ما تعصر العنوان (حالة "Reset Favorites & Recents" و"Installed build…").
+- عناوين مجموعات صغيرة (`GroupLabel`): General → المظهر / الصيانة / إعادة الضبط؛ Playback → التشغيل / الأداء / التشخيص. مفاتيح ×9: set_grp_*.
+- ThemePicker: العنوان والاسم في سطر واحد، والدواير الـ6 موزّعة بالتساوي (SpaceBetween، 38dp) ومبقتش بتتقطع.

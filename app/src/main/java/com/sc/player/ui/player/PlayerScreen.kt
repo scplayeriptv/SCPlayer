@@ -197,6 +197,26 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     var isVod by remember { mutableStateOf(false) }
     var dragging by remember { mutableStateOf(false) }
 
+    var showCast by remember { mutableStateOf(false) }
+    val cast = remember { com.sc.player.cast.CastHelper(ctx) }
+    val castChannel by androidx.compose.runtime.rememberUpdatedState(channel)
+    val castVod by androidx.compose.runtime.rememberUpdatedState(isVod)
+    DisposableEffect(cast) {
+        fun handoff() {
+            val pos = player.currentPosition
+            player.pause()
+            cast.load(castChannel, if (castVod) pos else 0L)
+        }
+        cast.onStart = { handoff() }
+        cast.onEnd = { player.playWhenReady = true }
+        if (cast.active) handoff()
+        onDispose {
+            cast.onStart = null
+            cast.onEnd = null
+            cast.release()
+        }
+    }
+
     // حفظ موضع المشاهدة للأفلام/الحلقات (مش للبث المباشر)
     fun saveNow() {
         val id = player.currentMediaItem?.mediaId?.takeIf { it.isNotEmpty() } ?: return
@@ -349,6 +369,10 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
         if (resume != null) player.setMediaItem(item, resume) else player.setMediaItem(item)
         player.prepare()
         player.playWhenReady = true
+        if (cast.active) {
+            player.playWhenReady = false
+            cast.load(channel)
+        }
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
@@ -559,6 +583,9 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     if (PipState.supported(ctx)) {
                         RoundButton("🖼", stringResource(R.string.player_pip)) { ctx.findActivity()?.let { PipState.enter(it) } }
                     }
+                    if (cast.supported) {
+                        RoundButton("📡", stringResource(R.string.cast_title)) { showCast = true; poke() }
+                    }
                     if (queue.size > 1) {
                         RoundButton("☰", stringResource(R.string.player_channels)) { showList = true; poke() }
                     }
@@ -611,6 +638,20 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             }
         }
 
+        if (cast.active && !inPip) {
+            Column(
+                Modifier.background(Color(0xCC000000), RoundedCornerShape(16.dp)).padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(stringResource(R.string.cast_casting, cast.deviceName), color = TextMain, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    PillButton(stringResource(if (cast.paused) R.string.resume else R.string.pause), primary = true) { cast.togglePause() }
+                    PillButton(stringResource(R.string.cast_stop)) { cast.stop() }
+                }
+            }
+        }
+
         if (numberBuffer.isNotEmpty() && !inPip) {
             NumberBadge(numberBuffer, Modifier.align(Alignment.TopEnd).padding(28.dp))
         }
@@ -622,6 +663,10 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                 modifier = Modifier.align(Alignment.CenterStart),
             )
         }
+    }
+
+    if (showCast && !inPip) {
+        com.sc.player.cast.CastDialog(cast) { showCast = false }
     }
 
     if (showOptions && !inPip) {

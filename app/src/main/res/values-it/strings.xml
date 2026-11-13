@@ -257,4 +257,14 @@
     <string name="onb3_body">Guarda cosa va in onda in una griglia temporale e ricevi un avviso prima del tuo programma preferito.</string>
     <string name="onb4_title">Altri modi di guardare</string>
     <string name="onb4_body">Profili per la famiglia, profilo bambini con PIN, multi-vista fino a 4 canali e temi a tuo gusto.</string>
+    <string name="cast_title">Trasmetti al dispositivo</string>
+    <string name="cast_none">Ricerca di dispositivi Cast sul Wi-Fi… Telefono e TV/Chromecast devono essere sulla stessa rete.</string>
+    <string name="cast_casting">Trasmissione su %1$s</string>
+    <string name="cast_stop">Interrompi trasmissione</string>
+    <string name="set_grp_appearance">ASPETTO</string>
+    <string name="set_grp_maintenance">MANUTENZIONE</string>
+    <string name="set_grp_reset">RIPRISTINO</string>
+    <string name="set_grp_playback">RIPRODUZIONE</string>
+    <string name="set_grp_performance">PRESTAZIONI</string>
+    <string name="set_grp_diag">DIAGNOSTICA</string>
 </resources>

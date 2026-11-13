@@ -257,4 +257,14 @@
     <string name="onb3_body">Mira qué hay en una cuadrícula temporal y recibe un aviso antes de tu programa favorito.</string>
     <string name="onb4_title">Más formas de ver</string>
     <string name="onb4_body">Perfiles para la familia, perfil infantil con PIN, multivista de hasta 4 canales y temas a tu gusto.</string>
+    <string name="cast_title">Transmitir a dispositivo</string>
+    <string name="cast_none">Buscando dispositivos Cast en tu Wi-Fi… El móvil y la TV/Chromecast deben estar en la misma red.</string>
+    <string name="cast_casting">Transmitiendo a %1$s</string>
+    <string name="cast_stop">Detener transmisión</string>
+    <string name="set_grp_appearance">APARIENCIA</string>
+    <string name="set_grp_maintenance">MANTENIMIENTO</string>
+    <string name="set_grp_reset">RESTABLECER</string>
+    <string name="set_grp_playback">REPRODUCCIÓN</string>
+    <string name="set_grp_performance">RENDIMIENTO</string>
+    <string name="set_grp_diag">DIAGNÓSTICO</string>
 </resources>

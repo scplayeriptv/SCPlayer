@@ -159,6 +159,7 @@ fun SettingsScreen(
     val rows: @Composable () -> Unit = {
         when (section) {
             Section.General -> {
+                GroupLabel(stringResource(R.string.set_grp_appearance))
                 SettingRow(
                     stringResource(R.string.set_language),
                     null,
@@ -166,7 +167,7 @@ fun SettingsScreen(
                 ) { showLanguages = true }
                 RowDivider()
                 ThemePicker(prefs)
-                RowDivider()
+                GroupLabel(stringResource(R.string.set_grp_maintenance))
                 SettingRow(
                     stringResource(R.string.set_clear_cache),
                     null,
@@ -204,7 +205,7 @@ fun SettingsScreen(
                         }
                     }
                 }
-                RowDivider()
+                GroupLabel(stringResource(R.string.set_grp_reset))
                 SettingRow(
                     stringResource(R.string.set_reset),
                     null,
@@ -296,6 +297,7 @@ fun SettingsScreen(
                 },
             ) { showParental = true }
             Section.Playback -> {
+                GroupLabel(stringResource(R.string.set_grp_playback))
                 ToggleRow(stringResource(R.string.set_auto_play), stringResource(R.string.set_auto_play_sub), autoPlay) {
                     autoPlay = it
                     prefs.setAutoPlay(it)
@@ -310,7 +312,7 @@ fun SettingsScreen(
                     pip = it
                     prefs.setPip(it)
                 }
-                RowDivider()
+                GroupLabel(stringResource(R.string.set_grp_performance))
                 ToggleRow(stringResource(R.string.set_hw), stringResource(R.string.set_hw_sub), hw) {
                     hw = it
                     prefs.setHardwareDecoding(it)
@@ -335,7 +337,7 @@ fun SettingsScreen(
                     bufferMode = (bufferMode + 1) % 3
                     prefs.setBufferMode(bufferMode)
                 }
-                RowDivider()
+                GroupLabel(stringResource(R.string.set_grp_diag))
                 ToggleRow(stringResource(R.string.set_stats), stringResource(R.string.set_stats_sub), stats) {
                     stats = it
                     prefs.setShowStats(it)
@@ -597,16 +599,31 @@ private fun SettingRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
+        // قيمة طويلة تنزل تحت العنوان بدل ما تضغطه
+        val stacked = value != null && value.length > 18
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(title, color = TextMain, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             subtitle?.let { Text(it, color = TextMuted, fontSize = 13.sp) }
+            if (stacked) Text(value!!, color = TextMuted, fontSize = 13.sp)
         }
-        value?.let {
+        if (!stacked) value?.let {
             Text(it, color = TextMuted, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.dp))
         }
         if (icon != null) Icon(icon, null, tint = Cyan, modifier = Modifier.size(22.dp))
         else Text("›", color = TextMuted, fontSize = 24.sp)
     }
+}
+
+@Composable
+private fun GroupLabel(text: String) {
+    Text(
+        text,
+        color = Cyan,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.sp,
+        modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 2.dp),
+    )
 }
 
 @Composable
