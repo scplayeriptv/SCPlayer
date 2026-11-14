@@ -272,4 +272,5 @@
     <string name="grp_tools">TOOLS</string>
     <string name="grp_manage">MANAGE</string>
     <string name="add_list_playlists">Saved playlists</string>
+    <string name="set_sec_tools">Tools</string>
 </resources>

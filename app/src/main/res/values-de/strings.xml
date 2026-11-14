@@ -270,4 +270,5 @@
     <string name="grp_tools">WERKZEUGE</string>
     <string name="grp_manage">VERWALTEN</string>
     <string name="add_list_playlists">Gespeicherte Playlists</string>
+    <string name="set_sec_tools">Werkzeuge</string>
 </resources>

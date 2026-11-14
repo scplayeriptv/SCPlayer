@@ -137,24 +137,13 @@ internal fun Launcher(
                 )
             }
             Row(Modifier.weight(1f).fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                Tile3D(live, Icons.Filled.LiveTv, Purple, TileStyle.Hero, Modifier.weight(2f).fillMaxHeight(), badge = counts[Kind.Live]?.toString()) {
+                Tile3D(live, Icons.Filled.LiveTv, Purple, TileStyle.Hero, Modifier.weight(1.5f).fillMaxHeight(), badge = counts[Kind.Live]?.toString()) {
                     onOpen(Dest.LiveTv)
                 }
-                Column(Modifier.weight(2.2f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                        Tile3D(movies, Icons.Filled.Movie, Blue, TileStyle.Card, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Movies]?.toString()) { onOpen(Dest.Movies) }
-                        Tile3D(series, Icons.Filled.VideoLibrary, Orange, TileStyle.Card, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Series]?.toString()) { onOpen(Dest.Series) }
-                    }
-                    Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                        Tile3D(radio, Icons.Filled.Radio, Green, TileStyle.Card, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Radio]?.takeIf { it > 0 }?.toString()) { onOpen(Dest.Radio) }
-                        Tile3D(guide, Icons.Filled.CalendarMonth, Teal, TileStyle.Card, Modifier.weight(1f).fillMaxHeight()) { onGuide() }
-                        Tile3D(multi, Icons.Filled.GridView, Pink, TileStyle.Card, Modifier.weight(1f).fillMaxHeight()) { onMulti() }
-                    }
-                }
-                Column(Modifier.weight(1.7f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Tile3D(movies, Icons.Filled.Movie, Blue, TileStyle.Hero, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Movies]?.toString()) { onOpen(Dest.Movies) }
+                Tile3D(series, Icons.Filled.VideoLibrary, Orange, TileStyle.Hero, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Series]?.toString()) { onOpen(Dest.Series) }
+                Column(Modifier.weight(0.9f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     val m = Modifier.weight(1f).fillMaxWidth()
-                    Tile3D(search, Icons.Filled.Search, Blue, TileStyle.Action, m) { onOpen(Dest.Search) }
-                    Tile3D(playlists, Icons.AutoMirrored.Filled.PlaylistPlay, Pink, TileStyle.Action, m) { onOpen(Dest.Playlist) }
                     Tile3D(reload, Icons.Filled.Refresh, Slate, TileStyle.Action, m) { if (!reloading) onReload() }
                     Tile3D(settings, Icons.Filled.Settings, Slate, TileStyle.Action, m) { onOpen(Dest.Settings) }
                     Tile3D(exit, Icons.AutoMirrored.Filled.ExitToApp, Red, TileStyle.Action, m) { onExit() }
@@ -184,18 +173,8 @@ internal fun Launcher(
                 Tile3D(movies, Icons.Filled.Movie, Blue, TileStyle.Card, Modifier.weight(1f).height(112.dp), badge = counts[Kind.Movies]?.toString()) { onOpen(Dest.Movies) }
                 Tile3D(series, Icons.Filled.VideoLibrary, Orange, TileStyle.Card, Modifier.weight(1f).height(112.dp), badge = counts[Kind.Series]?.toString()) { onOpen(Dest.Series) }
             }
-            GroupHeader(stringResource(R.string.grp_tools))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 val m = Modifier.weight(1f).height(92.dp)
-                Tile3D(radio, Icons.Filled.Radio, Green, TileStyle.Mini, m, badge = counts[Kind.Radio]?.takeIf { it > 0 }?.toString()) { onOpen(Dest.Radio) }
-                Tile3D(guide, Icons.Filled.CalendarMonth, Teal, TileStyle.Mini, m) { onGuide() }
-                Tile3D(multi, Icons.Filled.GridView, Pink, TileStyle.Mini, m) { onMulti() }
-                Tile3D(search, Icons.Filled.Search, Blue, TileStyle.Mini, m) { onOpen(Dest.Search) }
-            }
-            GroupHeader(stringResource(R.string.grp_manage))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                val m = Modifier.weight(1f).height(92.dp)
-                Tile3D(playlists, Icons.AutoMirrored.Filled.PlaylistPlay, Pink, TileStyle.Mini, m) { onOpen(Dest.Playlist) }
                 Tile3D(reload, Icons.Filled.Refresh, Slate, TileStyle.Mini, m) { if (!reloading) onReload() }
                 Tile3D(settings, Icons.Filled.Settings, Slate, TileStyle.Mini, m) { onOpen(Dest.Settings) }
                 Tile3D(exit, Icons.AutoMirrored.Filled.ExitToApp, Red, TileStyle.Mini, m) { onExit() }

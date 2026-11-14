@@ -270,4 +270,5 @@
     <string name="grp_tools">STRUMENTI</string>
     <string name="grp_manage">GESTISCI</string>
     <string name="add_list_playlists">Playlist salvate</string>
+    <string name="set_sec_tools">Strumenti</string>
 </resources>

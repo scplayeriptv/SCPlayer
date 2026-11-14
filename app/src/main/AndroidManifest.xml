@@ -27,6 +27,7 @@
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
+            android:screenOrientation="sensorLandscape"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden|uiMode"
             android:supportsPictureInPicture="true"
             android:exported="true">

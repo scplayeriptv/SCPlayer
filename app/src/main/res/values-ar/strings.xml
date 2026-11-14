@@ -270,4 +270,5 @@
     <string name="grp_tools">أدوات</string>
     <string name="grp_manage">إدارة</string>
     <string name="add_list_playlists">القوائم المحفوظة</string>
+    <string name="set_sec_tools">الأدوات</string>
 </resources>

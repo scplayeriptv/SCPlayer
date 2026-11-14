@@ -160,7 +160,8 @@ private fun Shell(
     onMulti: (List<Channel>) -> Unit,
 ) {
     val ctx = LocalContext.current
-    val wide = LocalConfiguration.current.screenWidthDp >= 720
+    val cfg = LocalConfiguration.current
+    val wide = cfg.screenWidthDp >= 720 || cfg.screenWidthDp > cfg.screenHeightDp
     var destName by rememberSaveable { mutableStateOf(Dest.Home.name) }
     val dest = Dest.valueOf(destName)
     var favs by remember { mutableStateOf(prefs.favorites()) }
@@ -337,6 +338,14 @@ private fun Shell(
                     unlocked = ParentalSession.unlocked
                 },
                 onPlaylists = onPlaylists,
+                onTool = { tool ->
+                    when (tool) {
+                        "radio" -> destName = Dest.Radio.name
+                        "search" -> destName = Dest.Search.name
+                        "guide" -> onGuide(byKind[Kind.Live]?.takeIf { it.isNotEmpty() } ?: visible)
+                        "multi" -> onMulti(byKind[Kind.Live]?.takeIf { it.isNotEmpty() } ?: visible)
+                    }
+                },
                 onProfileChanged = { refreshProfile() },
                 onAbout = { destName = Dest.About.name },
                 onResetUserData = {

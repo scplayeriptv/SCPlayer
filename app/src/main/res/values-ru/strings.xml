@@ -270,4 +270,5 @@
     <string name="grp_tools">ИНСТРУМЕНТЫ</string>
     <string name="grp_manage">УПРАВЛЕНИЕ</string>
     <string name="add_list_playlists">Сохранённые плейлисты</string>
+    <string name="set_sec_tools">Инструменты</string>
 </resources>

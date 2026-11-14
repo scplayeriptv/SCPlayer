@@ -270,4 +270,5 @@
     <string name="grp_tools">ARAÇLAR</string>
     <string name="grp_manage">YÖNET</string>
     <string name="add_list_playlists">Kayıtlı listeler</string>
+    <string name="set_sec_tools">Araçlar</string>
 </resources>

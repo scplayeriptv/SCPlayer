@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
@@ -109,6 +110,7 @@ fun SettingsScreen(
     onParentalChanged: () -> Unit,
     onProfileChanged: () -> Unit,
     onPlaylists: () -> Unit,
+    onTool: (String) -> Unit,
     onAbout: () -> Unit,
     onResetUserData: () -> Unit,
 ) {
@@ -230,6 +232,15 @@ fun SettingsScreen(
                     bufferMode = prefs.bufferMode()
                     stats = prefs.showStats()
                 }
+            }
+            Section.Tools -> {
+                SettingRow(stringResource(R.string.nav_radio), null, null) { onTool("radio") }
+                RowDivider()
+                SettingRow(stringResource(R.string.guide), null, null) { onTool("guide") }
+                RowDivider()
+                SettingRow(stringResource(R.string.multi_view), null, null) { onTool("multi") }
+                RowDivider()
+                SettingRow(stringResource(R.string.nav_search), null, null) { onTool("search") }
             }
             Section.Account -> {
                 val acc = account
@@ -508,6 +519,7 @@ fun SettingsScreen(
 
 private enum class Section(val titleRes: Int, val icon: ImageVector) {
     General(R.string.set_sec_general, Icons.Filled.Settings),
+    Tools(R.string.set_sec_tools, Icons.Filled.Apps),
     Account(R.string.set_sec_account, Icons.Filled.AccountCircle),
     Profiles(R.string.set_sec_profiles, Icons.Filled.Person),
     Parental(R.string.parental_title, Icons.Filled.Lock),
