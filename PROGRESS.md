@@ -305,3 +305,10 @@
 - مفاتيح ×9: set_backup(+_sub), set_restore(+_sub), backup_done/failed, restore_done/failed, sleep_title/off/min.
 
 ## إصلاح Build 47: مفتاح مكرر `set_restore` (كان موجود أصلًا لـ "Restore Defaults"). اتغيّر مفتاح النسخة الاحتياطية لـ `set_backup_restore` (+`_sub`). فحصت كل strings: مفيش مفاتيح مكررة، وكل `R.string.*` مستخدم له تعريف، والـ XML سليم.
+
+## شاشة إضافة القائمة بعرض الشاشة ✅ (غير مختبر)
+- `AddPlaylistScreen.kt`: شلت اللوحة اليسرى (رسم السيرفر) والتقسيم لعمودين. دلوقتي: شريط علوي فيه (رجوع) + لوجو + **"SC Player"** بتدرّج الثيم وتحته "Add your playlist"، وتحته الفورم بعرض الشاشة كلها (كارت زجاجي بهوامش 20dp، سكرول رأسي).
+- لو العرض ≥ 600dp (موبايل أفقي/تابلت/TV): حقول Xtream في صفّين (اسم | Username) و(Password | Server)، وM3U: الرابط (2) | الاسم (1). غير كده عمود واحد.
+- دوال `Brand` و`ServerIllustration` لسه في الملف بس مش مستخدمة (ممكن تتشال).
+
+## إصلاح Build 48: `SettingsScreen.kt:141 Unresolved reference 'prefs'` — لانچر الاستعادة كان بيستخدم `prefs` قبل تعريفه؛ اتغيّر لـ `UserPrefs(ctx).theme()`.

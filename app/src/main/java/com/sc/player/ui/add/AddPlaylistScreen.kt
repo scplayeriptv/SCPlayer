@@ -85,23 +85,8 @@ fun AddPlaylistScreen(
         Column(Modifier.fillMaxSize()) {
             TopBar(onBack)
             BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-                if (maxWidth >= 700.dp) {
-                    Row(
-                        Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(48.dp),
-                    ) {
-                        Brand(Modifier.weight(0.4f).align(Alignment.CenterVertically), compact = false, onList = onBack)
-                        FormCard(state, vm, Modifier.weight(0.6f).fillMaxSize(), true)
-                    }
-                } else {
-                    Column(
-                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp),
-                    ) {
-                        Brand(Modifier.fillMaxWidth(), compact = true)
-                        FormCard(state, vm, Modifier.fillMaxWidth(), false)
-                    }
-                }
+                // الفورم بعرض الشاشة كلها؛ حقلين جنب بعض لو العرض يسمح
+                FormCard(state, vm, Modifier.fillMaxSize(), maxWidth >= 600.dp)
             }
         }
     }
@@ -111,7 +96,7 @@ fun AddPlaylistScreen(
 private fun TopBar(onBack: (() -> Unit)?) {
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -127,16 +112,17 @@ private fun TopBar(onBack: (() -> Unit)?) {
             ) {
                 Text(if (rtl) "→" else "←", color = TextMain, fontSize = 20.sp)
             }
-        } else {
-            SCLogo(36.dp)
         }
-        Text(
-            stringResource(R.string.add_title),
-            color = TextMain,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f),
-        )
+        SCLogo(36.dp)
+        Column(Modifier.weight(1f)) {
+            Text(
+                "SC Player",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.ExtraBold,
+                style = TextStyle(brush = BrandBrush),
+            )
+            Text(stringResource(R.string.add_title), color = TextMuted, fontSize = 13.sp)
+        }
     }
 }
 
@@ -218,7 +204,7 @@ private fun ServerIllustration(illustrationSize: Dp) {
 
 @Composable
 private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifier, scroll: Boolean) {
-    val shape = RoundedCornerShape(32.dp)
+    val shape = RoundedCornerShape(24.dp)
     var tab by remember { mutableIntStateOf(1) }
     var showPass by remember { mutableStateOf(false) }
     var url by remember { mutableStateOf("") }
@@ -241,11 +227,12 @@ private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifi
     val narrow = !scroll
     Column(
         modifier
+            .padding(horizontal = 20.dp, vertical = 8.dp)
             .background(Glass, shape)
             .border(1.dp, GlassBorder, shape)
-            .then(if (scroll) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-            .padding(if (narrow) 20.dp else 32.dp),
-        verticalArrangement = Arrangement.spacedBy(if (narrow) 16.dp else 20.dp),
+            .verticalScroll(rememberScrollState())
+            .padding(if (narrow) 18.dp else 20.dp),
+        verticalArrangement = Arrangement.spacedBy(if (narrow) 14.dp else 12.dp),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             BrandChip(stringResource(R.string.tab_m3u), tab == 0, Modifier.weight(1f)) { tab = 0; vm.clearError() }
@@ -265,25 +252,44 @@ private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifi
                     Field(stringResource(R.string.field_name), name, Modifier.weight(1f)) { name = it }
                 }
             }
-            1 -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Field(stringResource(R.string.field_name), name, Modifier.fillMaxWidth()) { name = it }
-                Field(stringResource(R.string.field_user), user, Modifier.fillMaxWidth()) { user = it }
-                Field(
-                    stringResource(R.string.field_pass), pass, Modifier.fillMaxWidth(), KeyboardType.Password,
-                    secret = !showPass,
-                    trailing = {
-                        Text(
-                            if (showPass) "🙈" else "👁",
-                            fontSize = 20.sp,
-                            modifier = Modifier.clip(CircleShape).clickable(role = Role.Button) { showPass = !showPass }.padding(8.dp),
-                        )
-                    },
-                ) { pass = it }
-                Field(
-                    stringResource(R.string.field_server), server, Modifier.fillMaxWidth(), KeyboardType.Uri,
-                    ime = ImeAction.Done,
-                    onDone = { if (canSubmit) vm.addXtream(name, server, user, pass) },
-                ) { server = it }
+            1 -> {
+                val nameF: @Composable (Modifier) -> Unit = { m -> Field(stringResource(R.string.field_name), name, m) { name = it } }
+                val userF: @Composable (Modifier) -> Unit = { m -> Field(stringResource(R.string.field_user), user, m) { user = it } }
+                val passF: @Composable (Modifier) -> Unit = { m ->
+                    Field(
+                        stringResource(R.string.field_pass), pass, m, KeyboardType.Password,
+                        secret = !showPass,
+                        trailing = {
+                            Text(
+                                if (showPass) "🙈" else "👁",
+                                fontSize = 20.sp,
+                                modifier = Modifier.clip(CircleShape).clickable(role = Role.Button) { showPass = !showPass }.padding(8.dp),
+                            )
+                        },
+                    ) { pass = it }
+                }
+                val serverF: @Composable (Modifier) -> Unit = { m ->
+                    Field(
+                        stringResource(R.string.field_server), server, m, KeyboardType.Uri,
+                        ime = ImeAction.Done,
+                        onDone = { if (canSubmit) vm.addXtream(name, server, user, pass) },
+                    ) { server = it }
+                }
+                if (scroll) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            nameF(Modifier.weight(1f)); userF(Modifier.weight(1f))
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            passF(Modifier.weight(1f)); serverF(Modifier.weight(1f))
+                        }
+                    }
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        nameF(Modifier.fillMaxWidth()); userF(Modifier.fillMaxWidth())
+                        passF(Modifier.fillMaxWidth()); serverF(Modifier.fillMaxWidth())
+                    }
+                }
             }
             else -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 GradientButton(stringResource(R.string.qr_scan), Modifier.fillMaxWidth()) {

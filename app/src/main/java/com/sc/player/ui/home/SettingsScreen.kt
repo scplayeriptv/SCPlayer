@@ -138,7 +138,7 @@ fun SettingsScreen(
                     .mapCatching { com.sc.player.data.BackupManager.import(ctx, it).getOrThrow() }
             }
             if (res.isSuccess) {
-                com.sc.player.ui.theme.ThemeState.current = com.sc.player.ui.theme.AppTheme.byId(prefs.theme())
+                com.sc.player.ui.theme.ThemeState.current = com.sc.player.ui.theme.AppTheme.byId(com.sc.player.data.UserPrefs(ctx).theme())
                 android.widget.Toast.makeText(ctx, R.string.restore_done, android.widget.Toast.LENGTH_LONG).show()
                 ctx.activityOrNull()?.recreate()
             } else {
