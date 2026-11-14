@@ -273,8 +273,8 @@
     <string name="set_sec_tools">Werkzeuge</string>
     <string name="set_backup">Einstellungen sichern</string>
     <string name="set_backup_sub">Favoriten, Profile, Einstellungen und Wiedergabepositionen in einer Datei speichern (ohne Playlists).</string>
-    <string name="set_restore">Einstellungen wiederherstellen</string>
-    <string name="set_restore_sub">Sicherungsdatei laden. Ersetzt aktuelle Favoriten, Profile und Einstellungen.</string>
+    <string name="set_backup_restore">Einstellungen wiederherstellen</string>
+    <string name="set_backup_restore_sub">Sicherungsdatei laden. Ersetzt aktuelle Favoriten, Profile und Einstellungen.</string>
     <string name="backup_done">Sicherung gespeichert</string>
     <string name="backup_failed">Sicherung fehlgeschlagen</string>
     <string name="restore_done">Wiederhergestellt</string>

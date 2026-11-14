@@ -275,8 +275,8 @@
     <string name="set_sec_tools">Tools</string>
     <string name="set_backup">Backup settings</string>
     <string name="set_backup_sub">Save favorites, profiles, settings and watch positions to a file (playlists are not included).</string>
-    <string name="set_restore">Restore settings</string>
-    <string name="set_restore_sub">Load a backup file. This replaces the current favorites, profiles and settings.</string>
+    <string name="set_backup_restore">Restore settings</string>
+    <string name="set_backup_restore_sub">Load a backup file. This replaces the current favorites, profiles and settings.</string>
     <string name="backup_done">Backup saved</string>
     <string name="backup_failed">Backup failed</string>
     <string name="restore_done">Restored</string>

@@ -244,7 +244,7 @@ fun SettingsScreen(
                     backupLauncher.launch("scplayer-backup.json")
                 }
                 RowDivider()
-                SettingRow(stringResource(R.string.set_restore), stringResource(R.string.set_restore_sub), null) {
+                SettingRow(stringResource(R.string.set_backup_restore), stringResource(R.string.set_backup_restore_sub), null) {
                     restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
                 }
                 GroupLabel(stringResource(R.string.set_grp_reset))

@@ -273,8 +273,8 @@
     <string name="set_sec_tools">Ferramentas</string>
     <string name="set_backup">Backup das configurações</string>
     <string name="set_backup_sub">Salva favoritos, perfis, configurações e posições em um arquivo (sem as listas).</string>
-    <string name="set_restore">Restaurar backup</string>
-    <string name="set_restore_sub">Carrega um arquivo de backup. Substitui favoritos, perfis e configurações atuais.</string>
+    <string name="set_backup_restore">Restaurar backup</string>
+    <string name="set_backup_restore_sub">Carrega um arquivo de backup. Substitui favoritos, perfis e configurações atuais.</string>
     <string name="backup_done">Backup salvo</string>
     <string name="backup_failed">Falha no backup</string>
     <string name="restore_done">Restaurado</string>

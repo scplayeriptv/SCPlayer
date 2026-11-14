@@ -303,3 +303,5 @@
 - **مؤقّت النوم** في المشغّل: زر ⏲ في الشريط العلوي → Off/15/30/45/60/90 دقيقة؛ بيظهر ⏲ Nm، وعند الانتهاء بيوقّف التشغيل + الـ Cast ويرجع للخلف. (بيشتغل مع قياس `elapsedRealtime`، والشاشة لازم تفضل شغّالة داخل المشغّل.)
 - **نسخ احتياطي/استعادة** (Settings → General → Maintenance): `BackupManager` بيصدّر JSON فيه `sc_user` (المفضلة/البروفايلات/الإعدادات/الثيم/PIN) و`sc_positions` عبر Storage Access Framework (CreateDocument/OpenDocument). الاستعادة بتستبدل الحالي وبتعمل `recreate()`. القوائم نفسها مش داخلة (فيها بيانات الدخول)؛ الملف نفسه فيه روابط مفضلتك فاحتفظ بيه خاص.
 - مفاتيح ×9: set_backup(+_sub), set_restore(+_sub), backup_done/failed, restore_done/failed, sleep_title/off/min.
+
+## إصلاح Build 47: مفتاح مكرر `set_restore` (كان موجود أصلًا لـ "Restore Defaults"). اتغيّر مفتاح النسخة الاحتياطية لـ `set_backup_restore` (+`_sub`). فحصت كل strings: مفيش مفاتيح مكررة، وكل `R.string.*` مستخدم له تعريف، والـ XML سليم.
