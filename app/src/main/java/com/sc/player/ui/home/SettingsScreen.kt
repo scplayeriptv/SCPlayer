@@ -156,7 +156,9 @@ fun SettingsScreen(
             account = XtreamClient(ctx.applicationContext).accountInfo(url)
         }
     }
-    val wide = LocalConfiguration.current.screenWidthDp >= 720
+    val cfgS = LocalConfiguration.current
+    val wide = cfgS.screenWidthDp >= 900 && cfgS.screenHeightDp >= 480
+    val compactH = cfgS.screenHeightDp < 480
 
     val rows: @Composable () -> Unit = {
         when (section) {
@@ -407,8 +409,8 @@ fun SettingsScreen(
             }
         }
     } else {
-        Column(Modifier.fillMaxSize().padding(top = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Box(Modifier.padding(horizontal = 24.dp)) { ScreenTitle(stringResource(R.string.nav_settings)) }
+        Column(Modifier.fillMaxSize().padding(top = if (compactH) 10.dp else 24.dp), verticalArrangement = Arrangement.spacedBy(if (compactH) 8.dp else 12.dp)) {
+            if (!compactH) Box(Modifier.padding(horizontal = 24.dp)) { ScreenTitle(stringResource(R.string.nav_settings)) }
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

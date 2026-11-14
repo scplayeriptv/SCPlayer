@@ -142,7 +142,7 @@ internal fun Launcher(
                 }
                 Tile3D(movies, Icons.Filled.Movie, Blue, TileStyle.Hero, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Movies]?.toString()) { onOpen(Dest.Movies) }
                 Tile3D(series, Icons.Filled.VideoLibrary, Orange, TileStyle.Hero, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Series]?.toString()) { onOpen(Dest.Series) }
-                Column(Modifier.weight(0.9f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Column(Modifier.weight(1.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     val m = Modifier.weight(1f).fillMaxWidth()
                     Tile3D(reload, Icons.Filled.Refresh, Slate, TileStyle.Action, m) { if (!reloading) onReload() }
                     Tile3D(settings, Icons.Filled.Settings, Slate, TileStyle.Action, m) { onOpen(Dest.Settings) }
@@ -259,14 +259,14 @@ private fun Tile3D(
     val medallion = when (style) {
         TileStyle.Hero -> 112.dp
         TileStyle.Card -> 62.dp
-        TileStyle.Action -> 44.dp
+        TileStyle.Action -> 38.dp
         TileStyle.Mini -> 40.dp
     }
     val iconSize = medallion * 0.58f
     val labelSize = when (style) {
         TileStyle.Hero -> 24.sp
         TileStyle.Card -> 16.sp
-        TileStyle.Action -> 16.sp
+        TileStyle.Action -> 15.sp
         TileStyle.Mini -> 11.sp
     }
 
@@ -354,9 +354,9 @@ private fun Tile3D(
             }
             if (style == TileStyle.Action) {
                 Row(
-                    Modifier.align(Alignment.CenterStart).padding(horizontal = 16.dp),
+                    Modifier.align(Alignment.CenterStart).padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) { content() }
             } else {
                 Column(

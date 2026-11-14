@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -372,7 +373,7 @@ private fun Shell(
         Box(Modifier.fillMaxSize()) { content() }
     } else if (wide) {
         Row(Modifier.fillMaxSize()) {
-            Sidebar(dest, onSelect = { go(it) }, onExit = { ctx.findActivity()?.finish() })
+            Sidebar(dest, compact = cfg.screenHeightDp < 480, onSelect = { go(it) }, onExit = { ctx.findActivity()?.finish() })
             Box(Modifier.weight(1f).fillMaxHeight()) { content() }
         }
     } else {
@@ -419,7 +420,24 @@ private val sidebarItems = listOf(
 )
 
 @Composable
-private fun Sidebar(current: Dest, onSelect: (Dest) -> Unit, onExit: () -> Unit) {
+private fun Sidebar(current: Dest, compact: Boolean, onSelect: (Dest) -> Unit, onExit: () -> Unit) {
+    if (compact) {
+        // موبايل بالعرض: شريط أيقونات ضيق عشان المحتوى ياخد المساحة
+        Column(
+            Modifier
+                .width(64.dp)
+                .fillMaxHeight()
+                .background(Panel.copy(alpha = 0.85f))
+                .verticalScroll(rememberScrollState())
+                .padding(vertical = 8.dp, horizontal = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            sidebarItems.forEach { d -> RailItem(d.glyph, d == current) { onSelect(d) } }
+            RailItem("⏻", false, onClick = onExit)
+        }
+        return
+    }
     Column(
         Modifier
             .width(240.dp)
@@ -444,6 +462,22 @@ private fun Sidebar(current: Dest, onSelect: (Dest) -> Unit, onExit: () -> Unit)
         Box(Modifier.height(10.dp))
         SidebarItem("⏻", stringResource(R.string.nav_exit), false, onClick = onExit)
     }
+}
+
+@Composable
+private fun RailItem(glyph: String, selected: Boolean, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(14.dp)
+    Box(
+        Modifier
+            .size(46.dp)
+            .onFocusChanged { focused = it.isFocused }
+            .clip(shape)
+            .then(if (selected) Modifier.background(BrandBrush) else Modifier)
+            .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else if (selected) Color.Transparent else GlassBorder, shape)
+            .clickable(role = Role.Tab, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text(glyph, fontSize = 20.sp) }
 }
 
 @Composable
