@@ -49,4 +49,22 @@ class M3uParserTest {
         assertEquals(20_000, list.size)
         assertEquals("Ch 19999", list.last().name)
     }
+
+    @Test
+    fun attributeKeysAreCaseInsensitiveAndExact() {
+        val list = M3uParser.parse(
+            "#EXTM3U\n#EXTINF:-1 TVG-ID=\"up.1\" xtvg-id=\"wrong\" TVG-LOGO=\"http://l/p.png\" Group-Title=\"Sports\",Name\nhttp://h/1.ts",
+        )
+        assertEquals(1, list.size)
+        assertEquals("up.1", list[0].tvgId)
+        assertEquals("http://l/p.png", list[0].logo)
+        assertEquals("Sports", list[0].group)
+    }
+
+    @Test
+    fun kindIsCachedAndStable() {
+        val ch = Channel("A", "http://h/movie/u/p/1.mp4", "X", null, null)
+        assertEquals(Kind.Movies, ch.kind())
+        assertEquals(Kind.Movies, ch.kind())
+    }
 }

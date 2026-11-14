@@ -35,7 +35,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -88,7 +90,7 @@ fun AddPlaylistScreen(
                         Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 24.dp),
                         horizontalArrangement = Arrangement.spacedBy(48.dp),
                     ) {
-                        Brand(Modifier.weight(0.4f).align(Alignment.CenterVertically), compact = false)
+                        Brand(Modifier.weight(0.4f).align(Alignment.CenterVertically), compact = false, onList = onBack)
                         FormCard(state, vm, Modifier.weight(0.6f).fillMaxSize(), true)
                     }
                 } else {
@@ -139,7 +141,7 @@ private fun TopBar(onBack: (() -> Unit)?) {
 }
 
 @Composable
-private fun Brand(modifier: Modifier, compact: Boolean) {
+private fun Brand(modifier: Modifier, compact: Boolean, onList: (() -> Unit)? = null) {
     if (compact) {
         Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             ServerIllustration(84.dp)
@@ -174,6 +176,18 @@ private fun Brand(modifier: Modifier, compact: Boolean) {
                 lineHeight = 24.sp,
                 textAlign = TextAlign.Center,
             )
+            if (onList != null) {
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Glass)
+                        .border(1.dp, GlassBorder, RoundedCornerShape(14.dp))
+                        .clickable(role = Role.Button, onClick = onList)
+                        .padding(horizontal = 22.dp, vertical = 12.dp),
+                ) {
+                    Text("📋  " + stringResource(R.string.add_list_playlists), color = TextMain, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
         }
     }
 }
@@ -205,7 +219,8 @@ private fun ServerIllustration(illustrationSize: Dp) {
 @Composable
 private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifier, scroll: Boolean) {
     val shape = RoundedCornerShape(32.dp)
-    var tab by remember { mutableIntStateOf(0) }
+    var tab by remember { mutableIntStateOf(1) }
+    var showPass by remember { mutableStateOf(false) }
     var url by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var server by remember { mutableStateOf("") }
@@ -250,24 +265,25 @@ private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifi
                     Field(stringResource(R.string.field_name), name, Modifier.weight(1f)) { name = it }
                 }
             }
-            1 -> if (narrow) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Field(stringResource(R.string.field_server), server, Modifier.fillMaxWidth(), KeyboardType.Uri) { server = it }
-                    Field(stringResource(R.string.field_name), name, Modifier.fillMaxWidth()) { name = it }
-                    Field(stringResource(R.string.field_user), user, Modifier.fillMaxWidth()) { user = it }
-                    Field(stringResource(R.string.field_pass), pass, Modifier.fillMaxWidth(), KeyboardType.Password, true) { pass = it }
-                }
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Field(stringResource(R.string.field_server), server, Modifier.weight(2f), KeyboardType.Uri) { server = it }
-                        Field(stringResource(R.string.field_name), name, Modifier.weight(1f)) { name = it }
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Field(stringResource(R.string.field_user), user, Modifier.weight(1f)) { user = it }
-                        Field(stringResource(R.string.field_pass), pass, Modifier.weight(1f), KeyboardType.Password, true) { pass = it }
-                    }
-                }
+            1 -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Field(stringResource(R.string.field_name), name, Modifier.fillMaxWidth()) { name = it }
+                Field(stringResource(R.string.field_user), user, Modifier.fillMaxWidth()) { user = it }
+                Field(
+                    stringResource(R.string.field_pass), pass, Modifier.fillMaxWidth(), KeyboardType.Password,
+                    secret = !showPass,
+                    trailing = {
+                        Text(
+                            if (showPass) "🙈" else "👁",
+                            fontSize = 20.sp,
+                            modifier = Modifier.clip(CircleShape).clickable(role = Role.Button) { showPass = !showPass }.padding(8.dp),
+                        )
+                    },
+                ) { pass = it }
+                Field(
+                    stringResource(R.string.field_server), server, Modifier.fillMaxWidth(), KeyboardType.Uri,
+                    ime = ImeAction.Done,
+                    onDone = { if (canSubmit) vm.addXtream(name, server, user, pass) },
+                ) { server = it }
             }
             else -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 GradientButton(stringResource(R.string.qr_scan), Modifier.fillMaxWidth()) {
@@ -314,6 +330,9 @@ private fun Field(
     modifier: Modifier,
     keyboard: KeyboardType = KeyboardType.Text,
     secret: Boolean = false,
+    ime: ImeAction = ImeAction.Next,
+    trailing: (@Composable () -> Unit)? = null,
+    onDone: (() -> Unit)? = null,
     onChange: (String) -> Unit,
 ) {
     OutlinedTextField(
@@ -323,7 +342,9 @@ private fun Field(
         singleLine = true,
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        keyboardOptions = KeyboardOptions(keyboardType = keyboard),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboard, imeAction = ime),
+        keyboardActions = KeyboardActions(onDone = { onDone?.invoke() }),
+        trailingIcon = trailing,
         visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Cyan,

@@ -22,7 +22,9 @@ private val bareXtreamLive = Regex("^https?://[^/]+/[^/]+/[^/]+/\\d+$", RegexOpt
  * رابط البث المباشر (/live/ أو .ts أو .m3u8 أو user/pass/id) بيفضل Live حتى لو اسم المجموعة فيه "Cinema"
  * أو "Movies". غير كده بنخمّن من اسم المجموعة، وأي حاجة مش مصنّفة بتتعامل كقناة مباشرة.
  */
-fun Channel.kind(): Kind {
+fun Channel.kind(): Kind = kindCache ?: computeKind().also { kindCache = it }
+
+private fun Channel.computeKind(): Kind {
     val u = url.lowercase()
     val liveUrl = "/live/" in u || u.substringBefore('?').let { it.endsWith(".ts") || it.endsWith(".m3u8") } ||
         bareXtreamLive.matches(url)

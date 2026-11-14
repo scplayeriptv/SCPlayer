@@ -269,4 +269,5 @@
     <string name="set_grp_diag">DIAGNÓSTICO</string>
     <string name="grp_tools">HERRAMIENTAS</string>
     <string name="grp_manage">GESTIONAR</string>
+    <string name="add_list_playlists">Listas guardadas</string>
 </resources>

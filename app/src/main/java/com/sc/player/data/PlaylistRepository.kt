@@ -209,6 +209,10 @@ class PlaylistRepository(private val context: Context) {
         if (!f.exists()) return@withContext emptyList()
         val stamp = f.lastModified()
         ChannelCache.get(id, stamp)
-            ?: parseFile(f).also { ChannelCache.put(id, stamp, it) }
+            ?: parseFile(f).also { list ->
+                // نسخّن كاش التصنيف هنا (خيط الخلفية) بدل أول رسم للواجهة
+                for (c in list) c.kind()
+                ChannelCache.put(id, stamp, list)
+            }
     }
 }

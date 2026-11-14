@@ -269,4 +269,5 @@
     <string name="set_grp_diag">TANI</string>
     <string name="grp_tools">ARAÇLAR</string>
     <string name="grp_manage">YÖNET</string>
+    <string name="add_list_playlists">Kayıtlı listeler</string>
 </resources>

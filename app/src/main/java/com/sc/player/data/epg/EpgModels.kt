@@ -32,10 +32,16 @@ object EpgStore {
 
     fun forChannel(ch: Channel): List<Programme> {
         val d = data ?: return emptyList()
+        if (ch.epgOwner === d) ch.epgList?.let { return it }
         val byId = ch.tvgId?.lowercase()?.let { d.programmes[it] }
-        if (byId != null) return byId
-        val id = d.names[normalizeName(ch.name)] ?: return emptyList()
-        return d.programmes[id].orEmpty()
+        val result = byId ?: run {
+            val nn = ch.normName ?: normalizeName(ch.name).also { ch.normName = it }
+            val id = d.names[nn]
+            if (id == null) emptyList() else d.programmes[id].orEmpty()
+        }
+        ch.epgList = result
+        ch.epgOwner = d
+        return result
     }
 
     fun now(ch: Channel, t: Long): Programme? = forChannel(ch).firstOrNull { t >= it.start && t < it.stop }

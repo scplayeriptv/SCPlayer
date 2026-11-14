@@ -269,4 +269,5 @@
     <string name="set_grp_diag">DIAGNOSE</string>
     <string name="grp_tools">WERKZEUGE</string>
     <string name="grp_manage">VERWALTEN</string>
+    <string name="add_list_playlists">Gespeicherte Playlists</string>
 </resources>

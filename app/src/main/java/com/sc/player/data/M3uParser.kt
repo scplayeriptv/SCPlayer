@@ -2,8 +2,6 @@ package com.sc.player.data
 
 /** Parses extended M3U / M3U8 playlists into [Channel]s. Pure Kotlin so it can be unit tested. */
 object M3uParser {
-    private val attrRegex = Regex("""([\w-]+)="([^"]*)"""")
-
     /** Index of the first comma that is not inside quotes (it separates attributes from the title). */
     private fun titleComma(line: String): Int {
         var inQuotes = false
@@ -14,6 +12,22 @@ object M3uParser {
             }
         }
         return -1
+    }
+
+    /** قيمة خاصية key="..." من سطر EXTINF (من غير regex عشان الملفات الكبيرة). */
+    private fun attr(line: String, key: String): String? {
+        var from = 0
+        while (true) {
+            val i = line.indexOf(key, from, ignoreCase = true)
+            if (i < 0) return null
+            val end = i + key.length
+            val boundaryOk = i == 0 || !(line[i - 1].isLetterOrDigit() || line[i - 1] == '_' || line[i - 1] == '-')
+            if (boundaryOk && end + 1 < line.length && line[end] == '=' && line[end + 1] == '"') {
+                val close = line.indexOf('"', end + 2)
+                return if (close < 0) null else line.substring(end + 2, close)
+            }
+            from = end
+        }
     }
 
     fun parse(text: String): List<Channel> = parse(text.lineSequence())
@@ -31,14 +45,12 @@ object M3uParser {
             when {
                 line.isEmpty() -> {}
                 line.startsWith("#EXTINF", ignoreCase = true) -> {
-                    val attrs = attrRegex.findAll(line)
-                        .associate { it.groupValues[1].lowercase() to it.groupValues[2] }
                     val comma = titleComma(line)
                     val title = if (comma >= 0) line.substring(comma + 1).trim() else ""
-                    name = title.ifEmpty { attrs["tvg-name"].orEmpty() }
-                    group = attrs["group-title"].orEmpty()
-                    logo = attrs["tvg-logo"]?.ifEmpty { null }
-                    tvgId = attrs["tvg-id"]?.ifEmpty { null }
+                    name = title.ifEmpty { attr(line, "tvg-name").orEmpty() }
+                    group = attr(line, "group-title").orEmpty()
+                    logo = attr(line, "tvg-logo")?.ifEmpty { null }
+                    tvgId = attr(line, "tvg-id")?.ifEmpty { null }
                 }
                 line.startsWith("#EXTGRP:", ignoreCase = true) -> {
                     if (group.isEmpty()) group = line.substringAfter(':').trim()
