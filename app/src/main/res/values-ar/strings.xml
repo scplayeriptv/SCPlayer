@@ -271,4 +271,15 @@
     <string name="grp_manage">إدارة</string>
     <string name="add_list_playlists">القوائم المحفوظة</string>
     <string name="set_sec_tools">الأدوات</string>
+    <string name="set_backup">نسخة احتياطية</string>
+    <string name="set_backup_sub">احفظ المفضلة والبروفايلات والإعدادات ومواضع المشاهدة في ملف (القوائم مش داخلة).</string>
+    <string name="set_restore">استعادة نسخة</string>
+    <string name="set_restore_sub">حمّل ملف نسخة احتياطية. هيستبدل المفضلة والبروفايلات والإعدادات الحالية.</string>
+    <string name="backup_done">اتحفظت النسخة</string>
+    <string name="backup_failed">فشل الحفظ</string>
+    <string name="restore_done">اتسترجعت</string>
+    <string name="restore_failed">الملف ده مش نسخة SC Player صالحة</string>
+    <string name="sleep_title">مؤقّت النوم</string>
+    <string name="sleep_off">إيقاف</string>
+    <string name="sleep_min">%1$d دقيقة</string>
 </resources>

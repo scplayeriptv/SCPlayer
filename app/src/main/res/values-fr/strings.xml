@@ -271,4 +271,15 @@
     <string name="grp_manage">GÉRER</string>
     <string name="add_list_playlists">Listes enregistrées</string>
     <string name="set_sec_tools">Outils</string>
+    <string name="set_backup">Sauvegarde</string>
+    <string name="set_backup_sub">Enregistre favoris, profils, réglages et positions de lecture dans un fichier (sans les listes).</string>
+    <string name="set_restore">Restaurer une sauvegarde</string>
+    <string name="set_restore_sub">Charge un fichier de sauvegarde. Remplace les favoris, profils et réglages actuels.</string>
+    <string name="backup_done">Sauvegarde enregistrée</string>
+    <string name="backup_failed">Échec de la sauvegarde</string>
+    <string name="restore_done">Restauré</string>
+    <string name="restore_failed">Sauvegarde SC Player non valide</string>
+    <string name="sleep_title">Minuteur de veille</string>
+    <string name="sleep_off">Désactivé</string>
+    <string name="sleep_min">%1$d min</string>
 </resources>

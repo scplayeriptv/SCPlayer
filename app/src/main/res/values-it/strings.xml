@@ -271,4 +271,15 @@
     <string name="grp_manage">GESTISCI</string>
     <string name="add_list_playlists">Playlist salvate</string>
     <string name="set_sec_tools">Strumenti</string>
+    <string name="set_backup">Backup impostazioni</string>
+    <string name="set_backup_sub">Salva preferiti, profili, impostazioni e posizioni in un file (playlist escluse).</string>
+    <string name="set_restore">Ripristina backup</string>
+    <string name="set_restore_sub">Carica un file di backup. Sostituisce preferiti, profili e impostazioni attuali.</string>
+    <string name="backup_done">Backup salvato</string>
+    <string name="backup_failed">Backup non riuscito</string>
+    <string name="restore_done">Ripristinato</string>
+    <string name="restore_failed">Backup SC Player non valido</string>
+    <string name="sleep_title">Timer di spegnimento</string>
+    <string name="sleep_off">Off</string>
+    <string name="sleep_min">%1$d min</string>
 </resources>

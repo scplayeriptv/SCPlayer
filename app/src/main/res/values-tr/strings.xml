@@ -271,4 +271,15 @@
     <string name="grp_manage">YÖNET</string>
     <string name="add_list_playlists">Kayıtlı listeler</string>
     <string name="set_sec_tools">Araçlar</string>
+    <string name="set_backup">Ayarları yedekle</string>
+    <string name="set_backup_sub">Favorileri, profilleri, ayarları ve izleme konumlarını dosyaya kaydet (listeler dahil değil).</string>
+    <string name="set_restore">Yedeği geri yükle</string>
+    <string name="set_restore_sub">Yedek dosyasını yükler. Mevcut favori, profil ve ayarların yerine geçer.</string>
+    <string name="backup_done">Yedek kaydedildi</string>
+    <string name="backup_failed">Yedekleme başarısız</string>
+    <string name="restore_done">Geri yüklendi</string>
+    <string name="restore_failed">Geçerli bir SC Player yedeği değil</string>
+    <string name="sleep_title">Uyku zamanlayıcı</string>
+    <string name="sleep_off">Kapalı</string>
+    <string name="sleep_min">%1$d dk</string>
 </resources>

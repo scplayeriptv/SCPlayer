@@ -50,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -94,6 +95,7 @@ internal fun Launcher(
     playlistName: String,
     counts: Map<Kind, Int>,
     recents: List<Channel>,
+    quick: List<Channel>,
     favs: Set<String>,
     epgTick: Int,
     wide: Boolean,
@@ -105,6 +107,7 @@ internal fun Launcher(
     onReload: () -> Unit,
     onExit: () -> Unit,
     onPlayRecent: (Int) -> Unit,
+    onPlayQuick: (Int) -> Unit,
     onToggleFav: (String) -> Unit,
     profile: Profile,
     onProfile: () -> Unit,
@@ -137,11 +140,12 @@ internal fun Launcher(
                 )
             }
             Row(Modifier.weight(1f).fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                Tile3D(live, Icons.Filled.LiveTv, Purple, TileStyle.Hero, Modifier.weight(1.5f).fillMaxHeight(), badge = counts[Kind.Live]?.toString()) {
+                val big = if (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp < 480 && quick.isNotEmpty()) TileStyle.Card else TileStyle.Hero
+                Tile3D(live, Icons.Filled.LiveTv, Purple, big, Modifier.weight(1.5f).fillMaxHeight(), badge = counts[Kind.Live]?.toString()) {
                     onOpen(Dest.LiveTv)
                 }
-                Tile3D(movies, Icons.Filled.Movie, Blue, TileStyle.Hero, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Movies]?.toString()) { onOpen(Dest.Movies) }
-                Tile3D(series, Icons.Filled.VideoLibrary, Orange, TileStyle.Hero, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Series]?.toString()) { onOpen(Dest.Series) }
+                Tile3D(movies, Icons.Filled.Movie, Blue, big, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Movies]?.toString()) { onOpen(Dest.Movies) }
+                Tile3D(series, Icons.Filled.VideoLibrary, Orange, big, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Series]?.toString()) { onOpen(Dest.Series) }
                 Column(Modifier.weight(1.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     val m = Modifier.weight(1f).fillMaxWidth()
                     Tile3D(reload, Icons.Filled.Refresh, Slate, TileStyle.Action, m) { if (!reloading) onReload() }
@@ -149,11 +153,23 @@ internal fun Launcher(
                     Tile3D(exit, Icons.AutoMirrored.Filled.ExitToApp, Red, TileStyle.Action, m) { onExit() }
                 }
             }
+            if (quick.isNotEmpty()) {
+                val label = if (recents.isNotEmpty() && quick.size > recents.size) {
+                    stringResource(R.string.continue_watching) + "  ·  " + stringResource(R.string.favorites)
+                } else if (recents.isNotEmpty()) stringResource(R.string.continue_watching) else stringResource(R.string.favorites)
+                Text(label, color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.padding(top = 10.dp))
+                LazyRow(
+                    Modifier.fillMaxWidth().height(58.dp).padding(top = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    itemsIndexed(quick) { i, ch -> MiniCard(ch, ch.url in favs) { onPlayQuick(i) } }
+                }
+            }
             Text(
                 "v$version",
                 color = TextMuted,
                 fontSize = 12.sp,
-                modifier = Modifier.align(Alignment.End).padding(top = 6.dp),
+                modifier = Modifier.align(Alignment.End).padding(top = 2.dp),
             )
         }
     } else {
@@ -191,6 +207,36 @@ internal fun Launcher(
             }
             Text("v$version", color = TextMuted, fontSize = 12.sp, modifier = Modifier.align(Alignment.End))
         }
+    }
+}
+
+@Composable
+private fun MiniCard(ch: Channel, fav: Boolean, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(14.dp)
+    Row(
+        Modifier
+            .fillMaxHeight()
+            .widthIn(min = 150.dp, max = 240.dp)
+            .onFocusChanged { focused = it.isFocused }
+            .clip(shape)
+            .background(com.sc.player.ui.theme.Glass)
+            .border(if (focused) 2.dp else 1.dp, if (focused) com.sc.player.ui.theme.Cyan else com.sc.player.ui.theme.GlassBorder, shape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        ChannelLogo(ch, 36.dp)
+        Text(
+            ch.name,
+            color = Color.White,
+            fontSize = 13.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        if (fav) Text("★", color = Gold, fontSize = 14.sp)
     }
 }
 

@@ -216,6 +216,26 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             cast.release()
         }
     }
+    var showSleep by remember { mutableStateOf(false) }
+    var sleepAt by remember { mutableStateOf(0L) }
+    var sleepLeft by remember { mutableStateOf(0) }
+    LaunchedEffect(sleepAt) {
+        if (sleepAt <= 0L) {
+            sleepLeft = 0
+            return@LaunchedEffect
+        }
+        while (true) {
+            val left = sleepAt - android.os.SystemClock.elapsedRealtime()
+            if (left <= 0L) {
+                player.pause()
+                cast.stop()
+                onBack()
+                break
+            }
+            sleepLeft = ((left + 59_999L) / 60_000L).toInt()
+            delay(minOf(left, 15_000L))
+        }
+    }
 
     // حفظ موضع المشاهدة للأفلام/الحلقات (مش للبث المباشر)
     fun saveNow() {
@@ -583,6 +603,10 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     if (PipState.supported(ctx)) {
                         RoundButton("🖼", stringResource(R.string.player_pip)) { ctx.findActivity()?.let { PipState.enter(it) } }
                     }
+                    if (sleepLeft > 0) {
+                        Text("⏲ ${sleepLeft}m", color = TextMain, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+                    RoundButton("⏲", stringResource(R.string.sleep_title)) { showSleep = true; poke() }
                     if (cast.supported) {
                         RoundButton("📡", stringResource(R.string.cast_title)) { showCast = true; poke() }
                     }
@@ -663,6 +687,26 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                 modifier = Modifier.align(Alignment.CenterStart),
             )
         }
+    }
+
+    if (showSleep && !inPip) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showSleep = false },
+            title = { Text(stringResource(R.string.sleep_title)) },
+            text = {
+                Column {
+                    listOf(0, 15, 30, 45, 60, 90).forEach { m ->
+                        androidx.compose.material3.TextButton(onClick = {
+                            sleepAt = if (m == 0) 0L else android.os.SystemClock.elapsedRealtime() + m * 60_000L
+                            showSleep = false
+                        }) {
+                            Text(if (m == 0) stringResource(R.string.sleep_off) else stringResource(R.string.sleep_min, m))
+                        }
+                    }
+                }
+            },
+            confirmButton = { androidx.compose.material3.TextButton(onClick = { showSleep = false }) { Text(stringResource(R.string.done)) } },
+        )
     }
 
     if (showCast && !inPip) {

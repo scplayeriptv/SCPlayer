@@ -271,4 +271,15 @@
     <string name="grp_manage">УПРАВЛЕНИЕ</string>
     <string name="add_list_playlists">Сохранённые плейлисты</string>
     <string name="set_sec_tools">Инструменты</string>
+    <string name="set_backup">Резервная копия</string>
+    <string name="set_backup_sub">Сохранить избранное, профили, настройки и позиции просмотра в файл (плейлисты не входят).</string>
+    <string name="set_restore">Восстановить копию</string>
+    <string name="set_restore_sub">Загрузить файл копии. Заменит текущее избранное, профили и настройки.</string>
+    <string name="backup_done">Копия сохранена</string>
+    <string name="backup_failed">Не удалось сохранить</string>
+    <string name="restore_done">Восстановлено</string>
+    <string name="restore_failed">Недопустимая копия SC Player</string>
+    <string name="sleep_title">Таймер сна</string>
+    <string name="sleep_off">Выкл.</string>
+    <string name="sleep_min">%1$d мин</string>
 </resources>

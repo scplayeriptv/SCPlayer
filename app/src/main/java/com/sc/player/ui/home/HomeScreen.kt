@@ -213,6 +213,10 @@ private fun Shell(
     val counts = remember(byKind) { Kind.values().associateWith { byKind[it]?.size ?: 0 } }
     val byUrl = remember(visible) { visible.associateBy { it.url } }
     val recents = remember(byUrl, recentUrls) { recentUrls.mapNotNull { byUrl[it] } }
+    // صف الرئيسية الأفقية: آخر مشاهدة ثم المفضلة (من غير تكرار)
+    val quick = remember(recents, favs, byUrl) {
+        recents + favs.mapNotNull { byUrl[it] }.filter { f -> recents.none { it.url == f.url } }.take(24)
+    }
 
     var openSeries by remember { mutableStateOf<Channel?>(null) }
     var openDetails by remember { mutableStateOf<Pair<List<Channel>, Int>?>(null) }
@@ -289,6 +293,7 @@ private fun Shell(
                 playlistName = playlistName,
                 counts = counts,
                 recents = recents,
+                quick = quick,
                 favs = favs,
                 epgTick = epgTick,
                 wide = wide,
@@ -300,6 +305,7 @@ private fun Shell(
                 onReload = onReload,
                 onExit = { ctx.findActivity()?.finish() },
                 onPlayRecent = { play(recents, it) },
+                onPlayQuick = { openItem(quick, it) },
                 onToggleFav = { favs = prefs.toggleFavorite(it) },
                 profile = profile,
                 onProfile = { showSwitcher = true },

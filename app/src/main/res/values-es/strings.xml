@@ -271,4 +271,15 @@
     <string name="grp_manage">GESTIONAR</string>
     <string name="add_list_playlists">Listas guardadas</string>
     <string name="set_sec_tools">Herramientas</string>
+    <string name="set_backup">Copia de seguridad</string>
+    <string name="set_backup_sub">Guarda favoritos, perfiles, ajustes y posiciones en un archivo (sin listas).</string>
+    <string name="set_restore">Restaurar copia</string>
+    <string name="set_restore_sub">Carga un archivo de copia. Reemplaza favoritos, perfiles y ajustes actuales.</string>
+    <string name="backup_done">Copia guardada</string>
+    <string name="backup_failed">Error al guardar</string>
+    <string name="restore_done">Restaurado</string>
+    <string name="restore_failed">No es una copia válida de SC Player</string>
+    <string name="sleep_title">Temporizador de sueño</string>
+    <string name="sleep_off">Desactivado</string>
+    <string name="sleep_min">%1$d min</string>
 </resources>

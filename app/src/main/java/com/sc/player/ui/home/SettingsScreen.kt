@@ -90,6 +90,7 @@ import com.sc.player.ui.theme.GlassBorder
 import com.sc.player.ui.theme.TextMain
 import com.sc.player.ui.theme.TextMuted
 import com.sc.player.ui.update.UpdateDialog
+import com.sc.player.data.activityOrNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -116,6 +117,35 @@ fun SettingsScreen(
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
+    val backupLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) scope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                runCatching {
+                    ctx.contentResolver.openOutputStream(uri, "w")!!.use { it.write(com.sc.player.data.BackupManager.export(ctx).toByteArray()) }
+                }.isSuccess
+            }
+            android.widget.Toast.makeText(ctx, if (ok) R.string.backup_done else R.string.backup_failed, android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
+    val restoreLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) scope.launch {
+            val res = withContext(Dispatchers.IO) {
+                runCatching { ctx.contentResolver.openInputStream(uri)!!.use { it.readBytes().toString(Charsets.UTF_8) } }
+                    .mapCatching { com.sc.player.data.BackupManager.import(ctx, it).getOrThrow() }
+            }
+            if (res.isSuccess) {
+                com.sc.player.ui.theme.ThemeState.current = com.sc.player.ui.theme.AppTheme.byId(prefs.theme())
+                android.widget.Toast.makeText(ctx, R.string.restore_done, android.widget.Toast.LENGTH_LONG).show()
+                ctx.activityOrNull()?.recreate()
+            } else {
+                android.widget.Toast.makeText(ctx, R.string.restore_failed, android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
+    }
     val updater = remember { Updater(ctx) }
     var cache by remember { mutableLongStateOf(0L) }
     var cacheLoaded by remember { mutableStateOf(false) }
@@ -208,6 +238,14 @@ fun SettingsScreen(
                             }
                         }
                     }
+                }
+                RowDivider()
+                SettingRow(stringResource(R.string.set_backup), stringResource(R.string.set_backup_sub), null) {
+                    backupLauncher.launch("scplayer-backup.json")
+                }
+                RowDivider()
+                SettingRow(stringResource(R.string.set_restore), stringResource(R.string.set_restore_sub), null) {
+                    restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
                 }
                 GroupLabel(stringResource(R.string.set_grp_reset))
                 SettingRow(
