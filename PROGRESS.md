@@ -354,3 +354,5 @@
 - تنظيف القائمة: قسم جديد "Clean-up" في الإعدادات: إخفاء المكرر (نفس الرابط أو نفس الاسم+المجموعة) وإخفاء مجموعات (حوار بحث + checkbox). محفوظ في UserPrefs (hidden_groups, dedupe) وبيتطبّق في HomeScreen.visible على كل الشاشات.
 - تفاصيل الفيلم: خلفية احتياطية (البوستر) لو مفيش backdrop، وصف "أعمال مشابهة" (من نفس القائمة المفتوحة) بيفتح الفيلم التاني.
 - الملفات: PlaylistRepository.kt, UserPrefs.kt, HomeScreen.kt, SettingsScreen.kt, CleanupDialogs.kt (جديد), MovieDetailsScreen.kt + 8 نصوص × 9 لغات.
+
+### Fix: MovieDetailsScreen.kt — Unresolved reference 'items' (دوال LazyListScope لازم import: lazy.items)

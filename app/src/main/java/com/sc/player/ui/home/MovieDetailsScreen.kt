@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -112,8 +114,8 @@ fun MovieDetailsScreen(
                     fontSize = 18.sp,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                 )
-                androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    androidx.compose.foundation.lazy.items(similar) { j ->
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(similar) { j ->
                         Box(Modifier.width(104.dp)) {
                             PosterCard(ch = list[j], fav = false, onFocus = {}, onToggleFav = {}) { onOpenOther(j) }
                         }
