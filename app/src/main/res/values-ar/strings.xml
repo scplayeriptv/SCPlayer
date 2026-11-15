@@ -282,4 +282,6 @@
     <string name="sleep_title">مؤقّت النوم</string>
     <string name="sleep_off">إيقاف</string>
     <string name="sleep_min">%1$d دقيقة</string>
+    <string name="search_voice_prompt">قول اسم قناة أو فيلم</string>
+    <string name="search_voice_unavailable">البحث الصوتي مش متاح على الجهاز ده</string>
 </resources>

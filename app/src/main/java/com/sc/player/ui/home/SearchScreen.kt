@@ -11,9 +11,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.speech.RecognizerIntent
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,6 +62,15 @@ fun SearchScreen(
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var debounced by remember { mutableStateOf(query) }
+    val ctx = LocalContext.current
+    val voiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
+        if (r.resultCode == Activity.RESULT_OK) {
+            val said = r.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+            if (!said.isNullOrBlank()) query = said.trim()
+        }
+    }
+    val voicePrompt = stringResource(R.string.search_voice_prompt)
+    val voiceNa = stringResource(R.string.search_voice_unavailable)
     LaunchedEffect(query) {
         if (query != debounced) {
             delay(250)
@@ -74,6 +92,19 @@ fun SearchScreen(
                 onValueChange = { query = it },
                 placeholder = { Text(stringResource(R.string.search_hint), color = TextMuted) },
                 singleLine = true,
+                trailingIcon = {
+                    IconButton(onClick = {
+                        val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                            putExtra(RecognizerIntent.EXTRA_PROMPT, voicePrompt)
+                        }
+                        try { voiceLauncher.launch(i) } catch (e: ActivityNotFoundException) {
+                            Toast.makeText(ctx, voiceNa, Toast.LENGTH_SHORT).show()
+                        } catch (e: SecurityException) {
+                            Toast.makeText(ctx, voiceNa, Toast.LENGTH_SHORT).show()
+                        }
+                    }) { Text("🎤", fontSize = 22.sp) }
+                },
                 shape = RoundedCornerShape(28.dp),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(

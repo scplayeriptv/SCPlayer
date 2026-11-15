@@ -284,4 +284,6 @@
     <string name="sleep_title">Sleep timer</string>
     <string name="sleep_off">Off</string>
     <string name="sleep_min">%1$d min</string>
+    <string name="search_voice_prompt">Say a channel or movie name</string>
+    <string name="search_voice_unavailable">Voice search isn\'t available on this device</string>
 </resources>

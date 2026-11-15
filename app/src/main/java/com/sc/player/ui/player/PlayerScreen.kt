@@ -23,6 +23,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -496,6 +497,21 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                         } else false
                     }
                 }
+            }
+            .pointerInput(isVod, queue.size) {
+                // سحب لفوق/تحت = قناة تالية/سابقة (للبث المباشر بس)
+                if (isVod) return@pointerInput
+                var acc = 0f
+                detectVerticalDragGestures(
+                    onDragStart = { acc = 0f },
+                    onDragEnd = {
+                        if (!showList) {
+                            if (acc < -140f) next() else if (acc > 140f) prev()
+                        }
+                        acc = 0f
+                    },
+                    onDragCancel = { acc = 0f },
+                ) { _, dy -> acc += dy }
             }
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {

@@ -282,4 +282,6 @@
     <string name="sleep_title">Таймер сна</string>
     <string name="sleep_off">Выкл.</string>
     <string name="sleep_min">%1$d мин</string>
+    <string name="search_voice_prompt">Назовите канал или фильм</string>
+    <string name="search_voice_unavailable">Голосовой поиск недоступен на этом устройстве</string>
 </resources>

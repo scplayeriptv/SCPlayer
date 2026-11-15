@@ -282,4 +282,6 @@
     <string name="sleep_title">Minuteur de veille</string>
     <string name="sleep_off">Désactivé</string>
     <string name="sleep_min">%1$d min</string>
+    <string name="search_voice_prompt">Dites le nom d\'une chaîne ou d\'un film</string>
+    <string name="search_voice_unavailable">La recherche vocale n\'est pas disponible sur cet appareil</string>
 </resources>

@@ -282,4 +282,6 @@
     <string name="sleep_title">Uyku zamanlayıcı</string>
     <string name="sleep_off">Kapalı</string>
     <string name="sleep_min">%1$d dk</string>
+    <string name="search_voice_prompt">Bir kanal veya film adı söyleyin</string>
+    <string name="search_voice_unavailable">Sesli arama bu cihazda kullanılamıyor</string>
 </resources>

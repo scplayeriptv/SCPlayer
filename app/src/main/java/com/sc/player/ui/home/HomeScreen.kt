@@ -421,8 +421,7 @@ private fun Shell(
 }
 
 private val sidebarItems = listOf(
-    Dest.Home, Dest.LiveTv, Dest.Movies, Dest.Series, Dest.Radio, Dest.Search,
-    Dest.CatchUp, Dest.Playlist, Dest.Settings, Dest.About,
+    Dest.Home, Dest.Settings,
 )
 
 @Composable
