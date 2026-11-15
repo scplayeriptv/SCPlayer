@@ -325,3 +325,5 @@
 - فوق: شريحة البروفايل يسار، اللوجو + اسم القائمة في النص، ويمين 3 أزرار دائرية زجاجية (Reload / Settings / Exit). Reload بيلف وهو بيحمّل.
 - تحت: 3 لوحات كبيرة (Live أكبر شوية، Movies، Series). كل لوحة: خلفية متحركة بكرات ضوء، أيقونة عملاقة شفافة كعلامة مائية، ميدالية مضيئة، عدّاد بتوهّج، شريط بيطول مع الـ focus، سهم زجاجي، وميل 3D مع اللمس. Live عليها وسم LIVE بينبض.
 - الملف: ui/home/Launcher.kt (HubPanel, DockButton). التخطيط الطولي القديم لسه موجود كما هو بدون صف الاستمرار.
+
+### Fix: Launcher.kt — Unresolved reference 'animateFloat' (ناقص import androidx.compose.animation.core.animateFloat)
