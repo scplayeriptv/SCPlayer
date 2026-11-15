@@ -293,4 +293,22 @@
     <string name="set_hidden_count">%1$d ausgeblendet</string>
     <string name="hide_show_all">Alle zeigen</string>
     <string name="det_more_like">Ähnliche Titel</string>
+    <string name="player_skip_intro">Intro überspringen (+%1$ds)</string>
+    <string name="set_intro">Intro überspringen</string>
+    <string name="set_intro_sub">Überspringt das Serien-Intro um eine feste Zeit. Der Button erscheint in den ersten 5 Minuten einer Folge. Zum Ändern tippen.</string>
+    <string name="set_intro_off">Aus</string>
+    <string name="set_intro_sec">%1$d s</string>
+    <string name="set_check">Sender prüfen</string>
+    <string name="set_check_sub">Testet Live-Sender und findet nicht erreichbare</string>
+    <string name="set_dead_count">%1$d defekt</string>
+    <string name="set_hide_dead">Defekte Sender ausblenden</string>
+    <string name="set_hide_dead_sub">Blendet Sender aus, die den letzten Test nicht bestanden haben</string>
+    <string name="chk_title">Sender prüfen</string>
+    <string name="chk_intro">Testet Live-Sender und findet defekte. Nutzt deine Verbindung und kann kurz Verbindungsplätze deines Kontos belegen.</string>
+    <string name="chk_all">Alle Live-Sender (%1$d)</string>
+    <string name="chk_favs">Nur Favoriten (%1$d)</string>
+    <string name="chk_progress">%1$d von %2$d geprüft</string>
+    <string name="chk_result">Läuft: %1$d · Defekt: %2$d · Unbekannt: %3$d</string>
+    <string name="chk_stop">Stopp</string>
+    <string name="chk_hide">Defekte ausblenden</string>
 </resources>

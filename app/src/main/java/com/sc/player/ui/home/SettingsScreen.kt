@@ -109,6 +109,7 @@ private fun mb(bytes: Long): String = "%.1f MB".format(bytes / 1048576.0)
 fun SettingsScreen(
     playlistId: String,
     groups: List<String>,
+    checkable: List<com.sc.player.data.Channel>,
     onParentalChanged: () -> Unit,
     onProfileChanged: () -> Unit,
     onCleanupChanged: () -> Unit,
@@ -164,6 +165,9 @@ fun SettingsScreen(
     var dedupe by remember { mutableStateOf(prefs.dedupe()) }
     var hiddenSet by remember { mutableStateOf(prefs.hiddenGroups()) }
     var showHide by remember { mutableStateOf(false) }
+    var showCheck by remember { mutableStateOf(false) }
+    var hideDead by remember { mutableStateOf(prefs.hideDead()) }
+    var deadCount by remember { mutableStateOf(prefs.deadUrls().size) }
     var epgUrl by remember { mutableStateOf(prefs.epgOverride(playlistId).orEmpty()) }
 
     LaunchedEffect(Unit) {
@@ -180,6 +184,7 @@ fun SettingsScreen(
     var reconnect by remember { mutableStateOf(prefs.autoReconnect()) }
     var bufferMode by remember { mutableStateOf(prefs.bufferMode()) }
     var stats by remember { mutableStateOf(prefs.showStats()) }
+    var introSkip by remember { mutableStateOf(prefs.introSkip()) }
     var profilesTick by remember { mutableStateOf(0) }
     var editingProfile by remember { mutableStateOf<com.sc.player.data.Profile?>(null) }
     var addingProfile by remember { mutableStateOf(false) }
@@ -298,6 +303,16 @@ fun SettingsScreen(
                     stringResource(R.string.set_hide_groups_sub),
                     stringResource(R.string.set_hidden_count, hiddenSet.size),
                 ) { showHide = true }
+                SettingRow(
+                    stringResource(R.string.set_check),
+                    stringResource(R.string.set_check_sub),
+                    stringResource(R.string.set_dead_count, deadCount),
+                ) { showCheck = true }
+                ToggleRow(stringResource(R.string.set_hide_dead), stringResource(R.string.set_hide_dead_sub), hideDead) {
+                    hideDead = it
+                    prefs.setHideDead(it)
+                    onCleanupChanged()
+                }
             }
             Section.Account -> {
                 val acc = account
@@ -404,6 +419,15 @@ fun SettingsScreen(
                 ) {
                     bufferMode = (bufferMode + 1) % 3
                     prefs.setBufferMode(bufferMode)
+                }
+                SettingRow(
+                    stringResource(R.string.set_intro),
+                    stringResource(R.string.set_intro_sub),
+                    value = if (introSkip == 0) stringResource(R.string.set_intro_off) else stringResource(R.string.set_intro_sec, introSkip),
+                ) {
+                    val opts = listOf(0, 60, 85, 90, 120)
+                    introSkip = opts[(opts.indexOf(introSkip).let { if (it < 0) 0 else it } + 1) % opts.size]
+                    prefs.setIntroSkip(introSkip)
                 }
                 GroupLabel(stringResource(R.string.set_grp_diag))
                 ToggleRow(stringResource(R.string.set_stats), stringResource(R.string.set_stats_sub), stats) {
@@ -538,6 +562,24 @@ fun SettingsScreen(
         )
     }
 
+    if (showCheck) {
+        ChannelCheckDialog(
+            all = checkable,
+            favs = prefs.favorites(),
+            previousDead = prefs.deadUrls(),
+            onDismiss = { showCheck = false },
+            onFinished = { dead, hide ->
+                prefs.setDeadUrls(dead)
+                deadCount = dead.size
+                if (hide) {
+                    prefs.setHideDead(true)
+                    hideDead = true
+                }
+                showCheck = false
+                onCleanupChanged()
+            },
+        )
+    }
     if (showHide) {
         HideGroupsDialog(
             groups = groups,

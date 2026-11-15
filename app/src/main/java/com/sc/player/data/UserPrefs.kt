@@ -107,6 +107,19 @@ class UserPrefs(context: Context) {
         sp.edit().putBoolean("dedupe", on).apply()
     }
 
+    // ---- نتيجة اختبار القنوات ----
+    fun deadUrls(): Set<String> = sp.getStringSet("dead_urls", emptySet())?.toSet() ?: emptySet()
+
+    fun setDeadUrls(urls: Set<String>) {
+        sp.edit().putStringSet("dead_urls", urls).apply()
+    }
+
+    fun hideDead(): Boolean = sp.getBoolean("hide_dead", false)
+
+    fun setHideDead(on: Boolean) {
+        sp.edit().putBoolean("hide_dead", on).apply()
+    }
+
     fun lockedGroups(): Set<String> = sp.getStringSet("locked", emptySet())?.toSet() ?: emptySet()
 
     fun setLockedGroups(groups: Set<String>) {
@@ -186,8 +199,15 @@ class UserPrefs(context: Context) {
     }
 
     /** يرجّع إعدادات التشغيل للوضع الافتراضي. */
+    /** مدة تخطي مقدمة المسلسل بالثواني (0 = الزر مقفول). */
+    fun introSkip(): Int = sp.getInt("intro_skip", 85).coerceIn(0, 300)
+
+    fun setIntroSkip(sec: Int) {
+        sp.edit().putInt("intro_skip", sec).apply()
+    }
+
     fun restoreDefaults() {
-        sp.edit().remove("auto_reconnect").remove("buffer_mode").remove("show_stats").remove("auto_play").remove("hw_decoding").remove("bg_play").remove("pip").remove("aspect").apply()
+        sp.edit().remove("auto_reconnect").remove("buffer_mode").remove("show_stats").remove("auto_play").remove("hw_decoding").remove("bg_play").remove("pip").remove("aspect").remove("intro_skip").apply()
     }
 
     private fun hash(pin: String): String =

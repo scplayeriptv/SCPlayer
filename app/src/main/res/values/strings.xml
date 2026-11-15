@@ -295,4 +295,22 @@
     <string name="set_hidden_count">%1$d hidden</string>
     <string name="hide_show_all">Show all</string>
     <string name="det_more_like">More like this</string>
+    <string name="player_skip_intro">Skip intro (+%1$ds)</string>
+    <string name="set_intro">Skip intro</string>
+    <string name="set_intro_sub">Skips the series intro by a fixed time. The button appears in the first 5 minutes of an episode. Tap to change.</string>
+    <string name="set_intro_off">Off</string>
+    <string name="set_intro_sec">%1$d s</string>
+    <string name="set_check">Check channels</string>
+    <string name="set_check_sub">Tests live channels and finds the ones that don\'t respond</string>
+    <string name="set_dead_count">%1$d dead</string>
+    <string name="set_hide_dead">Hide dead channels</string>
+    <string name="set_hide_dead_sub">Hides channels that failed the last check</string>
+    <string name="chk_title">Check channels</string>
+    <string name="chk_intro">Tests live channels and finds the dead ones. It uses your connection and may briefly use your account\'s connection slots.</string>
+    <string name="chk_all">All live channels (%1$d)</string>
+    <string name="chk_favs">Favorites only (%1$d)</string>
+    <string name="chk_progress">Checked %1$d of %2$d</string>
+    <string name="chk_result">Working: %1$d · Dead: %2$d · Unknown: %3$d</string>
+    <string name="chk_stop">Stop</string>
+    <string name="chk_hide">Hide dead</string>
 </resources>

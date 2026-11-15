@@ -356,3 +356,16 @@
 - الملفات: PlaylistRepository.kt, UserPrefs.kt, HomeScreen.kt, SettingsScreen.kt, CleanupDialogs.kt (جديد), MovieDetailsScreen.kt + 8 نصوص × 9 لغات.
 
 ### Fix: MovieDetailsScreen.kt — Unresolved reference 'items' (دوال LazyListScope لازم import: lazy.items)
+
+## زر تخطي المقدمة (المسلسلات)
+- في المشغّل: لو الحلقة مسلسل (Kind.Series) وبتتشغّل (مش Cast) وفي أول 5 دقايق وبعد ثانية 3، بيظهر زر "تخطي المقدمة (+85ث)" تحت يمين. بيقفز المدة المختارة ويختفي لحد الحلقة اللي بعدها. على الريموت: Enter والأزرار مخفية = تخطي.
+- الإعدادات > Playback: "تخطي المقدمة" بيبدّل بين مقفول/60/85/90/120 ثانية (UserPrefs.introSkip، الافتراضي 85، بيرجع للافتراضي مع Restore Defaults).
+- نصوص جديدة × 9 لغات: player_skip_intro, set_intro(+_sub/_off/_sec).
+- ملاحظة: المدة ثابتة مش مكتشفة تلقائيًا من الحلقة.
+
+## اختبار القنوات (Check channels)
+- الإعدادات > Clean-up: صف "اختبار القنوات" (بيعرض عدد الميتة) + مفتاح "إخفاء القنوات الميتة".
+- الحوار: اختيار النطاق (كل القنوات المباشرة / المفضلة بس) ← تقدّم (4 اختبارات متوازية) ← نتيجة شغالة/ميتة/غير معروفة، وزر "إخفاء الميتة" بيشغّل الإخفاء.
+- ChannelChecker: بيفتح البث ويقرا أول 188 بايت (مهلة اتصال 5ث وقراءة 6ث، محاولتين). ميتة = فشل اتصال/قراءة، 404/410، أو 5xx (عدا 509)، أو رد فاضي. غير معروفة = 401/403/429/509 أو رد HTML (غالبًا حد اتصالات الحساب).
+- النتيجة محفوظة في UserPrefs.dead_urls ومفتاح hide_dead؛ HomeScreen.visible بيفلتر بيهم. إعادة الاختبار بتحدّث النطاق اللي اتفحص بس (وبتشمل الميتة المخفية).
+- محدود بالقنوات المباشرة (Live). النصوص: 13 مفتاح × 9 لغات. ملفات: data/ChannelChecker.kt, CleanupDialogs.kt, SettingsScreen.kt, HomeScreen.kt, UserPrefs.kt.

@@ -77,3 +77,90 @@ internal fun HideGroupsDialog(
         },
     )
 }
+
+/** اختبار القنوات المباشرة: اختيار النطاق، تقدّم، ونتيجة مع خيار إخفاء الميت. */
+@Composable
+internal fun ChannelCheckDialog(
+    all: List<com.sc.player.data.Channel>,
+    favs: Set<String>,
+    previousDead: Set<String>,
+    onDismiss: () -> Unit,
+    onFinished: (Set<String>, Boolean) -> Unit,
+) {
+    val favList = remember(all, favs) { all.filter { it.url in favs } }
+    var phase by remember { mutableStateOf(0) } // 0 اختيار، 1 شغّال، 2 خلص
+    var target by remember { mutableStateOf<List<com.sc.player.data.Channel>>(emptyList()) }
+    var done by remember { mutableStateOf(0) }
+    var okN by remember { mutableStateOf(0) }
+    var deadN by remember { mutableStateOf(0) }
+    var unkN by remember { mutableStateOf(0) }
+    val deadFound = remember { HashSet<String>() }
+    val processed = remember { HashSet<String>() }
+
+    androidx.compose.runtime.LaunchedEffect(phase) {
+        if (phase == 1) {
+            com.sc.player.data.ChannelChecker.check(target, 4).collect { (url, st) ->
+                processed.add(url)
+                done++
+                when (st) {
+                    com.sc.player.data.ChannelChecker.OK -> okN++
+                    com.sc.player.data.ChannelChecker.DEAD -> { deadN++; deadFound.add(url) }
+                    else -> unkN++
+                }
+            }
+            phase = 2
+        }
+    }
+    fun merged(): Set<String> = (previousDead - processed) + deadFound
+
+    AlertDialog(
+        onDismissRequest = { if (phase == 0) onDismiss() },
+        title = { Text(stringResource(R.string.chk_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                when (phase) {
+                    0 -> {
+                        Text(stringResource(R.string.chk_intro), color = TextMuted, fontSize = 13.sp)
+                        com.sc.player.ui.theme.GradientButton(
+                            stringResource(R.string.chk_all, all.size),
+                            Modifier.fillMaxWidth(),
+                            onClick = { target = all; phase = 1 },
+                        )
+                        if (favList.isNotEmpty()) {
+                            CategoryChip(stringResource(R.string.chk_favs, favList.size), false) { target = favList; phase = 1 }
+                        }
+                    }
+                    1 -> {
+                        androidx.compose.material3.LinearProgressIndicator(
+                            progress = { if (target.isEmpty()) 0f else done.toFloat() / target.size },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Cyan,
+                        )
+                        Text(stringResource(R.string.chk_progress, done, target.size), color = TextMain, fontSize = 14.sp)
+                        Text(stringResource(R.string.chk_result, okN, deadN, unkN), color = TextMuted, fontSize = 13.sp)
+                    }
+                    else -> {
+                        Text(stringResource(R.string.chk_progress, done, target.size), color = TextMain, fontSize = 14.sp)
+                        Text(stringResource(R.string.chk_result, okN, deadN, unkN), color = TextMain, fontSize = 15.sp)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            when (phase) {
+                1 -> TextButton(onClick = { phase = 2 }) { Text(stringResource(R.string.chk_stop)) }
+                2 -> if (deadN > 0) {
+                    TextButton(onClick = { onFinished(merged(), true) }) { Text(stringResource(R.string.chk_hide)) }
+                }
+                else -> {}
+            }
+        },
+        dismissButton = {
+            when (phase) {
+                0 -> TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                2 -> TextButton(onClick = { onFinished(merged(), false) }) { Text(stringResource(R.string.done)) }
+                else -> {}
+            }
+        },
+    )
+}

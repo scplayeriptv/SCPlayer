@@ -177,6 +177,8 @@ private fun Shell(
     var lockedGroups by remember { mutableStateOf(prefs.lockedGroups()) }
     var hiddenGroups by remember { mutableStateOf(prefs.hiddenGroups()) }
     var dedupe by remember { mutableStateOf(prefs.dedupe()) }
+    var deadUrls by remember { mutableStateOf(prefs.deadUrls()) }
+    var hideDead by remember { mutableStateOf(prefs.hideDead()) }
     var unlocked by remember { mutableStateOf(ParentalSession.unlocked) }
 
     // البروفايلات: مفضلة وسجل منفصلين لكل بروفايل، وبروفايل الأطفال بيفضل مخفي عنه التصنيفات المقفولة
@@ -212,9 +214,10 @@ private fun Shell(
         }
     }
 
-    val visible = remember(channels, lockedGroups, unlocked, kids, hiddenGroups, dedupe) {
+    val visible = remember(channels, lockedGroups, unlocked, kids, hiddenGroups, dedupe, deadUrls, hideDead) {
         var l = if ((unlocked && !kids) || lockedGroups.isEmpty()) channels else channels.filter { it.group !in lockedGroups }
         if (hiddenGroups.isNotEmpty()) l = l.filter { it.group !in hiddenGroups }
+        if (hideDead && deadUrls.isNotEmpty()) l = l.filter { it.url !in deadUrls }
         if (dedupe) {
             val seenUrl = HashSet<String>()
             val seenKey = HashSet<String>()
@@ -226,6 +229,7 @@ private fun Shell(
         }
         l
     }
+    val liveAll = remember(channels) { channels.filter { it.kind() == Kind.Live } }
     val allGroups = remember(channels) { channels.map { it.group }.distinct().sorted() }
 
     val byKind = remember(visible) { visible.groupBy { it.kind() } }
@@ -360,6 +364,7 @@ private fun Shell(
             Dest.Settings -> SettingsScreen(
                 playlistId = playlistId,
                 groups = allGroups,
+                checkable = liveAll,
                 onParentalChanged = {
                     lockedGroups = prefs.lockedGroups()
                     unlocked = ParentalSession.unlocked
@@ -377,6 +382,8 @@ private fun Shell(
                 onCleanupChanged = {
                     hiddenGroups = prefs.hiddenGroups()
                     dedupe = prefs.dedupe()
+                    deadUrls = prefs.deadUrls()
+                    hideDead = prefs.hideDead()
                 },
                 onAbout = { destName = Dest.About.name },
                 onResetUserData = {

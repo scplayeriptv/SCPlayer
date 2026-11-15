@@ -89,6 +89,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.UnrecognizedInputFormatException
 import com.sc.player.data.PlayQueue
+import com.sc.player.data.kind
 import com.sc.player.data.epg.EpgStore
 import com.sc.player.ui.theme.BrandBrush
 import com.sc.player.ui.theme.Cyan
@@ -461,6 +462,17 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
         poke()
     }
 
+    // تخطي مقدمة المسلسل: الزر بيظهر في أول 5 دقايق من الحلقة
+    val introSec = remember { prefs.introSkip() }
+    var introDone by remember(index) { mutableStateOf(false) }
+    val introVisible = introSec > 0 && !introDone && isVod && position in 3_000L..300_000L &&
+        channel.kind() == com.sc.player.data.Kind.Series && !cast.active
+    fun skipIntro() {
+        player.seekTo((player.currentPosition + introSec * 1000L).coerceIn(0L, duration))
+        position = player.currentPosition
+        introDone = true
+        poke()
+    }
     val focus = remember { FocusRequester() }
     LaunchedEffect(showList) { if (!showList) runCatching { focus.requestFocus() } }
 
@@ -476,6 +488,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                 } else when (ev.key) {
                     Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
                         if (numberBuffer.isNotEmpty()) commitNumber()
+                        else if (introVisible && !controls) skipIntro()
                         else if (controls) toggle() else poke()
                         true
                     }
@@ -692,6 +705,11 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             }
         }
 
+        if (introVisible && !inPip) {
+            Box(Modifier.align(Alignment.BottomEnd).padding(end = 28.dp, bottom = 120.dp)) {
+                PillButton(stringResource(R.string.player_skip_intro, introSec), primary = true) { skipIntro() }
+            }
+        }
         if (numberBuffer.isNotEmpty() && !inPip) {
             NumberBadge(numberBuffer, Modifier.align(Alignment.TopEnd).padding(28.dp))
         }

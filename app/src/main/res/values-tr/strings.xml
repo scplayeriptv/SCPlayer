@@ -293,4 +293,22 @@
     <string name="set_hidden_count">%1$d gizli</string>
     <string name="hide_show_all">Tümünü göster</string>
     <string name="det_more_like">Benzer yapımlar</string>
+    <string name="player_skip_intro">Girişi atla (+%1$ds)</string>
+    <string name="set_intro">Girişi atla</string>
+    <string name="set_intro_sub">Dizi girişini sabit bir süre atlar. Düğme bölümün ilk 5 dakikasında görünür. Değiştirmek için dokun.</string>
+    <string name="set_intro_off">Kapalı</string>
+    <string name="set_intro_sec">%1$d sn</string>
+    <string name="set_check">Kanalları test et</string>
+    <string name="set_check_sub">Canlı kanalları test eder ve yanıt vermeyenleri bulur</string>
+    <string name="set_dead_count">%1$d çalışmıyor</string>
+    <string name="set_hide_dead">Çalışmayan kanalları gizle</string>
+    <string name="set_hide_dead_sub">Son testte başarısız olan kanalları gizler</string>
+    <string name="chk_title">Kanalları test et</string>
+    <string name="chk_intro">Canlı kanalları test eder ve çalışmayanları bulur. Bağlantını kullanır ve hesabının bağlantı hakkını kısa süre meşgul edebilir.</string>
+    <string name="chk_all">Tüm canlı kanallar (%1$d)</string>
+    <string name="chk_favs">Yalnızca favoriler (%1$d)</string>
+    <string name="chk_progress">%1$d / %2$d test edildi</string>
+    <string name="chk_result">Çalışan: %1$d · Çalışmayan: %2$d · Bilinmeyen: %3$d</string>
+    <string name="chk_stop">Durdur</string>
+    <string name="chk_hide">Çalışmayanları gizle</string>
 </resources>

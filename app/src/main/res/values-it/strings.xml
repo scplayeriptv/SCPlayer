@@ -293,4 +293,22 @@
     <string name="set_hidden_count">%1$d nascosti</string>
     <string name="hide_show_all">Mostra tutto</string>
     <string name="det_more_like">Titoli simili</string>
+    <string name="player_skip_intro">Salta intro (+%1$ds)</string>
+    <string name="set_intro">Salta intro</string>
+    <string name="set_intro_sub">Salta la sigla della serie di un tempo fisso. Il pulsante compare nei primi 5 minuti dell\'episodio. Tocca per cambiare.</string>
+    <string name="set_intro_off">Disattivato</string>
+    <string name="set_intro_sec">%1$d s</string>
+    <string name="set_check">Verifica canali</string>
+    <string name="set_check_sub">Prova i canali live e trova quelli che non rispondono</string>
+    <string name="set_dead_count">%1$d non attivi</string>
+    <string name="set_hide_dead">Nascondi canali non attivi</string>
+    <string name="set_hide_dead_sub">Nasconde i canali che hanno fallito l\'ultima verifica</string>
+    <string name="chk_title">Verifica canali</string>
+    <string name="chk_intro">Prova i canali live e trova quelli non attivi. Usa la tua connessione e può occupare brevemente le connessioni del tuo account.</string>
+    <string name="chk_all">Tutti i canali live (%1$d)</string>
+    <string name="chk_favs">Solo preferiti (%1$d)</string>
+    <string name="chk_progress">Verificati %1$d di %2$d</string>
+    <string name="chk_result">Attivi: %1$d · Non attivi: %2$d · Sconosciuti: %3$d</string>
+    <string name="chk_stop">Ferma</string>
+    <string name="chk_hide">Nascondi non attivi</string>
 </resources>

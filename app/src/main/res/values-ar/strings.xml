@@ -293,4 +293,22 @@
     <string name="set_hidden_count">%1$d مخفية</string>
     <string name="hide_show_all">إظهار الكل</string>
     <string name="det_more_like">أعمال مشابهة</string>
+    <string name="player_skip_intro">تخطي المقدمة (+%1$dث)</string>
+    <string name="set_intro">تخطي المقدمة</string>
+    <string name="set_intro_sub">بيقفز على مقدمة المسلسل بمدة ثابتة. الزر بيظهر في أول 5 دقايق من الحلقة. دوس عشان تغيّر المدة.</string>
+    <string name="set_intro_off">مقفول</string>
+    <string name="set_intro_sec">%1$d ث</string>
+    <string name="set_check">اختبار القنوات</string>
+    <string name="set_check_sub">يفحص القنوات المباشرة ويكشف اللي مش شغالة</string>
+    <string name="set_dead_count">%1$d ميتة</string>
+    <string name="set_hide_dead">إخفاء القنوات الميتة</string>
+    <string name="set_hide_dead_sub">بيخفي القنوات اللي فشلت في آخر اختبار</string>
+    <string name="chk_title">اختبار القنوات</string>
+    <string name="chk_intro">بيفحص القنوات المباشرة ويكشف الميتة. بيستخدم النت عندك وممكن يستهلك اتصالات حسابك مؤقتًا.</string>
+    <string name="chk_all">كل القنوات المباشرة (%1$d)</string>
+    <string name="chk_favs">المفضلة بس (%1$d)</string>
+    <string name="chk_progress">اتفحص %1$d من %2$d</string>
+    <string name="chk_result">شغالة: %1$d · ميتة: %2$d · غير معروفة: %3$d</string>
+    <string name="chk_stop">إيقاف</string>
+    <string name="chk_hide">إخفاء الميتة</string>
 </resources>

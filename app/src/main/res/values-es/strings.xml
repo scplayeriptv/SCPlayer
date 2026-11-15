@@ -293,4 +293,22 @@
     <string name="set_hidden_count">%1$d ocultos</string>
     <string name="hide_show_all">Mostrar todo</string>
     <string name="det_more_like">Más como esto</string>
+    <string name="player_skip_intro">Saltar intro (+%1$ds)</string>
+    <string name="set_intro">Saltar intro</string>
+    <string name="set_intro_sub">Salta la intro de la serie un tiempo fijo. El botón aparece en los primeros 5 minutos del episodio. Toca para cambiar.</string>
+    <string name="set_intro_off">Desactivado</string>
+    <string name="set_intro_sec">%1$d s</string>
+    <string name="set_check">Comprobar canales</string>
+    <string name="set_check_sub">Prueba los canales en directo y detecta los que no responden</string>
+    <string name="set_dead_count">%1$d caídos</string>
+    <string name="set_hide_dead">Ocultar canales caídos</string>
+    <string name="set_hide_dead_sub">Oculta los canales que fallaron en la última comprobación</string>
+    <string name="chk_title">Comprobar canales</string>
+    <string name="chk_intro">Prueba los canales en directo y encuentra los caídos. Usa tu conexión y puede ocupar brevemente las conexiones de tu cuenta.</string>
+    <string name="chk_all">Todos los canales en directo (%1$d)</string>
+    <string name="chk_favs">Solo favoritos (%1$d)</string>
+    <string name="chk_progress">Comprobados %1$d de %2$d</string>
+    <string name="chk_result">Funcionan: %1$d · Caídos: %2$d · Desconocidos: %3$d</string>
+    <string name="chk_stop">Detener</string>
+    <string name="chk_hide">Ocultar caídos</string>
 </resources>

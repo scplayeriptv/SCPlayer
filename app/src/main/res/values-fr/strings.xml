@@ -293,4 +293,22 @@
     <string name="set_hidden_count">%1$d masqués</string>
     <string name="hide_show_all">Tout afficher</string>
     <string name="det_more_like">Titres similaires</string>
+    <string name="player_skip_intro">Passer l\'intro (+%1$ds)</string>
+    <string name="set_intro">Passer l\'intro</string>
+    <string name="set_intro_sub">Saute le générique de la série d\'une durée fixe. Le bouton apparaît pendant les 5 premières minutes d\'un épisode. Touchez pour changer.</string>
+    <string name="set_intro_off">Désactivé</string>
+    <string name="set_intro_sec">%1$d s</string>
+    <string name="set_check">Tester les chaînes</string>
+    <string name="set_check_sub">Teste les chaînes en direct et repère celles qui ne répondent pas</string>
+    <string name="set_dead_count">%1$d hors service</string>
+    <string name="set_hide_dead">Masquer les chaînes hors service</string>
+    <string name="set_hide_dead_sub">Masque les chaînes ayant échoué au dernier test</string>
+    <string name="chk_title">Tester les chaînes</string>
+    <string name="chk_intro">Teste les chaînes en direct et trouve celles hors service. Utilise votre connexion et peut occuper brièvement les connexions de votre compte.</string>
+    <string name="chk_all">Toutes les chaînes en direct (%1$d)</string>
+    <string name="chk_favs">Favoris uniquement (%1$d)</string>
+    <string name="chk_progress">%1$d testées sur %2$d</string>
+    <string name="chk_result">Fonctionnent : %1$d · Hors service : %2$d · Inconnues : %3$d</string>
+    <string name="chk_stop">Arrêter</string>
+    <string name="chk_hide">Masquer les inactives</string>
 </resources>

@@ -293,4 +293,22 @@
     <string name="set_hidden_count">Скрыто: %1$d</string>
     <string name="hide_show_all">Показать все</string>
     <string name="det_more_like">Похожие</string>
+    <string name="player_skip_intro">Пропустить заставку (+%1$d с)</string>
+    <string name="set_intro">Пропуск заставки</string>
+    <string name="set_intro_sub">Пропускает заставку сериала на фиксированное время. Кнопка появляется в первые 5 минут серии. Нажмите, чтобы изменить.</string>
+    <string name="set_intro_off">Выкл.</string>
+    <string name="set_intro_sec">%1$d с</string>
+    <string name="set_check">Проверка каналов</string>
+    <string name="set_check_sub">Проверяет прямые эфиры и находит неработающие</string>
+    <string name="set_dead_count">Неработающих: %1$d</string>
+    <string name="set_hide_dead">Скрывать неработающие</string>
+    <string name="set_hide_dead_sub">Скрывает каналы, не прошедшие последнюю проверку</string>
+    <string name="chk_title">Проверка каналов</string>
+    <string name="chk_intro">Проверяет прямые эфиры и находит неработающие. Использует ваше соединение и может ненадолго занять слоты подключения аккаунта.</string>
+    <string name="chk_all">Все прямые каналы (%1$d)</string>
+    <string name="chk_favs">Только избранное (%1$d)</string>
+    <string name="chk_progress">Проверено %1$d из %2$d</string>
+    <string name="chk_result">Работают: %1$d · Не работают: %2$d · Неизвестно: %3$d</string>
+    <string name="chk_stop">Стоп</string>
+    <string name="chk_hide">Скрыть неработающие</string>
 </resources>
