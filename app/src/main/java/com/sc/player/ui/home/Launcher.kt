@@ -50,6 +50,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -127,50 +130,26 @@ internal fun Launcher(
 
     if (wide) {
         Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 14.dp)) {
-            Box(Modifier.fillMaxWidth().height(56.dp), contentAlignment = Alignment.Center) {
-                Brand()
-                ProfileChip(profile, onProfile, Modifier.align(Alignment.CenterStart).widthIn(max = 200.dp))
-                Text(
-                    status,
-                    color = TextMuted,
-                    fontSize = 13.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.CenterEnd).widthIn(max = 260.dp),
-                )
-            }
-            Row(Modifier.weight(1f).fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                val big = if (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp < 480 && quick.isNotEmpty()) TileStyle.Card else TileStyle.Hero
-                Tile3D(live, Icons.Filled.LiveTv, Purple, big, Modifier.weight(1.5f).fillMaxHeight(), badge = counts[Kind.Live]?.toString()) {
-                    onOpen(Dest.LiveTv)
+            Box(Modifier.fillMaxWidth().height(60.dp), contentAlignment = Alignment.Center) {
+                ProfileChip(profile, onProfile, Modifier.align(Alignment.CenterStart).widthIn(max = 190.dp))
+                Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Brand()
+                    Text(status, color = TextMuted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 240.dp))
                 }
-                Tile3D(movies, Icons.Filled.Movie, Blue, big, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Movies]?.toString()) { onOpen(Dest.Movies) }
-                Tile3D(series, Icons.Filled.VideoLibrary, Orange, big, Modifier.weight(1f).fillMaxHeight(), badge = counts[Kind.Series]?.toString()) { onOpen(Dest.Series) }
-                Column(Modifier.weight(1.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    val m = Modifier.weight(1f).fillMaxWidth()
-                    Tile3D(reload, Icons.Filled.Refresh, Slate, TileStyle.Action, m) { if (!reloading) onReload() }
-                    Tile3D(settings, Icons.Filled.Settings, Slate, TileStyle.Action, m) { onOpen(Dest.Settings) }
-                    Tile3D(exit, Icons.AutoMirrored.Filled.ExitToApp, Red, TileStyle.Action, m) { onExit() }
+                Row(Modifier.align(Alignment.CenterEnd), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    DockButton(Icons.Filled.Refresh, reload, Color(0xFF38BDF8), spinning = reloading) { if (!reloading) onReload() }
+                    DockButton(Icons.Filled.Settings, settings, Color(0xFFA78BFA)) { onOpen(Dest.Settings) }
+                    DockButton(Icons.AutoMirrored.Filled.ExitToApp, exit, Color(0xFFF87171)) { onExit() }
                 }
             }
-            if (quick.isNotEmpty()) {
-                val label = if (recents.isNotEmpty() && quick.size > recents.size) {
-                    stringResource(R.string.continue_watching) + "  ·  " + stringResource(R.string.favorites)
-                } else if (recents.isNotEmpty()) stringResource(R.string.continue_watching) else stringResource(R.string.favorites)
-                Text(label, color = TextMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.padding(top = 10.dp))
-                LazyRow(
-                    Modifier.fillMaxWidth().height(58.dp).padding(top = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    itemsIndexed(quick) { i, ch -> MiniCard(ch, ch.url in favs) { onPlayQuick(i) } }
-                }
+            Row(
+                Modifier.weight(1f).fillMaxWidth().padding(top = 14.dp, bottom = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                HubPanel(live, Icons.Filled.LiveTv, Purple, counts[Kind.Live]?.toString(), "LIVE", Modifier.weight(1.35f).fillMaxHeight()) { onOpen(Dest.LiveTv) }
+                HubPanel(movies, Icons.Filled.Movie, Blue, counts[Kind.Movies]?.toString(), null, Modifier.weight(1f).fillMaxHeight()) { onOpen(Dest.Movies) }
+                HubPanel(series, Icons.Filled.VideoLibrary, Orange, counts[Kind.Series]?.toString(), null, Modifier.weight(1f).fillMaxHeight()) { onOpen(Dest.Series) }
             }
-            Text(
-                "v$version",
-                color = TextMuted,
-                fontSize = 12.sp,
-                modifier = Modifier.align(Alignment.End).padding(top = 2.dp),
-            )
         }
     } else {
         Column(
@@ -195,61 +174,223 @@ internal fun Launcher(
                 Tile3D(settings, Icons.Filled.Settings, Slate, TileStyle.Mini, m) { onOpen(Dest.Settings) }
                 Tile3D(exit, Icons.AutoMirrored.Filled.ExitToApp, Red, TileStyle.Mini, m) { onExit() }
             }
-            if (recents.isNotEmpty()) {
-                SectionTitle(stringResource(R.string.continue_watching))
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    itemsIndexed(recents) { i, ch ->
-                        Box(Modifier.size(width = 140.dp, height = 150.dp)) {
-                            ChannelCard(ch, epgNow(ch, epgTick), ch.url in favs, { onToggleFav(ch.url) }) { onPlayRecent(i) }
-                        }
-                    }
-                }
-            }
-            Text("v$version", color = TextMuted, fontSize = 12.sp, modifier = Modifier.align(Alignment.End))
         }
     }
 }
 
 @Composable
-private fun MiniCard(ch: Channel, fav: Boolean, onClick: () -> Unit) {
-    var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(14.dp)
-    Row(
+private fun DockButton(icon: ImageVector, desc: String, tint: Color, spinning: Boolean = false, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    val scale by animateFloatAsState(if (focused) 1.15f else 1f, label = "dock")
+    val spin = androidx.compose.animation.core.rememberInfiniteTransition(label = "spin")
+    val angle by spin.animateFloat(
+        0f, 360f,
+        androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(900, easing = androidx.compose.animation.core.LinearEasing)),
+        label = "angle",
+    )
+    Box(
         Modifier
-            .fillMaxHeight()
-            .widthIn(min = 150.dp, max = 240.dp)
-            .onFocusChanged { focused = it.isFocused }
-            .clip(shape)
-            .background(com.sc.player.ui.theme.Glass)
-            .border(if (focused) 2.dp else 1.dp, if (focused) com.sc.player.ui.theme.Cyan else com.sc.player.ui.theme.GlassBorder, shape)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+            .size(44.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .clip(CircleShape)
+            .background(Brush.verticalGradient(listOf(tint.copy(alpha = 0.30f), tint.copy(alpha = 0.10f))))
+            .border(if (focused) 2.dp else 1.dp, if (focused) Color.White else tint.copy(alpha = 0.55f), CircleShape)
+            .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
     ) {
-        ChannelLogo(ch, 36.dp)
-        Text(
-            ch.name,
-            color = Color.White,
-            fontSize = 13.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false),
+        Icon(
+            icon,
+            contentDescription = desc,
+            tint = Color.White,
+            modifier = Modifier.size(22.dp).graphicsLayer { rotationZ = if (spinning) angle else 0f },
         )
-        if (fav) Text("★", color = Gold, fontSize = 14.sp)
     }
 }
 
+/** لوحة سينمائية: خلفية متحركة بكرات ضوء، أيقونة عملاقة شفافة، عدّاد، وميل 3D مع اللمس. */
 @Composable
-private fun GroupHeader(text: String) {
-    Text(
-        text,
-        color = TextMuted,
-        fontSize = 12.sp,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = 1.sp,
-        modifier = Modifier.padding(start = 4.dp, top = 2.dp),
+private fun HubPanel(
+    label: String,
+    icon: ImageVector,
+    colors: Pair<Color, Color>,
+    count: String?,
+    tag: String?,
+    modifier: Modifier,
+    onClick: () -> Unit,
+) {
+    val (from, to) = colors
+    val interaction = remember { MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    var pressed by remember { mutableStateOf(false) }
+    var tiltX by remember { mutableFloatStateOf(0f) }
+    var tiltY by remember { mutableFloatStateOf(0f) }
+    val springSpec = spring<Float>(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+    val aTiltX by animateFloatAsState(tiltX, animationSpec = springSpec, label = "tx")
+    val aTiltY by animateFloatAsState(tiltY, animationSpec = springSpec, label = "ty")
+    val scale by animateFloatAsState(if (pressed) 0.97f else if (focused) 1.05f else 1f, animationSpec = springSpec, label = "sc")
+    val bar by androidx.compose.animation.core.animateDpAsState(if (focused) 96.dp else 36.dp, label = "bar")
+    val density = LocalDensity.current.density
+    val shape = RoundedCornerShape(32.dp)
+
+    val inf = androidx.compose.animation.core.rememberInfiniteTransition(label = "orbs")
+    val t by inf.animateFloat(
+        0f, 1f,
+        androidx.compose.animation.core.infiniteRepeatable(
+            androidx.compose.animation.core.tween(7000, easing = androidx.compose.animation.core.LinearEasing),
+            androidx.compose.animation.core.RepeatMode.Reverse,
+        ),
+        label = "t",
     )
+    val pulse by inf.animateFloat(
+        0.55f, 1f,
+        androidx.compose.animation.core.infiniteRepeatable(
+            androidx.compose.animation.core.tween(900),
+            androidx.compose.animation.core.RepeatMode.Reverse,
+        ),
+        label = "pulse",
+    )
+
+    androidx.compose.foundation.layout.BoxWithConstraints(
+        modifier
+            .graphicsLayer {
+                rotationX = aTiltX
+                rotationY = aTiltY
+                scaleX = scale
+                scaleY = scale
+                cameraDistance = 16f * density
+            }
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    pressed = true
+                    fun tilt(p: Offset) {
+                        tiltY = ((p.x / size.width) - 0.5f) * 2f * 7f
+                        tiltX = -((p.y / size.height) - 0.5f) * 2f * 7f
+                    }
+                    tilt(down.position)
+                    do {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        event.changes.firstOrNull()?.let { tilt(it.position) }
+                    } while (event.changes.any { it.pressed })
+                    pressed = false
+                    tiltX = 0f
+                    tiltY = 0f
+                }
+            }
+            .shadow(if (focused) 28.dp else 16.dp, shape, ambientColor = from, spotColor = from)
+            .clip(shape)
+            .background(Brush.linearGradient(listOf(from.darken(0.50f), to.darken(0.28f), Color(0xFF070B18))))
+            .drawBehind {
+                val w = size.width
+                val h = size.height
+                val c1 = Offset(w * (0.15f + 0.55f * t), h * (0.20f + 0.25f * t))
+                drawCircle(
+                    Brush.radialGradient(listOf(from.copy(alpha = 0.60f), Color.Transparent), center = c1, radius = size.minDimension * 0.95f),
+                    radius = size.minDimension * 0.95f,
+                    center = c1,
+                )
+                val c2 = Offset(w * (0.95f - 0.5f * t), h * (0.95f - 0.35f * t))
+                drawCircle(
+                    Brush.radialGradient(listOf(Color.White.copy(alpha = 0.14f), Color.Transparent), center = c2, radius = size.minDimension * 0.8f),
+                    radius = size.minDimension * 0.8f,
+                    center = c2,
+                )
+            }
+            .border(
+                if (focused) 3.dp else 1.5.dp,
+                if (focused) Brush.linearGradient(listOf(Color.White, from)) else Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.55f), Color.White.copy(alpha = 0.03f))),
+                shape,
+            )
+            .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick),
+    ) {
+        val compact = maxHeight < 230.dp
+        val med = if (compact) 58.dp else 76.dp
+        // أيقونة عملاقة شفافة كعلامة مائية
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = Color.White.copy(alpha = 0.09f),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .size(maxHeight * 0.95f)
+                .offset(x = maxHeight * 0.18f, y = maxHeight * 0.12f)
+                .rotate(-14f),
+        )
+        // لمعة زجاجية علوية
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.38f)
+                .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.14f), Color.Transparent))),
+        )
+        // الميدالية المضيئة
+        Box(
+            Modifier
+                .align(Alignment.TopStart)
+                .padding(18.dp)
+                .size(med)
+                .shadow(18.dp, CircleShape, ambientColor = from, spotColor = from)
+                .clip(CircleShape)
+                .background(Brush.linearGradient(listOf(from, to)))
+                .border(1.5.dp, Color.White.copy(alpha = 0.55f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(med * 0.52f))
+        }
+        // العدّاد + وسم LIVE
+        Column(Modifier.align(Alignment.TopEnd).padding(16.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (count != null) {
+                Text(
+                    count,
+                    color = Color.White,
+                    fontSize = if (compact) 20.sp else 26.sp,
+                    fontWeight = FontWeight.Black,
+                    style = TextStyle(shadow = Shadow(from, Offset(0f, 0f), 18f)),
+                )
+            }
+            if (tag != null) {
+                Row(
+                    Modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xFFEF4444).copy(alpha = 0.9f)).padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                ) {
+                    Box(Modifier.size(7.dp).graphicsLayer { alpha = pulse }.clip(CircleShape).background(Color.White))
+                    Text(tag, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                }
+            }
+        }
+        // العنوان + شريط مضيء
+        Column(Modifier.align(Alignment.BottomStart).padding(start = 20.dp, bottom = 20.dp, end = 64.dp)) {
+            Text(
+                label,
+                color = Color.White,
+                fontSize = if (compact) 22.sp else 28.sp,
+                fontWeight = FontWeight.ExtraBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = TextStyle(shadow = Shadow(Color.Black.copy(alpha = 0.55f), Offset(0f, 4f), 10f)),
+            )
+            Box(
+                Modifier
+                    .padding(top = 8.dp)
+                    .size(width = bar, height = 4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Brush.horizontalGradient(listOf(from, Color.White))),
+            )
+        }
+        // سهم زجاجي
+        Box(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .size(38.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = if (focused) 0.30f else 0.14f))
+                .border(1.dp, Color.White.copy(alpha = 0.4f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) { Text("›", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold) }
+    }
 }
 
 @Composable
