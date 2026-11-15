@@ -31,6 +31,18 @@ class PositionStore(context: Context) {
         e.apply()
     }
 
+    /** روابط اللي لسه بيتكمّل، الأحدث مشاهدة الأول. */
+    fun inProgress(): List<String> =
+        sp.all.entries
+            .mapNotNull { e ->
+                val p = (e.value as? String)?.split(',') ?: return@mapNotNull null
+                val pos = p.getOrNull(0)?.toLongOrNull() ?: return@mapNotNull null
+                if (pos < MIN_RESUME_MS) return@mapNotNull null
+                e.key to (p.getOrNull(2)?.toLongOrNull() ?: 0L)
+            }
+            .sortedByDescending { it.second }
+            .map { it.first }
+
     /** نسبة التقدّم 0..1 لو معروفة. */
     fun progress(url: String): Float? {
         val p = sp.getString(url, null)?.split(',') ?: return null

@@ -342,3 +342,9 @@
 - على اليمين لوحة بخلفية متدرّجة ملوّنة (Cyan→Violet→داكن) فيها عنوان التصنيف المحدد + العدد + بحث + Guide، وتحتها شبكة بوسترات أصغر (≈5 أعمدة على الموبايل) بالعنوان فوق البوستر.
 - Live بنفس التصميم لكن بصفوف القنوات. الملف: ContentScreen.kt (CategoryPanel).
 - "Continue Watching / Recently Added" كتصنيفات مش متضافة (محتاجة تتبّع إضافي).
+
+## تصنيفات Continue Watching و Recently Added
+- Continue Watching: أفلام/مسلسلات = اللي لسه بيتكمّل (من PositionStore.inProgress، الأحدث أول). Live/Radio = آخر المشاهَد (UserPrefs.recents). بتظهر بس لو فيها عناصر.
+- Recently Added: SeenStore بيسجّل أول ظهور لكل رابط (ملف ثنائي seen_<النوع>.bin بهاش الرابط). أول تحميل أو تغيير القائمة كلها (>40% جديد) = baseline. بيعرض آخر 14 يوم، والأحدث أول، وبحد أقصى 200؛ ولو مفيش جديد بيعرض آخر 30 عنصر في القائمة.
+- ملاحظة: التصنيف مش هيبان "جديد" فعلًا إلا بعد ما تعمل Reload بعد ما القائمة تتحدّث.
+- نص جديد: cat_recent (9 لغات). الملفات: data/SeenStore.kt, PositionStore.kt, ui/home/ContentScreen.kt.

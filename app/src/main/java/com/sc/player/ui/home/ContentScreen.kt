@@ -42,6 +42,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import com.sc.player.data.PositionStore
+import com.sc.player.data.SeenStore
+import com.sc.player.data.UserPrefs
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -69,6 +73,8 @@ import java.util.Date
 import java.util.Locale
 
 private const val FAV_KEY = "__fav__"
+private const val CONT_KEY = "__cont__"
+private const val NEW_KEY = "__new__"
 
 private fun hm(t: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(t))
 
@@ -91,6 +97,19 @@ fun ContentScreen(
 
     val groups = remember(items) { items.groupingBy { it.group }.eachCount().entries.toList() }
     val favCount = remember(items, favs) { items.count { it.url in favs } }
+    val ctx = LocalContext.current
+    val vod = kind == Kind.Movies || kind == Kind.Series
+    // "أكمل المشاهدة": الأفلام/المسلسلات من مواضع المشاهدة، والقنوات/الراديو من آخر المشاهَد
+    val cont by produceState(emptyList<Channel>(), items, kind) {
+        value = withContext(Dispatchers.IO) {
+            val byUrl = items.associateBy { it.url }
+            val urls = if (vod) PositionStore(ctx).inProgress() else UserPrefs(ctx).recents()
+            urls.mapNotNull { byUrl[it] }
+        }
+    }
+    val fresh by produceState(emptyList<Channel>(), items, kind) {
+        value = withContext(Dispatchers.IO) { SeenStore(ctx).recent(kind, items) }
+    }
 
     // البحث بيستنى 250ms بعد آخر حرف، والفلترة بتتم في الخلفية عشان القوائم الكبيرة
     var debounced by remember { mutableStateOf(query) }
@@ -100,18 +119,27 @@ fun ContentScreen(
             debounced = query
         }
     }
-    val filtered by produceState(items, items, selected, debounced, favs) {
+    val filtered by produceState(items, items, selected, debounced, favs, cont, fresh) {
         val q = debounced.trim()
         val sel = selected
         val fav = favs
+        val contRank = cont.withIndex().associate { it.value.url to it.index }
+        val newRank = fresh.withIndex().associate { it.value.url to it.index }
         value = withContext(Dispatchers.Default) {
-            items.filter {
+            val list = items.filter {
                 val inCategory = when (sel) {
                     null -> true
                     FAV_KEY -> it.url in fav
+                    CONT_KEY -> it.url in contRank
+                    NEW_KEY -> it.url in newRank
                     else -> it.group == sel
                 }
                 inCategory && (q.isEmpty() || it.name.contains(q, ignoreCase = true))
+            }
+            when (sel) {
+                CONT_KEY -> list.sortedBy { contRank[it.url] ?: Int.MAX_VALUE }
+                NEW_KEY -> list.sortedBy { newRank[it.url] ?: Int.MAX_VALUE }
+                else -> list
             }
         }
     }
@@ -119,6 +147,8 @@ fun ContentScreen(
     val posters = kind == Kind.Movies || kind == Kind.Series
     val allLabel = if (live) stringResource(R.string.all_channels) else stringResource(R.string.all_items)
     val favLabel = stringResource(R.string.favorites)
+    val contLabel = stringResource(R.string.continue_watching)
+    val newLabel = stringResource(R.string.cat_recent)
     val kindTitle = stringResource(kind.titleRes)
 
     var catQuery by rememberSaveable(kind.name) { mutableStateOf("") }
@@ -131,6 +161,8 @@ fun ContentScreen(
     val title = when {
         sel == null -> allLabel
         sel == FAV_KEY -> favLabel
+        sel == CONT_KEY -> contLabel
+        sel == NEW_KEY -> newLabel
         else -> sel
     }
     val searchHint = stringResource(R.string.search_hint)
@@ -226,6 +258,10 @@ fun ContentScreen(
                 allCount = items.size,
                 favLabel = favLabel,
                 favCount = favCount,
+                contLabel = contLabel,
+                contCount = cont.size,
+                newLabel = newLabel,
+                newCount = fresh.size,
                 groups = shownGroups,
                 selected = selected,
                 onSelect = { selected = it },
@@ -271,6 +307,8 @@ fun ContentScreen(
             ) {
                 item { CategoryChip("$allLabel (${items.size})", selected == null) { selected = null } }
                 item { CategoryChip("$favLabel ($favCount)", selected == FAV_KEY) { selected = FAV_KEY } }
+                if (cont.isNotEmpty()) item { CategoryChip("$contLabel (${cont.size})", selected == CONT_KEY) { selected = CONT_KEY } }
+                if (fresh.isNotEmpty()) item { CategoryChip("$newLabel (${fresh.size})", selected == NEW_KEY) { selected = NEW_KEY } }
                 items(groups) { g ->
                     CategoryChip("${g.key} (${g.value})", selected == g.key) { selected = g.key }
                 }
@@ -298,6 +336,10 @@ private fun CategoryPanel(
     allCount: Int,
     favLabel: String,
     favCount: Int,
+    contLabel: String,
+    contCount: Int,
+    newLabel: String,
+    newCount: Int,
     groups: List<Map.Entry<String, Int>>,
     selected: String?,
     onSelect: (String?) -> Unit,
@@ -318,6 +360,8 @@ private fun CategoryPanel(
             if (catQuery.isBlank()) {
                 item { CategoryRow(allLabel, allCount, selected == null) { onSelect(null) } }
                 item { CategoryRow(favLabel, favCount, selected == FAV_KEY) { onSelect(FAV_KEY) } }
+                if (contCount > 0) item { CategoryRow(contLabel, contCount, selected == CONT_KEY) { onSelect(CONT_KEY) } }
+                if (newCount > 0) item { CategoryRow(newLabel, newCount, selected == NEW_KEY) { onSelect(NEW_KEY) } }
             }
             items(groups) { g -> CategoryRow(g.key, g.value, selected == g.key) { onSelect(g.key) } }
         }

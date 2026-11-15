@@ -284,4 +284,5 @@
     <string name="sleep_min">%1$d min</string>
     <string name="search_voice_prompt">Pronuncia il nome di un canale o film</string>
     <string name="search_voice_unavailable">La ricerca vocale non è disponibile su questo dispositivo</string>
+    <string name="cat_recent">Aggiunti di recente</string>
 </resources>

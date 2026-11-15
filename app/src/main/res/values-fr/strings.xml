@@ -284,4 +284,5 @@
     <string name="sleep_min">%1$d min</string>
     <string name="search_voice_prompt">Dites le nom d\'une chaîne ou d\'un film</string>
     <string name="search_voice_unavailable">La recherche vocale n\'est pas disponible sur cet appareil</string>
+    <string name="cat_recent">Ajouté récemment</string>
 </resources>
