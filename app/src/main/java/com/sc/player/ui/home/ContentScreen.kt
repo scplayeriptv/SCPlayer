@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -58,6 +59,7 @@ import com.sc.player.ui.theme.GradientButton
 import com.sc.player.ui.theme.Ink
 import com.sc.player.ui.theme.Panel
 import com.sc.player.ui.theme.TextMain
+import com.sc.player.ui.theme.Violet
 import com.sc.player.ui.theme.TextMuted
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -119,109 +121,130 @@ fun ContentScreen(
     val favLabel = stringResource(R.string.favorites)
     val kindTitle = stringResource(kind.titleRes)
 
-    Column(Modifier.fillMaxSize().padding(top = 16.dp)) {
-        Row(
-            Modifier.padding(horizontal = 24.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            ScreenTitle(kindTitle, "${items.size}")
-            SearchPill(query, { query = it }, stringResource(R.string.search_hint), Modifier.weight(1f))
-            if (live) CategoryChip(stringResource(R.string.guide), false) { onGuide(filtered) }
-        }
+    var catQuery by rememberSaveable(kind.name) { mutableStateOf("") }
+    val shownGroups = remember(groups, catQuery) {
+        val q = catQuery.trim()
+        if (q.isEmpty()) groups else groups.filter { it.key.contains(q, ignoreCase = true) }
+    }
+    val compactH = LocalConfiguration.current.screenHeightDp < 480
+    val sel = selected
+    val title = when {
+        sel == null -> allLabel
+        sel == FAV_KEY -> favLabel
+        else -> sel
+    }
+    val searchHint = stringResource(R.string.search_hint)
 
-        if (!wide) {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 24.dp),
+    // نتائج القسم (قنوات/بوسترات) — بتتعرض جوه اللوحة الملوّنة
+    val results: @Composable () -> Unit = {
+        if (filtered.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    when {
+                        items.isEmpty() -> stringResource(R.string.empty_none, kindTitle)
+                        selected == FAV_KEY -> stringResource(R.string.empty_favs)
+                        else -> stringResource(R.string.empty_nomatch)
+                    },
+                    color = Color.White.copy(alpha = 0.85f),
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(24.dp),
+                )
+            }
+        } else if (posters) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(if (compactH) 92.dp else 128.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.padding(vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                item { CategoryChip("$allLabel (${items.size})", selected == null) { selected = null } }
-                item { CategoryChip("$favLabel ($favCount)", selected == FAV_KEY) { selected = FAV_KEY } }
-                items(groups) { g ->
-                    CategoryChip("${g.key} (${g.value})", selected == g.key) { selected = g.key }
+                gridItemsIndexed(filtered) { i, ch ->
+                    PosterCard(
+                        ch = ch,
+                        fav = ch.url in favs,
+                        onFocus = { highlighted = ch },
+                        onToggleFav = { onToggleFav(ch.url) },
+                    ) { onPlay(filtered, i) }
                 }
             }
         } else {
-            Box(Modifier.padding(top = 12.dp))
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                itemsIndexed(filtered) { i, ch ->
+                    ChannelRow(
+                        ch = ch,
+                        now = epgNow(ch, epgTick),
+                        fav = ch.url in favs,
+                        live = live,
+                        onFocus = { highlighted = ch },
+                        onToggleFav = { onToggleFav(ch.url) },
+                    ) { onPlay(filtered, i) }
+                }
+            }
         }
+    }
 
-        Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            if (wide) {
-                LazyColumn(
-                    Modifier
-                        .padding(start = 24.dp, bottom = 16.dp)
-                        .width(240.dp)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(26.dp))
-                        .background(Panel.copy(alpha = 0.55f))
-                        .border(1.dp, GlassBorder, RoundedCornerShape(26.dp)),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = PaddingValues(10.dp),
-                ) {
-                    item { CategoryRow(allLabel, items.size, selected == null) { selected = null } }
-                    item { CategoryRow(favLabel, favCount, selected == FAV_KEY) { selected = FAV_KEY } }
-                    items(groups) { g -> CategoryRow(g.key, g.value, selected == g.key) { selected = g.key } }
-                }
+    val header: @Composable () -> Unit = {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = 10.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Column(Modifier.widthIn(max = 230.dp)) {
+                Text(
+                    title,
+                    color = Color.White,
+                    fontSize = if (compactH) 18.sp else 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text("$kindTitle  ·  ${filtered.size}", color = Color.White.copy(alpha = 0.75f), fontSize = 11.sp, maxLines = 1)
             }
+            SearchPill(query, { query = it }, searchHint, Modifier.weight(1f).height(42.dp))
+            if (live) CategoryChip(stringResource(R.string.guide), false) { onGuide(filtered) }
+        }
+    }
 
-            if (filtered.isEmpty()) {
-                Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                    Text(
-                        when {
-                            items.isEmpty() -> stringResource(R.string.empty_none, kindTitle)
-                            selected == FAV_KEY -> stringResource(R.string.empty_favs)
-                            else -> stringResource(R.string.empty_nomatch)
-                        },
-                        color = TextMuted,
-                        fontSize = 16.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(24.dp),
-                    )
-                }
-            } else if (posters) {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(if (wide) 140.dp else 110.dp),
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                    contentPadding = PaddingValues(start = if (wide) 0.dp else 24.dp, end = 24.dp, bottom = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    gridItemsIndexed(filtered) { i, ch ->
-                        PosterCard(
-                            ch = ch,
-                            fav = ch.url in favs,
-                            onFocus = { highlighted = ch },
-                            onToggleFav = { onToggleFav(ch.url) },
-                        ) { onPlay(filtered, i) }
-                    }
-                }
-            } else {
-                LazyColumn(
-                    Modifier.weight(1f).fillMaxHeight(),
-                    contentPadding = PaddingValues(
-                        start = if (wide) 0.dp else 24.dp,
-                        end = if (huge) 0.dp else 24.dp,
-                        bottom = 24.dp,
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    itemsIndexed(filtered) { i, ch ->
-                        ChannelRow(
-                            ch = ch,
-                            now = epgNow(ch, epgTick),
-                            fav = ch.url in favs,
-                            live = live,
-                            onFocus = { highlighted = ch },
-                            onToggleFav = { onToggleFav(ch.url) },
-                        ) { onPlay(filtered, i) }
-                    }
-                }
+    val paneBrush = androidx.compose.ui.graphics.Brush.linearGradient(
+        listOf(Cyan.copy(alpha = 0.55f), Violet.copy(alpha = 0.80f), Color(0xFF1B1446)),
+    )
+    val paneShape = RoundedCornerShape(28.dp)
+
+    if (wide) {
+        Row(Modifier.fillMaxSize().padding(top = 8.dp)) {
+            CategoryPanel(
+                modifier = Modifier.padding(start = 12.dp, bottom = 12.dp).width(if (compactH) 200.dp else 250.dp).fillMaxHeight(),
+                catQuery = catQuery,
+                onCatQuery = { catQuery = it },
+                hint = searchHint,
+                allLabel = allLabel,
+                allCount = items.size,
+                favLabel = favLabel,
+                favCount = favCount,
+                groups = shownGroups,
+                selected = selected,
+                onSelect = { selected = it },
+            )
+            Column(
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
+                    .clip(paneShape)
+                    .background(paneBrush)
+                    .border(1.dp, Color.White.copy(alpha = 0.25f), paneShape),
+            ) {
+                header()
+                Box(Modifier.weight(1f).fillMaxWidth()) { results() }
             }
-
             if (huge && !posters) {
                 val shown = highlighted?.takeIf { h -> filtered.any { it === h } } ?: filtered.firstOrNull()
-                Box(Modifier.width(320.dp).fillMaxHeight().padding(end = 24.dp, bottom = 24.dp)) {
+                Box(Modifier.width(320.dp).fillMaxHeight().padding(end = 24.dp, bottom = 12.dp)) {
                     if (shown != null) {
                         DetailsPanel(
                             ch = shown,
@@ -237,6 +260,66 @@ fun ContentScreen(
                     }
                 }
             }
+        }
+    } else {
+        Column(Modifier.fillMaxSize().padding(top = 8.dp)) {
+            header()
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.padding(vertical = 8.dp),
+            ) {
+                item { CategoryChip("$allLabel (${items.size})", selected == null) { selected = null } }
+                item { CategoryChip("$favLabel ($favCount)", selected == FAV_KEY) { selected = FAV_KEY } }
+                items(groups) { g ->
+                    CategoryChip("${g.key} (${g.value})", selected == g.key) { selected = g.key }
+                }
+            }
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .clip(paneShape)
+                    .background(paneBrush),
+            ) { results() }
+        }
+    }
+}
+
+/** لوحة التصنيفات: بحث في التصنيفات + الكل + المفضلة + المجموعات. */
+@Composable
+private fun CategoryPanel(
+    modifier: Modifier,
+    catQuery: String,
+    onCatQuery: (String) -> Unit,
+    hint: String,
+    allLabel: String,
+    allCount: Int,
+    favLabel: String,
+    favCount: Int,
+    groups: List<Map.Entry<String, Int>>,
+    selected: String?,
+    onSelect: (String?) -> Unit,
+) {
+    val shape = RoundedCornerShape(26.dp)
+    Column(
+        modifier
+            .clip(shape)
+            .background(Panel.copy(alpha = 0.65f))
+            .border(1.dp, GlassBorder, shape),
+    ) {
+        SearchPill(catQuery, onCatQuery, hint, Modifier.padding(10.dp).fillMaxWidth().height(42.dp))
+        LazyColumn(
+            Modifier.weight(1f).fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, bottom = 10.dp),
+        ) {
+            if (catQuery.isBlank()) {
+                item { CategoryRow(allLabel, allCount, selected == null) { onSelect(null) } }
+                item { CategoryRow(favLabel, favCount, selected == FAV_KEY) { onSelect(FAV_KEY) } }
+            }
+            items(groups) { g -> CategoryRow(g.key, g.value, selected == g.key) { onSelect(g.key) } }
         }
     }
 }
