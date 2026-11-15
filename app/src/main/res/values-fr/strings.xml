@@ -311,4 +311,6 @@
     <string name="chk_result">Fonctionnent : %1$d · Hors service : %2$d · Inconnues : %3$d</string>
     <string name="chk_stop">Arrêter</string>
     <string name="chk_hide">Masquer les inactives</string>
+    <string name="reload_done">Liste mise à jour (%1$d chaînes)</string>
+    <string name="reload_failed">Échec de la mise à jour : %1$s</string>
 </resources>

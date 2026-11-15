@@ -311,4 +311,6 @@
     <string name="chk_result">شغالة: %1$d · ميتة: %2$d · غير معروفة: %3$d</string>
     <string name="chk_stop">إيقاف</string>
     <string name="chk_hide">إخفاء الميتة</string>
+    <string name="reload_done">اتحدّثت القائمة (%1$d قناة)</string>
+    <string name="reload_failed">فشل التحديث: %1$s</string>
 </resources>

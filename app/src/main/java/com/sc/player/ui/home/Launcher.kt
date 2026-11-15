@@ -177,6 +177,21 @@ internal fun Launcher(
             }
         }
     }
+    if (reloading) {
+        // شاشة تحميل واضحة وقت إعادة تحميل القائمة (وبتمنع اللمس لحد ما يخلص)
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Color(0xAA000000))
+                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                androidx.compose.material3.CircularProgressIndicator(color = com.sc.player.ui.theme.Cyan)
+                Text(reload, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
 }
 
 @Composable

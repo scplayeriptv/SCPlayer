@@ -311,4 +311,6 @@
     <string name="chk_result">Çalışan: %1$d · Çalışmayan: %2$d · Bilinmeyen: %3$d</string>
     <string name="chk_stop">Durdur</string>
     <string name="chk_hide">Çalışmayanları gizle</string>
+    <string name="reload_done">Liste güncellendi (%1$d kanal)</string>
+    <string name="reload_failed">Güncelleme başarısız: %1$s</string>
 </resources>

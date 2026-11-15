@@ -311,4 +311,6 @@
     <string name="chk_result">Funcionan: %1$d · Caídos: %2$d · Desconocidos: %3$d</string>
     <string name="chk_stop">Detener</string>
     <string name="chk_hide">Ocultar caídos</string>
+    <string name="reload_done">Lista actualizada (%1$d canales)</string>
+    <string name="reload_failed">Error al actualizar: %1$s</string>
 </resources>

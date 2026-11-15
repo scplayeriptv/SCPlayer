@@ -136,11 +136,18 @@ fun HomeScreen(
                 prefs = prefs,
                 reloading = reloading,
                 onReload = {
-                    reloading = true
-                    scope.launch {
-                        repo.refresh(playlistId)
-                        reloadKey++
-                        reloading = false
+                    if (!reloading) {
+                        reloading = true
+                        scope.launch {
+                            val r = repo.refresh(playlistId)
+                            reloadKey++
+                            reloading = false
+                            val msg = r.fold(
+                                { ctx.getString(R.string.reload_done, it) },
+                                { ctx.getString(R.string.reload_failed, it.message ?: it.javaClass.simpleName) },
+                            )
+                            android.widget.Toast.makeText(ctx, msg, android.widget.Toast.LENGTH_LONG).show()
+                        }
                     }
                 },
                 onPlay = onPlay,

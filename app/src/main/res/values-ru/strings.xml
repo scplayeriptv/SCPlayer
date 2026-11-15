@@ -311,4 +311,6 @@
     <string name="chk_result">Работают: %1$d · Не работают: %2$d · Неизвестно: %3$d</string>
     <string name="chk_stop">Стоп</string>
     <string name="chk_hide">Скрыть неработающие</string>
+    <string name="reload_done">Плейлист обновлён (каналов: %1$d)</string>
+    <string name="reload_failed">Не удалось обновить: %1$s</string>
 </resources>

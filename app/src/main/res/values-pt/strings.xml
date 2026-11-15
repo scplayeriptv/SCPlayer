@@ -311,4 +311,6 @@
     <string name="chk_result">Funcionando: %1$d · Inativos: %2$d · Desconhecidos: %3$d</string>
     <string name="chk_stop">Parar</string>
     <string name="chk_hide">Ocultar inativos</string>
+    <string name="reload_done">Lista atualizada (%1$d canais)</string>
+    <string name="reload_failed">Falha ao atualizar: %1$s</string>
 </resources>

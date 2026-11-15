@@ -311,4 +311,6 @@
     <string name="chk_result">Läuft: %1$d · Defekt: %2$d · Unbekannt: %3$d</string>
     <string name="chk_stop">Stopp</string>
     <string name="chk_hide">Defekte ausblenden</string>
+    <string name="reload_done">Playlist aktualisiert (%1$d Sender)</string>
+    <string name="reload_failed">Aktualisierung fehlgeschlagen: %1$s</string>
 </resources>
