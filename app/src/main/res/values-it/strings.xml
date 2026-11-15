@@ -313,4 +313,8 @@
     <string name="chk_hide">Nascondi non attivi</string>
     <string name="reload_done">Playlist aggiornata (%1$d canali)</string>
     <string name="reload_failed">Aggiornamento non riuscito: %1$s</string>
+    <string name="sort_default">Ordine predefinito</string>
+    <string name="sort_az">Nome A–Z</string>
+    <string name="sort_za">Nome Z–A</string>
+    <string name="sort_added">Aggiunti di recente</string>
 </resources>

@@ -313,4 +313,8 @@
     <string name="chk_hide">Çalışmayanları gizle</string>
     <string name="reload_done">Liste güncellendi (%1$d kanal)</string>
     <string name="reload_failed">Güncelleme başarısız: %1$s</string>
+    <string name="sort_default">Varsayılan sıra</string>
+    <string name="sort_az">Ad A–Z</string>
+    <string name="sort_za">Ad Z–A</string>
+    <string name="sort_added">Yakında eklenenler</string>
 </resources>

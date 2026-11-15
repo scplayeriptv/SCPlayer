@@ -16,6 +16,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.LiveTv
+import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -89,10 +95,12 @@ fun ContentScreen(
     onToggleFav: (String) -> Unit,
     onPlay: (List<Channel>, Int) -> Unit,
     onGuide: (List<Channel>) -> Unit,
+    onNav: ((Dest) -> Unit)? = null,
 ) {
     val huge = LocalConfiguration.current.screenWidthDp >= 1100
     var selected by rememberSaveable(kind.name) { mutableStateOf<String?>(null) }
     var query by rememberSaveable(kind.name) { mutableStateOf("") }
+    var sortMode by rememberSaveable(kind.name) { mutableStateOf(0) }
     var highlighted by remember { mutableStateOf<Channel?>(null) }
 
     val groups = remember(items) { items.groupingBy { it.group }.eachCount().entries.toList() }
@@ -119,7 +127,7 @@ fun ContentScreen(
             debounced = query
         }
     }
-    val filtered by produceState(items, items, selected, debounced, favs, cont, fresh) {
+    val filtered by produceState(items, items, selected, debounced, favs, cont, fresh, sortMode) {
         val q = debounced.trim()
         val sel = selected
         val fav = favs
@@ -136,9 +144,12 @@ fun ContentScreen(
                 }
                 inCategory && (q.isEmpty() || it.name.contains(q, ignoreCase = true))
             }
-            when (sel) {
-                CONT_KEY -> list.sortedBy { contRank[it.url] ?: Int.MAX_VALUE }
-                NEW_KEY -> list.sortedBy { newRank[it.url] ?: Int.MAX_VALUE }
+            when {
+                sel == CONT_KEY -> list.sortedBy { contRank[it.url] ?: Int.MAX_VALUE }
+                sel == NEW_KEY -> list.sortedBy { newRank[it.url] ?: Int.MAX_VALUE }
+                sortMode == 1 -> list.sortedBy { it.name.lowercase() }
+                sortMode == 2 -> list.sortedByDescending { it.name.lowercase() }
+                sortMode == 3 -> list.sortedBy { newRank[it.url] ?: Int.MAX_VALUE }
                 else -> list
             }
         }
@@ -248,51 +259,90 @@ fun ContentScreen(
     val paneShape = RoundedCornerShape(28.dp)
 
     if (wide) {
-        Row(Modifier.fillMaxSize().padding(top = 8.dp)) {
-            CategoryPanel(
-                modifier = Modifier.padding(start = 12.dp, bottom = 12.dp).width(if (compactH) 200.dp else 250.dp).fillMaxHeight(),
-                catQuery = catQuery,
-                onCatQuery = { catQuery = it },
-                hint = searchHint,
-                allLabel = allLabel,
-                allCount = items.size,
-                favLabel = favLabel,
-                favCount = favCount,
-                contLabel = contLabel,
-                contCount = cont.size,
-                newLabel = newLabel,
-                newCount = fresh.size,
-                groups = shownGroups,
-                selected = selected,
-                onSelect = { selected = it },
-            )
-            Column(
-                Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
-                    .clip(paneShape)
-                    .background(paneBrush)
-                    .border(1.dp, Color.White.copy(alpha = 0.25f), paneShape),
-            ) {
-                header()
-                Box(Modifier.weight(1f).fillMaxWidth()) { results() }
+        val panelW = if (compactH) 210.dp else 280.dp
+        val kindIcon = when (kind) {
+            Kind.Live -> Icons.Filled.LiveTv
+            Kind.Movies -> Icons.Filled.Movie
+            Kind.Series -> Icons.Filled.VideoLibrary
+            else -> Icons.Filled.Radio
+        }
+        val wideBrush = androidx.compose.ui.graphics.Brush.linearGradient(
+            listOf(Cyan.copy(alpha = 0.28f), Violet.copy(alpha = 0.50f), Color(0xFF0F0A24)),
+        )
+        Column(Modifier.fillMaxSize()) {
+            if (onNav != null) {
+                TopNav(
+                    current = when (kind) { Kind.Movies -> Dest.Movies; Kind.Series -> Dest.Series; else -> Dest.LiveTv },
+                    onNav = onNav,
+                    query = query,
+                    onQuery = { query = it },
+                    hint = searchHint,
+                )
             }
-            if (huge && !posters) {
-                val shown = highlighted?.takeIf { h -> filtered.any { it === h } } ?: filtered.firstOrNull()
-                Box(Modifier.width(320.dp).fillMaxHeight().padding(end = 24.dp, bottom = 12.dp)) {
-                    if (shown != null) {
-                        DetailsPanel(
-                            ch = shown,
-                            live = live,
-                            fav = shown.url in favs,
-                            epgTick = epgTick,
-                            onToggleFav = { onToggleFav(shown.url) },
-                            onPlay = {
-                                val i = filtered.indexOfFirst { it === shown }
-                                if (i >= 0) onPlay(filtered, i)
-                            },
+            Row(Modifier.weight(1f).fillMaxWidth()) {
+                CategoryPanel(
+                    modifier = Modifier.width(panelW).fillMaxHeight(),
+                    icon = kindIcon,
+                    compactH = compactH,
+                    onBack = { onNav?.invoke(Dest.Home) },
+                    showBack = onNav != null,
+                    catQuery = catQuery,
+                    onCatQuery = { catQuery = it },
+                    hint = searchHint,
+                    allLabel = allLabel,
+                    allCount = items.size,
+                    favLabel = favLabel,
+                    favCount = favCount,
+                    contLabel = contLabel,
+                    contCount = cont.size,
+                    newLabel = newLabel,
+                    newCount = fresh.size,
+                    groups = shownGroups,
+                    selected = selected,
+                    onSelect = { selected = it },
+                )
+                Box(Modifier.width(1.dp).fillMaxHeight().background(GlassBorder))
+                Column(Modifier.weight(1f).fillMaxHeight().background(wideBrush)) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        SortMenu(sortMode) { sortMode = it }
+                        if (onNav == null) {
+                            SearchPill(query, { query = it }, searchHint, Modifier.weight(1f).height(42.dp))
+                        } else {
+                            Box(Modifier.weight(1f))
+                        }
+                        if (live) CategoryChip(stringResource(R.string.guide), false) { onGuide(filtered) }
+                        Text(
+                            "$title (${filtered.size})",
+                            color = Color.White,
+                            fontSize = if (compactH) 18.sp else 22.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.widthIn(max = 240.dp),
                         )
+                    }
+                    Box(Modifier.weight(1f).fillMaxWidth()) { results() }
+                }
+                if (huge && !posters) {
+                    val shown = highlighted?.takeIf { h -> filtered.any { it === h } } ?: filtered.firstOrNull()
+                    Box(Modifier.width(320.dp).fillMaxHeight().padding(end = 24.dp, bottom = 12.dp)) {
+                        if (shown != null) {
+                            DetailsPanel(
+                                ch = shown,
+                                live = live,
+                                fav = shown.url in favs,
+                                epgTick = epgTick,
+                                onToggleFav = { onToggleFav(shown.url) },
+                                onPlay = {
+                                    val i = filtered.indexOfFirst { it === shown }
+                                    if (i >= 0) onPlay(filtered, i)
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -325,10 +375,84 @@ fun ContentScreen(
     }
 }
 
-/** لوحة التصنيفات: بحث في التصنيفات + الكل + المفضلة + المجموعات. */
+/** شريط التنقّل العلوي: Home | Live TV | Movies | Series + بحث + اللوجو. */
+@Composable
+private fun TopNav(current: Dest, onNav: (Dest) -> Unit, query: String, onQuery: (String) -> Unit, hint: String) {
+    val tabs = listOf(
+        Dest.Home to R.string.nav_home,
+        Dest.LiveTv to R.string.nav_live_tv,
+        Dest.Movies to R.string.nav_movies,
+        Dest.Series to R.string.nav_series,
+    )
+    Row(
+        Modifier.fillMaxWidth().height(56.dp).background(Panel.copy(alpha = 0.95f)).padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        tabs.forEach { (d, res) ->
+            var focused by remember { mutableStateOf(false) }
+            val sel = d == current
+            Text(
+                stringResource(res),
+                color = if (sel) Cyan else TextMain,
+                fontSize = 17.sp,
+                fontWeight = if (sel) FontWeight.ExtraBold else FontWeight.Medium,
+                maxLines = 1,
+                modifier = Modifier
+                    .onFocusChanged { focused = it.isFocused }
+                    .clip(RoundedCornerShape(10.dp))
+                    .then(if (focused) Modifier.border(2.dp, Cyan, RoundedCornerShape(10.dp)) else Modifier)
+                    .clickable(role = Role.Tab) { onNav(d) }
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+            )
+            Box(Modifier.width(1.dp).height(22.dp).background(GlassBorder))
+        }
+        SearchPill(query, onQuery, hint, Modifier.weight(1f).padding(horizontal = 10.dp).height(40.dp))
+        com.sc.player.ui.theme.SCLogo(34.dp)
+    }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(GlassBorder))
+}
+
+/** قائمة الترتيب المنسدلة (Order by). */
+@Composable
+private fun SortMenu(mode: Int, onPick: (Int) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val labels = listOf(
+        stringResource(R.string.sort_default),
+        stringResource(R.string.sort_az),
+        stringResource(R.string.sort_za),
+        stringResource(R.string.sort_added),
+    )
+    Box {
+        Row(
+            Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0x33000000))
+                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                .clickable(role = Role.DropdownList) { open = true }
+                .padding(horizontal = 14.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(labels[mode.coerceIn(0, 3)], color = Color.White, fontSize = 14.sp, maxLines = 1)
+            Text("▾", color = Color.White, fontSize = 14.sp)
+        }
+        androidx.compose.material3.DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            labels.forEachIndexed { i, l ->
+                androidx.compose.material3.DropdownMenuItem(text = { Text(l) }, onClick = { onPick(i); open = false })
+            }
+        }
+    }
+}
+
+/** لوحة التصنيفات (يسار): أيقونة النوع + رجوع + بحث + الصفوف. */
 @Composable
 private fun CategoryPanel(
     modifier: Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    compactH: Boolean,
+    onBack: () -> Unit,
+    showBack: Boolean,
     catQuery: String,
     onCatQuery: (String) -> Unit,
     hint: String,
@@ -344,24 +468,40 @@ private fun CategoryPanel(
     selected: String?,
     onSelect: (String?) -> Unit,
 ) {
-    val shape = RoundedCornerShape(26.dp)
-    Column(
-        modifier
-            .clip(shape)
-            .background(Panel.copy(alpha = 0.65f))
-            .border(1.dp, GlassBorder, shape),
-    ) {
-        SearchPill(catQuery, onCatQuery, hint, Modifier.padding(10.dp).fillMaxWidth().height(42.dp))
+    Column(modifier.background(Panel.copy(alpha = 0.92f))) {
+        if (!compactH) {
+            Box(Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp), contentAlignment = Alignment.Center) {
+                androidx.compose.material3.Icon(icon, contentDescription = null, tint = Cyan, modifier = Modifier.size(52.dp))
+            }
+        }
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            if (showBack) {
+                Text(
+                    "↩ " + stringResource(R.string.back),
+                    color = TextMain,
+                    fontSize = 14.sp,
+                    modifier = Modifier.clip(RoundedCornerShape(10.dp)).clickable(role = Role.Button, onClick = onBack).padding(horizontal = 8.dp, vertical = 6.dp),
+                )
+            } else {
+                Box(Modifier)
+            }
+            if (compactH) androidx.compose.material3.Icon(icon, contentDescription = null, tint = Cyan, modifier = Modifier.size(22.dp))
+        }
+        SearchPill(catQuery, onCatQuery, hint, Modifier.padding(horizontal = 10.dp, vertical = 4.dp).fillMaxWidth().height(40.dp))
         LazyColumn(
             Modifier.weight(1f).fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, bottom = 10.dp),
+            contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 6.dp, bottom = 10.dp),
         ) {
             if (catQuery.isBlank()) {
+                item { CategoryRow(contLabel, contCount, selected == CONT_KEY) { onSelect(CONT_KEY) } }
                 item { CategoryRow(allLabel, allCount, selected == null) { onSelect(null) } }
                 item { CategoryRow(favLabel, favCount, selected == FAV_KEY) { onSelect(FAV_KEY) } }
-                if (contCount > 0) item { CategoryRow(contLabel, contCount, selected == CONT_KEY) { onSelect(CONT_KEY) } }
-                if (newCount > 0) item { CategoryRow(newLabel, newCount, selected == NEW_KEY) { onSelect(NEW_KEY) } }
+                item { CategoryRow(newLabel, newCount, selected == NEW_KEY) { onSelect(NEW_KEY) } }
             }
             items(groups) { g -> CategoryRow(g.key, g.value, selected == g.key) { onSelect(g.key) } }
         }
@@ -371,11 +511,11 @@ private fun CategoryPanel(
 @Composable
 private fun CategoryRow(label: String, count: Int, selected: Boolean, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(10.dp)
     val fill: androidx.compose.ui.graphics.Brush = when {
         selected -> BrandBrush
-        focused -> androidx.compose.ui.graphics.SolidColor(Cyan.copy(alpha = 0.16f))
-        else -> androidx.compose.ui.graphics.SolidColor(Color.Transparent)
+        focused -> androidx.compose.ui.graphics.SolidColor(Cyan.copy(alpha = 0.20f))
+        else -> androidx.compose.ui.graphics.SolidColor(Color(0x14FFFFFF))
     }
     Row(
         Modifier

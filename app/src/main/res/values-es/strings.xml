@@ -313,4 +313,8 @@
     <string name="chk_hide">Ocultar caídos</string>
     <string name="reload_done">Lista actualizada (%1$d canales)</string>
     <string name="reload_failed">Error al actualizar: %1$s</string>
+    <string name="sort_default">Orden predeterminado</string>
+    <string name="sort_az">Nombre A–Z</string>
+    <string name="sort_za">Nombre Z–A</string>
+    <string name="sort_added">Añadido recientemente</string>
 </resources>

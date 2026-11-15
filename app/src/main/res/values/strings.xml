@@ -315,4 +315,8 @@
     <string name="chk_hide">Hide dead</string>
     <string name="reload_done">Playlist updated (%1$d channels)</string>
     <string name="reload_failed">Update failed: %1$s</string>
+    <string name="sort_default">Default order</string>
+    <string name="sort_az">Name A–Z</string>
+    <string name="sort_za">Name Z–A</string>
+    <string name="sort_added">Recently added</string>
 </resources>

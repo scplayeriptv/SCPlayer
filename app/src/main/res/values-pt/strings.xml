@@ -313,4 +313,8 @@
     <string name="chk_hide">Ocultar inativos</string>
     <string name="reload_done">Lista atualizada (%1$d canais)</string>
     <string name="reload_failed">Falha ao atualizar: %1$s</string>
+    <string name="sort_default">Ordem padrão</string>
+    <string name="sort_az">Nome A–Z</string>
+    <string name="sort_za">Nome Z–A</string>
+    <string name="sort_added">Adicionado recentemente</string>
 </resources>

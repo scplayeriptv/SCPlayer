@@ -313,4 +313,8 @@
     <string name="chk_hide">Скрыть неработающие</string>
     <string name="reload_done">Плейлист обновлён (каналов: %1$d)</string>
     <string name="reload_failed">Не удалось обновить: %1$s</string>
+    <string name="sort_default">По умолчанию</string>
+    <string name="sort_az">Название А–Я</string>
+    <string name="sort_za">Название Я–А</string>
+    <string name="sort_added">Недавно добавленные</string>
 </resources>

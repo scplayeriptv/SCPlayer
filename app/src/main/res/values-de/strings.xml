@@ -313,4 +313,8 @@
     <string name="chk_hide">Defekte ausblenden</string>
     <string name="reload_done">Playlist aktualisiert (%1$d Sender)</string>
     <string name="reload_failed">Aktualisierung fehlgeschlagen: %1$s</string>
+    <string name="sort_default">Standardreihenfolge</string>
+    <string name="sort_az">Name A–Z</string>
+    <string name="sort_za">Name Z–A</string>
+    <string name="sort_added">Zuletzt hinzugefügt</string>
 </resources>

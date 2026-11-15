@@ -313,4 +313,8 @@
     <string name="chk_hide">Masquer les inactives</string>
     <string name="reload_done">Liste mise à jour (%1$d chaînes)</string>
     <string name="reload_failed">Échec de la mise à jour : %1$s</string>
+    <string name="sort_default">Ordre par défaut</string>
+    <string name="sort_az">Nom A–Z</string>
+    <string name="sort_za">Nom Z–A</string>
+    <string name="sort_added">Ajouté récemment</string>
 </resources>

@@ -357,6 +357,7 @@ private fun Shell(
                     onToggleFav = { favs = prefs.toggleFavorite(it) },
                     onPlay = { list, i -> openItem(list, i) },
                     onGuide = onGuide,
+                    onNav = if (wide && dest != Dest.Radio) ({ d: Dest -> go(d) }) else null,
                 )
             }
             Dest.Search -> SearchScreen(
@@ -414,6 +415,9 @@ private fun Shell(
         )
     } else if (dest == Dest.Home) {
         // الرئيسية = مشغّل بمربعات، من غير شريط تنقّل
+        Box(Modifier.fillMaxSize()) { content() }
+    } else if (wide && (dest == Dest.LiveTv || dest == Dest.Movies || dest == Dest.Series)) {
+        // شاشات القوائم ليها شريط تنقّل علوي خاص (جوه ContentScreen)
         Box(Modifier.fillMaxSize()) { content() }
     } else if (wide) {
         Row(Modifier.fillMaxSize()) {
