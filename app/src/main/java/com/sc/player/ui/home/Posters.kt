@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -85,40 +86,50 @@ internal fun PosterCard(
     val ctx = LocalContext.current
     val progress = remember(ch.url) { PositionStore(ctx).progress(ch.url) }
     var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(14.dp)
-    Column(
+    val shape = RoundedCornerShape(18.dp)
+    Box(
         Modifier
             .onFocusChanged {
                 focused = it.isFocused
                 if (it.isFocused) onFocus()
             }
-            .graphicsLayer { scaleX = if (focused) 1.05f else 1f; scaleY = if (focused) 1.05f else 1f }
+            .graphicsLayer { scaleX = if (focused) 1.06f else 1f; scaleY = if (focused) 1.06f else 1f }
+            .shadow(if (focused) 18.dp else 4.dp, shape, ambientColor = Cyan, spotColor = Cyan)
+            .fillMaxWidth()
+            .aspectRatio(2f / 3f)
+            .clip(shape)
+            .border(
+                if (focused) 3.dp else 1.dp,
+                if (focused) androidx.compose.ui.graphics.Brush.linearGradient(listOf(Cyan, Color.White))
+                else androidx.compose.ui.graphics.SolidColor(GlassBorder),
+                shape,
+            )
             .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onToggleFav),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+        PosterImage(ch.logo, ch.name, Modifier.fillMaxSize())
+        // تدرّج داكن تحت + العنوان فوق البوستر
         Box(
             Modifier
+                .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .aspectRatio(2f / 3f)
-                .clip(shape)
-                .border(if (focused) 3.dp else 1.dp, if (focused) Cyan else GlassBorder, shape),
-        ) {
-            PosterImage(ch.logo, ch.name, Modifier.fillMaxSize())
-            FavStar(fav, onToggleFav, Modifier.align(Alignment.TopEnd).padding(2.dp).background(Color(0x66000000), RoundedCornerShape(20.dp)))
-            if (progress != null && progress > 0.01f) {
-                Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(4.dp).background(Color(0x99000000))) {
-                    Box(Modifier.fillMaxWidth(progress).height(4.dp).background(Cyan))
-                }
-            }
-        }
+                .height(78.dp)
+                .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6000000)))),
+        )
         Text(
             ch.name,
-            color = TextMain,
+            color = Color.White,
             fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.align(Alignment.BottomStart).padding(start = 10.dp, end = 10.dp, bottom = if (progress != null && progress > 0.01f) 10.dp else 8.dp),
         )
+        FavStar(fav, onToggleFav, Modifier.align(Alignment.TopEnd).padding(4.dp).background(Color(0x66000000), RoundedCornerShape(20.dp)))
+        if (progress != null && progress > 0.01f) {
+            Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(4.dp).background(Color(0x99000000))) {
+                Box(Modifier.fillMaxWidth(progress).height(4.dp).background(BrandBrush))
+            }
+        }
     }
 }
 

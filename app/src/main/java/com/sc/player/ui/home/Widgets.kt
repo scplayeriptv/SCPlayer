@@ -175,7 +175,7 @@ internal fun FavStar(fav: Boolean, onToggle: () -> Unit, modifier: Modifier = Mo
     }
 }
 
-/** صف قناة في القائمة (Live TV / Movies / ...). */
+/** صف قناة في القائمة (Live TV / Radio): لوجو في بلاطة، شريط تقدّم للبرنامج الحالي، وتوهّج عند التحديد. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ChannelRow(
@@ -188,7 +188,17 @@ internal fun ChannelRow(
     onClick: () -> Unit,
 ) {
     var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(20.dp)
+    val bg = if (focused) {
+        androidx.compose.ui.graphics.Brush.horizontalGradient(
+            listOf(com.sc.player.ui.theme.Violet.copy(alpha = 0.40f), Cyan.copy(alpha = 0.12f)),
+        )
+    } else {
+        androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Glass, Glass))
+    }
+    val stroke: androidx.compose.ui.graphics.Brush = if (focused) {
+        androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Cyan, com.sc.player.ui.theme.Violet))
+    } else androidx.compose.ui.graphics.SolidColor(GlassBorder)
     Row(
         Modifier
             .fillMaxWidth()
@@ -196,20 +206,24 @@ internal fun ChannelRow(
                 focused = it.isFocused
                 if (it.isFocused) onFocus()
             }
+            .graphicsLayer { scaleX = if (focused) 1.012f else 1f; scaleY = if (focused) 1.012f else 1f }
             .clip(shape)
-            .background(if (focused) com.sc.player.ui.theme.Violet.copy(alpha = 0.2f) else Glass)
-            .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
+            .background(bg)
+            .border(if (focused) 2.dp else 1.dp, stroke, shape)
             .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onToggleFav)
-            .padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+            .padding(start = 10.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        ChannelLogo(ch, 48.dp)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Box(
+            Modifier.size(54.dp).clip(RoundedCornerShape(16.dp)).background(Color(0x33000000)),
+            contentAlignment = Alignment.Center,
+        ) { ChannelLogo(ch, 42.dp) }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
                 ch.name,
                 color = TextMain,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -221,9 +235,53 @@ internal fun ChannelRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (now != null && now.stop > now.start) {
+                val frac = ((System.currentTimeMillis() - now.start).toFloat() / (now.stop - now.start).toFloat()).coerceIn(0f, 1f)
+                Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(Color(0x33FFFFFF))) {
+                    Box(Modifier.fillMaxWidth(frac).height(3.dp).background(BrandBrush))
+                }
+            }
         }
         if (live) LiveBadge()
         FavStar(fav, onToggleFav)
+    }
+}
+
+/** خانة بحث على شكل كبسولة زجاجية. */
+@Composable
+internal fun SearchPill(value: String, onChange: (String) -> Unit, hint: String, modifier: Modifier = Modifier) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(26.dp)
+    Row(
+        modifier
+            .height(48.dp)
+            .clip(shape)
+            .background(Glass)
+            .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text("🔍", fontSize = 16.sp)
+        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+            if (value.isEmpty()) Text(hint, color = TextMuted, fontSize = 15.sp, maxLines = 1)
+            androidx.compose.foundation.text.BasicTextField(
+                value = value,
+                onValueChange = onChange,
+                singleLine = true,
+                textStyle = androidx.compose.ui.text.TextStyle(color = TextMain, fontSize = 15.sp),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(Cyan),
+                modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },
+            )
+        }
+        if (value.isNotEmpty()) {
+            Text(
+                "✕",
+                color = TextMuted,
+                fontSize = 16.sp,
+                modifier = Modifier.clip(CircleShape).clickable { onChange("") }.padding(6.dp),
+            )
+        }
     }
 }
 
@@ -234,8 +292,11 @@ internal fun GlassCard(modifier: Modifier = Modifier, content: @Composable () ->
 }
 
 @Composable
-internal fun ScreenTitle(text: String) {
-    Text(text, color = TextMain, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(bottom = 4.dp))
+internal fun ScreenTitle(text: String, subtitle: String? = null) {
+    Column(Modifier.padding(bottom = 2.dp)) {
+        Text(text, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, style = androidx.compose.ui.text.TextStyle(brush = BrandBrush))
+        if (subtitle != null) Text(subtitle, color = TextMuted, fontSize = 12.sp)
+    }
 }
 
 @Composable

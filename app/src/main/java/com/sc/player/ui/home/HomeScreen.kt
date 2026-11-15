@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
@@ -438,8 +439,8 @@ private fun Sidebar(current: Dest, compact: Boolean, onSelect: (Dest) -> Unit, o
             verticalArrangement = Arrangement.spacedBy(6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            sidebarItems.forEach { d -> RailItem(d.glyph, d == current) { onSelect(d) } }
-            RailItem("⏻", false, onClick = onExit)
+            sidebarItems.forEach { d -> RailItem(railIcon(d), d == current) { onSelect(d) } }
+            RailItem(androidx.compose.material.icons.Icons.AutoMirrored.Filled.ExitToApp, false, danger = true, onClick = onExit)
         }
         return
     }
@@ -465,24 +466,37 @@ private fun Sidebar(current: Dest, compact: Boolean, onSelect: (Dest) -> Unit, o
         }
         sidebarItems.forEach { d -> SidebarItem(d.glyph, stringResource(d.labelRes), d == current) { onSelect(d) } }
         Box(Modifier.height(10.dp))
-        SidebarItem("⏻", stringResource(R.string.nav_exit), false, onClick = onExit)
+        SidebarItem("🚪", stringResource(R.string.nav_exit), false, onClick = onExit)
     }
 }
 
+private fun railIcon(d: Dest): androidx.compose.ui.graphics.vector.ImageVector = when (d) {
+    Dest.Home -> androidx.compose.material.icons.Icons.Filled.Home
+    Dest.Settings -> androidx.compose.material.icons.Icons.Filled.Settings
+    else -> androidx.compose.material.icons.Icons.Filled.Info
+}
+
 @Composable
-private fun RailItem(glyph: String, selected: Boolean, onClick: () -> Unit) {
+private fun RailItem(icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, danger: Boolean = false, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(16.dp)
+    val accent = if (danger) Color(0xFFF87171) else Cyan
     Box(
         Modifier
             .size(46.dp)
             .onFocusChanged { focused = it.isFocused }
+            .then(if (selected) Modifier.shadow(14.dp, shape, ambientColor = accent, spotColor = accent) else Modifier)
             .clip(shape)
-            .then(if (selected) Modifier.background(BrandBrush) else Modifier)
-            .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else if (selected) Color.Transparent else GlassBorder, shape)
+            .then(
+                if (selected) Modifier.background(BrandBrush)
+                else Modifier.background(if (danger) Color(0x22F87171) else Color(0x14FFFFFF)),
+            )
+            .border(if (focused) 2.dp else 1.dp, if (focused) Color.White else if (selected) Color.Transparent else GlassBorder, shape)
             .clickable(role = Role.Tab, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(glyph, fontSize = 20.sp) }
+    ) {
+        androidx.compose.material3.Icon(icon, contentDescription = null, tint = if (danger && !selected) accent else Color.White, modifier = Modifier.size(22.dp))
+    }
 }
 
 @Composable

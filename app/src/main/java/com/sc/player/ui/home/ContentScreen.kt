@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.Role
@@ -123,24 +125,8 @@ fun ContentScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            ScreenTitle(kindTitle)
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                placeholder = { Text(stringResource(R.string.search_hint), color = TextMuted) },
-                singleLine = true,
-                shape = RoundedCornerShape(28.dp),
-                modifier = Modifier.weight(1f),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Cyan,
-                    unfocusedBorderColor = GlassBorder,
-                    focusedTextColor = TextMain,
-                    unfocusedTextColor = TextMain,
-                    cursorColor = Cyan,
-                    focusedContainerColor = Glass,
-                    unfocusedContainerColor = Glass,
-                ),
-            )
+            ScreenTitle(kindTitle, "${items.size}")
+            SearchPill(query, { query = it }, stringResource(R.string.search_hint), Modifier.weight(1f))
             if (live) CategoryChip(stringResource(R.string.guide), false) { onGuide(filtered) }
         }
 
@@ -163,9 +149,15 @@ fun ContentScreen(
         Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             if (wide) {
                 LazyColumn(
-                    Modifier.width(220.dp).fillMaxHeight().padding(start = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                    contentPadding = PaddingValues(bottom = 24.dp),
+                    Modifier
+                        .padding(start = 24.dp, bottom = 16.dp)
+                        .width(240.dp)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(26.dp))
+                        .background(Panel.copy(alpha = 0.55f))
+                        .border(1.dp, GlassBorder, RoundedCornerShape(26.dp)),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = PaddingValues(10.dp),
                 ) {
                     item { CategoryRow(allLabel, items.size, selected == null) { selected = null } }
                     item { CategoryRow(favLabel, favCount, selected == FAV_KEY) { selected = FAV_KEY } }
@@ -252,28 +244,50 @@ fun ContentScreen(
 @Composable
 private fun CategoryRow(label: String, count: Int, selected: Boolean, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(18.dp)
+    val fill: androidx.compose.ui.graphics.Brush = when {
+        selected -> BrandBrush
+        focused -> androidx.compose.ui.graphics.SolidColor(Cyan.copy(alpha = 0.16f))
+        else -> androidx.compose.ui.graphics.SolidColor(Color.Transparent)
+    }
     Row(
         Modifier
             .fillMaxWidth()
             .onFocusChanged { focused = it.isFocused }
             .clip(shape)
-            .background(if (selected) BrandBrush else androidx.compose.ui.graphics.SolidColor(Glass), shape)
-            .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
+            .background(fill, shape)
+            .then(if (focused) Modifier.border(2.dp, Cyan, shape) else Modifier)
             .clickable(role = Role.Tab, onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .padding(start = 8.dp, end = 10.dp, top = 11.dp, bottom = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        Box(
+            Modifier
+                .width(4.dp)
+                .height(18.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(if (selected) Color.White else if (focused) Cyan else Color.Transparent),
+        )
         Text(
             label,
             color = if (selected) Ink else TextMain,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Medium,
             fontSize = 14.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        Text(count.toString(), color = if (selected) Ink else TextMuted, fontSize = 12.sp)
+        Text(
+            count.toString(),
+            color = if (selected) Ink else TextMuted,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .background(if (selected) Color(0x33000000) else Color(0x22FFFFFF))
+                .padding(horizontal = 8.dp, vertical = 3.dp),
+        )
     }
 }
 
