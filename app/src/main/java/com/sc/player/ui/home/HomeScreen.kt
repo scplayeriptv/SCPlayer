@@ -175,6 +175,8 @@ private fun Shell(
     var recentUrls by remember { mutableStateOf(prefs.recents()) }
 
     var lockedGroups by remember { mutableStateOf(prefs.lockedGroups()) }
+    var hiddenGroups by remember { mutableStateOf(prefs.hiddenGroups()) }
+    var dedupe by remember { mutableStateOf(prefs.dedupe()) }
     var unlocked by remember { mutableStateOf(ParentalSession.unlocked) }
 
     // البروفايلات: مفضلة وسجل منفصلين لكل بروفايل، وبروفايل الأطفال بيفضل مخفي عنه التصنيفات المقفولة
@@ -210,8 +212,19 @@ private fun Shell(
         }
     }
 
-    val visible = remember(channels, lockedGroups, unlocked, kids) {
-        if ((unlocked && !kids) || lockedGroups.isEmpty()) channels else channels.filter { it.group !in lockedGroups }
+    val visible = remember(channels, lockedGroups, unlocked, kids, hiddenGroups, dedupe) {
+        var l = if ((unlocked && !kids) || lockedGroups.isEmpty()) channels else channels.filter { it.group !in lockedGroups }
+        if (hiddenGroups.isNotEmpty()) l = l.filter { it.group !in hiddenGroups }
+        if (dedupe) {
+            val seenUrl = HashSet<String>()
+            val seenKey = HashSet<String>()
+            l = l.filter {
+                val a = seenUrl.add(it.url)
+                val b = seenKey.add(it.name.trim().lowercase() + "|" + it.group)
+                a && b
+            }
+        }
+        l
     }
     val allGroups = remember(channels) { channels.map { it.group }.distinct().sorted() }
 
@@ -287,6 +300,7 @@ private fun Shell(
                 onToggleFav = { favs = prefs.toggleFavorite(list[i].url) },
                 onBack = { openDetails = null },
                 onPlay = { play(list, i) },
+                onOpenOther = { j -> openDetails = list to j },
             )
             return@content
         }
@@ -360,6 +374,10 @@ private fun Shell(
                     }
                 },
                 onProfileChanged = { refreshProfile() },
+                onCleanupChanged = {
+                    hiddenGroups = prefs.hiddenGroups()
+                    dedupe = prefs.dedupe()
+                },
                 onAbout = { destName = Dest.About.name },
                 onResetUserData = {
                     prefs.clearUserData()

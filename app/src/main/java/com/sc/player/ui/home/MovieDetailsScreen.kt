@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -43,6 +45,7 @@ fun MovieDetailsScreen(
     onToggleFav: () -> Unit,
     onBack: () -> Unit,
     onPlay: () -> Unit,
+    onOpenOther: (Int) -> Unit = {},
 ) {
     val ch = list[index]
     val ctx = LocalContext.current
@@ -52,8 +55,16 @@ fun MovieDetailsScreen(
     val resumeAt = remember(ch.url) { PositionStore(ctx).resumeAt(ch.url) }
     val wide = LocalConfiguration.current.screenWidthDp >= 720
 
+    // أفلام مشابهة: من نفس القائمة (التصنيف المفتوح)، بادئين من اللي بعد الفيلم الحالي
+    val similar = remember(list, index) {
+        val after = (index + 1 until list.size).map { it }
+        val before = (0 until index).map { it }
+        (after + before).take(24)
+    }
+
+    androidx.compose.runtime.key(ch.url) {
     Box(Modifier.fillMaxSize()) {
-        meta.backdrop?.let {
+        (meta.backdrop ?: meta.poster ?: ch.logo)?.let {
             AsyncImage(it, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             Box(
                 Modifier.fillMaxSize().background(
@@ -94,7 +105,23 @@ fun MovieDetailsScreen(
                     )
                 }
             }
+            if (similar.isNotEmpty()) {
+                androidx.compose.material3.Text(
+                    stringResource(R.string.det_more_like),
+                    color = com.sc.player.ui.theme.TextMain,
+                    fontSize = 18.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                )
+                androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    androidx.compose.foundation.lazy.items(similar) { j ->
+                        Box(Modifier.width(104.dp)) {
+                            PosterCard(ch = list[j], fav = false, onFocus = {}, onToggleFav = {}) { onOpenOther(j) }
+                        }
+                    }
+                }
+            }
         }
+    }
     }
 }
 

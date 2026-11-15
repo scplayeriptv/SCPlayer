@@ -285,4 +285,12 @@
     <string name="search_voice_prompt">Sag einen Sender- oder Filmnamen</string>
     <string name="search_voice_unavailable">Sprachsuche ist auf diesem Gerät nicht verfügbar</string>
     <string name="cat_recent">Kürzlich hinzugefügt</string>
+    <string name="set_sec_cleanup">Bereinigen</string>
+    <string name="set_dedupe">Duplikate entfernen</string>
+    <string name="set_dedupe_sub">Doppelt vorkommende Sender und Titel ausblenden</string>
+    <string name="set_hide_groups">Gruppen ausblenden</string>
+    <string name="set_hide_groups_sub">Kategorien wählen, die du nicht sehen willst</string>
+    <string name="set_hidden_count">%1$d ausgeblendet</string>
+    <string name="hide_show_all">Alle zeigen</string>
+    <string name="det_more_like">Ähnliche Titel</string>
 </resources>

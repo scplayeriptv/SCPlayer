@@ -287,4 +287,12 @@
     <string name="search_voice_prompt">Say a channel or movie name</string>
     <string name="search_voice_unavailable">Voice search isn\'t available on this device</string>
     <string name="cat_recent">Recently Added</string>
+    <string name="set_sec_cleanup">Clean-up</string>
+    <string name="set_dedupe">Remove duplicates</string>
+    <string name="set_dedupe_sub">Hide channels and titles that appear twice</string>
+    <string name="set_hide_groups">Hide groups</string>
+    <string name="set_hide_groups_sub">Choose categories you don\'t want to see</string>
+    <string name="set_hidden_count">%1$d hidden</string>
+    <string name="hide_show_all">Show all</string>
+    <string name="det_more_like">More like this</string>
 </resources>

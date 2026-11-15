@@ -285,4 +285,12 @@
     <string name="search_voice_prompt">Di el nombre de un canal o película</string>
     <string name="search_voice_unavailable">La búsqueda por voz no está disponible en este dispositivo</string>
     <string name="cat_recent">Añadido recientemente</string>
+    <string name="set_sec_cleanup">Limpieza</string>
+    <string name="set_dedupe">Quitar duplicados</string>
+    <string name="set_dedupe_sub">Oculta canales y títulos repetidos</string>
+    <string name="set_hide_groups">Ocultar grupos</string>
+    <string name="set_hide_groups_sub">Elige las categorías que no quieres ver</string>
+    <string name="set_hidden_count">%1$d ocultos</string>
+    <string name="hide_show_all">Mostrar todo</string>
+    <string name="det_more_like">Más como esto</string>
 </resources>

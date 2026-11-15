@@ -53,6 +53,56 @@ class PlaylistRepository(private val context: Context) {
 
     private fun parseFile(f: File): List<Channel> = f.bufferedReader().useLines { M3uParser.parse(it) }
 
+    // كاش ثنائي بعد الـ parse: فتح التطبيق بيقرا الملف ده بدل ما يحلّل الـ M3U من الأول (والتصنيف محفوظ فيه)
+    private fun binFile(id: String) = File(context.filesDir, "playlist_$id.bin")
+
+    private fun readBin(f: File, stamp: Long): List<Channel>? {
+        if (!f.exists()) return null
+        return runCatching {
+            java.io.DataInputStream(f.inputStream().buffered(65536)).use { inp ->
+                if (inp.readInt() != BIN_VERSION || inp.readLong() != stamp) return null
+                val n = inp.readInt()
+                val kinds = Kind.values()
+                val out = ArrayList<Channel>(n)
+                repeat(n) {
+                    val name = inp.readUTF()
+                    val url = inp.readUTF()
+                    val group = inp.readUTF()
+                    val logo = if (inp.readBoolean()) inp.readUTF() else null
+                    val tvg = if (inp.readBoolean()) inp.readUTF() else null
+                    val kd = inp.readByte().toInt()
+                    val c = Channel(name, url, group, logo, tvg)
+                    if (kd in kinds.indices) c.kindCache = kinds[kd]
+                    out.add(c)
+                }
+                out as List<Channel>
+            }
+        }.getOrNull()
+    }
+
+    private fun writeBin(f: File, stamp: Long, list: List<Channel>) {
+        val tmp = File(f.parentFile, f.name + ".tmp")
+        val ok = runCatching {
+            java.io.DataOutputStream(tmp.outputStream().buffered(65536)).use { out ->
+                out.writeInt(BIN_VERSION)
+                out.writeLong(stamp)
+                out.writeInt(list.size)
+                for (c in list) {
+                    out.writeUTF(c.name)
+                    out.writeUTF(c.url)
+                    out.writeUTF(c.group)
+                    out.writeBoolean(c.logo != null)
+                    if (c.logo != null) out.writeUTF(c.logo)
+                    out.writeBoolean(c.tvgId != null)
+                    if (c.tvgId != null) out.writeUTF(c.tvgId)
+                    out.writeByte(c.kind().ordinal)
+                }
+            }
+        }.isSuccess
+        f.delete()
+        if (!ok || !tmp.renameTo(f)) tmp.delete()
+    }
+
     /**
      * ينزّل القائمة مباشرة في ملف (من غير ما تتحمّل كلها في الذاكرة)، ويحلّلها بالسطر،
      * وبعدين يستبدل الملف القديم. يرجّع القنوات.
@@ -88,6 +138,7 @@ class PlaylistRepository(private val context: Context) {
             dest.delete()
             if (!tmp.renameTo(dest)) throw java.io.IOException("could not store playlist")
             ChannelCache.put(id, dest.lastModified(), channels)
+            writeBin(binFile(id), dest.lastModified(), channels)
             return channels
         } finally {
             tmp.delete()
@@ -200,6 +251,7 @@ class PlaylistRepository(private val context: Context) {
 
     fun delete(id: String) {
         listFile(id).delete()
+        binFile(id).delete()
         ChannelCache.remove(id)
         save(playlists().filter { it.id != id })
     }
@@ -209,10 +261,16 @@ class PlaylistRepository(private val context: Context) {
         if (!f.exists()) return@withContext emptyList()
         val stamp = f.lastModified()
         ChannelCache.get(id, stamp)
-            ?: parseFile(f).also { list ->
-                // نسخّن كاش التصنيف هنا (خيط الخلفية) بدل أول رسم للواجهة
-                for (c in list) c.kind()
-                ChannelCache.put(id, stamp, list)
-            }
+            ?: (readBin(binFile(id), stamp)
+                ?: parseFile(f).also { list ->
+                    // نسخّن كاش التصنيف هنا (خيط الخلفية) بدل أول رسم للواجهة
+                    for (c in list) c.kind()
+                    writeBin(binFile(id), stamp, list)
+                }
+                ).also { ChannelCache.put(id, stamp, it) }
+    }
+
+    private companion object {
+        const val BIN_VERSION = 1
     }
 }

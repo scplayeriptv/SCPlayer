@@ -285,4 +285,12 @@
     <string name="search_voice_prompt">Назовите канал или фильм</string>
     <string name="search_voice_unavailable">Голосовой поиск недоступен на этом устройстве</string>
     <string name="cat_recent">Недавно добавлено</string>
+    <string name="set_sec_cleanup">Очистка</string>
+    <string name="set_dedupe">Убрать дубликаты</string>
+    <string name="set_dedupe_sub">Скрывать повторяющиеся каналы и названия</string>
+    <string name="set_hide_groups">Скрыть группы</string>
+    <string name="set_hide_groups_sub">Выберите категории, которые не нужны</string>
+    <string name="set_hidden_count">Скрыто: %1$d</string>
+    <string name="hide_show_all">Показать все</string>
+    <string name="det_more_like">Похожие</string>
 </resources>

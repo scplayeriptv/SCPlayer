@@ -285,4 +285,12 @@
     <string name="search_voice_prompt">Bir kanal veya film adı söyleyin</string>
     <string name="search_voice_unavailable">Sesli arama bu cihazda kullanılamıyor</string>
     <string name="cat_recent">Yakında eklenenler</string>
+    <string name="set_sec_cleanup">Temizlik</string>
+    <string name="set_dedupe">Yinelenenleri kaldır</string>
+    <string name="set_dedupe_sub">İki kez görünen kanal ve başlıkları gizler</string>
+    <string name="set_hide_groups">Grupları gizle</string>
+    <string name="set_hide_groups_sub">Görmek istemediğin kategorileri seç</string>
+    <string name="set_hidden_count">%1$d gizli</string>
+    <string name="hide_show_all">Tümünü göster</string>
+    <string name="det_more_like">Benzer yapımlar</string>
 </resources>

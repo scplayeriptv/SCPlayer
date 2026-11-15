@@ -94,6 +94,19 @@ class UserPrefs(context: Context) {
         e.apply()
     }
 
+    // ---- تنظيف القائمة: مجموعات مخفية + إخفاء المكرر ----
+    fun hiddenGroups(): Set<String> = sp.getStringSet("hidden_groups", emptySet())?.toSet() ?: emptySet()
+
+    fun setHiddenGroups(groups: Set<String>) {
+        sp.edit().putStringSet("hidden_groups", groups).apply()
+    }
+
+    fun dedupe(): Boolean = sp.getBoolean("dedupe", false)
+
+    fun setDedupe(on: Boolean) {
+        sp.edit().putBoolean("dedupe", on).apply()
+    }
+
     fun lockedGroups(): Set<String> = sp.getStringSet("locked", emptySet())?.toSet() ?: emptySet()
 
     fun setLockedGroups(groups: Set<String>) {

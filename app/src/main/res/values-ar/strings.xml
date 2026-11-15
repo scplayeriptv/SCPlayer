@@ -285,4 +285,12 @@
     <string name="search_voice_prompt">قول اسم قناة أو فيلم</string>
     <string name="search_voice_unavailable">البحث الصوتي مش متاح على الجهاز ده</string>
     <string name="cat_recent">أُضيف حديثًا</string>
+    <string name="set_sec_cleanup">تنظيف القائمة</string>
+    <string name="set_dedupe">إخفاء المكرر</string>
+    <string name="set_dedupe_sub">إخفاء القنوات والأعمال اللي ظاهرة مرتين</string>
+    <string name="set_hide_groups">إخفاء مجموعات</string>
+    <string name="set_hide_groups_sub">اختار التصنيفات اللي مش عايز تشوفها</string>
+    <string name="set_hidden_count">%1$d مخفية</string>
+    <string name="hide_show_all">إظهار الكل</string>
+    <string name="det_more_like">أعمال مشابهة</string>
 </resources>
