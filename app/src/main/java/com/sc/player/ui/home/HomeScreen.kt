@@ -9,6 +9,11 @@ import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -440,7 +445,7 @@ private fun Sidebar(current: Dest, compact: Boolean, onSelect: (Dest) -> Unit, o
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             sidebarItems.forEach { d -> RailItem(railIcon(d), d == current) { onSelect(d) } }
-            RailItem(androidx.compose.material.icons.Icons.AutoMirrored.Filled.ExitToApp, false, danger = true, onClick = onExit)
+            RailItem(Icons.AutoMirrored.Filled.ExitToApp, false, danger = true, onClick = onExit)
         }
         return
     }
@@ -471,9 +476,9 @@ private fun Sidebar(current: Dest, compact: Boolean, onSelect: (Dest) -> Unit, o
 }
 
 private fun railIcon(d: Dest): androidx.compose.ui.graphics.vector.ImageVector = when (d) {
-    Dest.Home -> androidx.compose.material.icons.Icons.Filled.Home
-    Dest.Settings -> androidx.compose.material.icons.Icons.Filled.Settings
-    else -> androidx.compose.material.icons.Icons.Filled.Info
+    Dest.Home -> Icons.Filled.Home
+    Dest.Settings -> Icons.Filled.Settings
+    else -> Icons.Filled.Info
 }
 
 @Composable
