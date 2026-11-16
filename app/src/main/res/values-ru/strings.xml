@@ -317,4 +317,15 @@
     <string name="sort_az">Название А–Я</string>
     <string name="sort_za">Название Я–А</string>
     <string name="sort_added">Недавно добавленные</string>
+    <string name="tab_phone">С телефона</string>
+    <string name="phone_step1">1. Подключите телефон к той же сети Wi-Fi, что и это устройство.</string>
+    <string name="phone_step2">2. Отсканируйте код или откройте этот адрес в браузере телефона:</string>
+    <string name="phone_step3">3. Заполните форму и нажмите «Отправить». Плейлист добавится здесь автоматически.</string>
+    <string name="phone_no_wifi">Wi-Fi или локальная сеть не найдены. Подключите это устройство к той же сети, что и телефон.</string>
+    <string name="phone_failed">Не удалось запустить локальную службу. Повторите попытку.</string>
+    <string name="phone_page_title">Добавить плейлист в SC Player</string>
+    <string name="phone_send">Отправить на ТВ</string>
+    <string name="phone_sent">Отправлено! Смотрите на экран ТВ.</string>
+    <string name="phone_bad">Некоторые поля не заполнены или неверны.</string>
+    <string name="phone_back">Назад</string>
 </resources>

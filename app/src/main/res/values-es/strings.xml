@@ -317,4 +317,15 @@
     <string name="sort_az">Nombre A–Z</string>
     <string name="sort_za">Nombre Z–A</string>
     <string name="sort_added">Añadido recientemente</string>
+    <string name="tab_phone">Desde el móvil</string>
+    <string name="phone_step1">1. Conecta tu móvil a la misma Wi-Fi que este dispositivo.</string>
+    <string name="phone_step2">2. Escanea el código o abre esta dirección en el navegador de tu móvil:</string>
+    <string name="phone_step3">3. Rellena el formulario y pulsa Enviar. La lista se añade aquí automáticamente.</string>
+    <string name="phone_no_wifi">No se encontró Wi-Fi ni red local. Conecta este dispositivo a la misma red que tu móvil.</string>
+    <string name="phone_failed">No se pudo iniciar el servicio local. Inténtalo de nuevo.</string>
+    <string name="phone_page_title">Añadir una lista a SC Player</string>
+    <string name="phone_send">Enviar al TV</string>
+    <string name="phone_sent">¡Enviado! Mira la pantalla de tu TV.</string>
+    <string name="phone_bad">Faltan campos o no son válidos.</string>
+    <string name="phone_back">Volver</string>
 </resources>

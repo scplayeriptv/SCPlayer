@@ -317,4 +317,15 @@
     <string name="sort_az">Ad A–Z</string>
     <string name="sort_za">Ad Z–A</string>
     <string name="sort_added">Yakında eklenenler</string>
+    <string name="tab_phone">Telefondan</string>
+    <string name="phone_step1">1. Telefonunu bu cihazla aynı Wi-Fi ağına bağla.</string>
+    <string name="phone_step2">2. Kodu tara veya bu adresi telefonunun tarayıcısında aç:</string>
+    <string name="phone_step3">3. Formu doldur ve Gönder\'e dokun. Liste burada otomatik eklenir.</string>
+    <string name="phone_no_wifi">Wi-Fi veya yerel ağ bulunamadı. Bu cihazı telefonunla aynı ağa bağla.</string>
+    <string name="phone_failed">Yerel hizmet başlatılamadı. Tekrar dene.</string>
+    <string name="phone_page_title">SC Player\'a liste ekle</string>
+    <string name="phone_send">TV\'ye gönder</string>
+    <string name="phone_sent">Gönderildi! TV ekranına bak.</string>
+    <string name="phone_bad">Bazı alanlar eksik veya geçersiz.</string>
+    <string name="phone_back">Geri</string>
 </resources>

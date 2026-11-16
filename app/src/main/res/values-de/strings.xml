@@ -317,4 +317,15 @@
     <string name="sort_az">Name A–Z</string>
     <string name="sort_za">Name Z–A</string>
     <string name="sort_added">Zuletzt hinzugefügt</string>
+    <string name="tab_phone">Vom Handy</string>
+    <string name="phone_step1">1. Verbinde dein Handy mit demselben WLAN wie dieses Gerät.</string>
+    <string name="phone_step2">2. Scanne den Code oder öffne diese Adresse im Browser deines Handys:</string>
+    <string name="phone_step3">3. Fülle das Formular aus und tippe auf Senden. Die Playlist wird hier automatisch hinzugefügt.</string>
+    <string name="phone_no_wifi">Kein WLAN oder lokales Netzwerk gefunden. Verbinde dieses Gerät mit dem Netzwerk deines Handys.</string>
+    <string name="phone_failed">Der lokale Dienst konnte nicht gestartet werden. Versuche es erneut.</string>
+    <string name="phone_page_title">Playlist zu SC Player hinzufügen</string>
+    <string name="phone_send">An TV senden</string>
+    <string name="phone_sent">Gesendet! Schau auf deinen Fernseher.</string>
+    <string name="phone_bad">Einige Felder fehlen oder sind ungültig.</string>
+    <string name="phone_back">Zurück</string>
 </resources>

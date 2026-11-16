@@ -317,4 +317,15 @@
     <string name="sort_az">Nome A–Z</string>
     <string name="sort_za">Nome Z–A</string>
     <string name="sort_added">Aggiunti di recente</string>
+    <string name="tab_phone">Dal telefono</string>
+    <string name="phone_step1">1. Collega il telefono alla stessa rete Wi-Fi di questo dispositivo.</string>
+    <string name="phone_step2">2. Scansiona il codice o apri questo indirizzo nel browser del telefono:</string>
+    <string name="phone_step3">3. Compila il modulo e tocca Invia. La playlist viene aggiunta qui automaticamente.</string>
+    <string name="phone_no_wifi">Nessuna rete Wi-Fi o locale trovata. Collega questo dispositivo alla stessa rete del telefono.</string>
+    <string name="phone_failed">Impossibile avviare il servizio locale. Riprova.</string>
+    <string name="phone_page_title">Aggiungi una playlist a SC Player</string>
+    <string name="phone_send">Invia alla TV</string>
+    <string name="phone_sent">Inviato! Guarda lo schermo della TV.</string>
+    <string name="phone_bad">Alcuni campi mancano o non sono validi.</string>
+    <string name="phone_back">Indietro</string>
 </resources>

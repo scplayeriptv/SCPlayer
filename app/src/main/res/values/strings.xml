@@ -319,4 +319,15 @@
     <string name="sort_az">Name A–Z</string>
     <string name="sort_za">Name Z–A</string>
     <string name="sort_added">Recently added</string>
+    <string name="tab_phone">From phone</string>
+    <string name="phone_step1">1. Connect your phone to the same Wi-Fi as this device.</string>
+    <string name="phone_step2">2. Scan the code or open this address in your phone\'s browser:</string>
+    <string name="phone_step3">3. Fill in the form and tap Send. The playlist is added here automatically.</string>
+    <string name="phone_no_wifi">No Wi-Fi or local network found. Connect this device to the same network as your phone.</string>
+    <string name="phone_failed">Couldn\'t start the local service. Try again.</string>
+    <string name="phone_page_title">Add a playlist to SC Player</string>
+    <string name="phone_send">Send to TV</string>
+    <string name="phone_sent">Sent! Check your TV screen.</string>
+    <string name="phone_bad">Some fields are missing or invalid.</string>
+    <string name="phone_back">Back</string>
 </resources>

@@ -238,6 +238,7 @@ private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifi
             BrandChip(stringResource(R.string.tab_m3u), tab == 0, Modifier.weight(1f)) { tab = 0; vm.clearError() }
             BrandChip(stringResource(R.string.tab_xtream), tab == 1, Modifier.weight(1f)) { tab = 1; vm.clearError() }
             BrandChip(stringResource(R.string.tab_qr), tab == 2, Modifier.weight(1f)) { tab = 2; vm.clearError() }
+            BrandChip(stringResource(R.string.tab_phone), tab == 3, Modifier.weight(1f)) { tab = 3; vm.clearError() }
         }
 
         when (tab) {
@@ -290,6 +291,9 @@ private fun FormCard(state: AddState, vm: AddPlaylistViewModel, modifier: Modifi
                         passF(Modifier.fillMaxWidth()); serverF(Modifier.fillMaxWidth())
                     }
                 }
+            }
+            3 -> PhoneAddPanel { p ->
+                if (p.type == "m3u") vm.addM3u(p.name, p.url) else vm.addXtream(p.name, p.server, p.user, p.pass)
             }
             else -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 GradientButton(stringResource(R.string.qr_scan), Modifier.fillMaxWidth()) {

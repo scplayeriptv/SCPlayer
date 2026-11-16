@@ -317,4 +317,15 @@
     <string name="sort_az">الاسم أ–ي</string>
     <string name="sort_za">الاسم ي–أ</string>
     <string name="sort_added">الأحدث إضافة</string>
+    <string name="tab_phone">من الموبايل</string>
+    <string name="phone_step1">1. وصّل موبايلك بنفس الواي فاي بتاع الجهاز ده.</string>
+    <string name="phone_step2">2. امسح الكود أو افتح العنوان ده في متصفح موبايلك:</string>
+    <string name="phone_step3">3. املا الفورم ودوس إرسال. القائمة بتتضاف هنا لوحدها.</string>
+    <string name="phone_no_wifi">مفيش واي فاي أو شبكة محلية. وصّل الجهاز ده بنفس شبكة موبايلك.</string>
+    <string name="phone_failed">معرفتش أشغّل الخدمة المحلية. جرّب تاني.</string>
+    <string name="phone_page_title">أضف قائمة إلى SC Player</string>
+    <string name="phone_send">إرسال للتلفزيون</string>
+    <string name="phone_sent">اتبعت! بُص على شاشة التلفزيون.</string>
+    <string name="phone_bad">في خانات ناقصة أو غلط.</string>
+    <string name="phone_back">رجوع</string>
 </resources>
