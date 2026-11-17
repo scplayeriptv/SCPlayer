@@ -54,13 +54,11 @@ import com.sc.player.ui.theme.TextMuted
 @Composable
 internal fun PosterImage(url: String?, title: String, modifier: Modifier = Modifier) {
     var failed by remember(url) { mutableStateOf(false) }
-    Box(modifier.background(BrandBrush), contentAlignment = Alignment.Center) {
-        Text(
-            title.trim().take(1).uppercase(),
-            color = Ink.copy(alpha = 0.85f),
-            fontSize = 40.sp,
-            fontWeight = FontWeight.ExtraBold,
-        )
+    Box(
+        modifier.background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF1E1E26), Color(0xFF0A0A0E)))),
+        contentAlignment = Alignment.Center,
+    ) {
+        com.sc.player.ui.theme.SCLogo(44.dp)
         if (url != null && !failed) {
             AsyncImage(
                 model = url,

@@ -258,9 +258,13 @@ fun ContentScreen(
         }
     }
 
-    val paneBrush = androidx.compose.ui.graphics.Brush.linearGradient(
-        listOf(Cyan.copy(alpha = 0.55f), Violet.copy(alpha = 0.80f), Color(0xFF1B1446)),
-    )
+    val paneBrush = if (com.sc.player.ui.theme.ThemeState.current == com.sc.player.ui.theme.AppTheme.Crimson) {
+        androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF0B0B0B), Color(0xFF1A0306)))
+    } else {
+        androidx.compose.ui.graphics.Brush.linearGradient(
+            listOf(Cyan.copy(alpha = 0.55f), Violet.copy(alpha = 0.80f), Color(0xFF1B1446)),
+        )
+    }
     val paneShape = RoundedCornerShape(28.dp)
 
     if (wide) {
@@ -271,9 +275,13 @@ fun ContentScreen(
             Kind.Series -> Icons.Filled.VideoLibrary
             else -> Icons.Filled.Radio
         }
-        val wideBrush = androidx.compose.ui.graphics.Brush.linearGradient(
-            listOf(Cyan.copy(alpha = 0.28f), Violet.copy(alpha = 0.50f), Color(0xFF0F0A24)),
-        )
+        val wideBrush = if (com.sc.player.ui.theme.ThemeState.current == com.sc.player.ui.theme.AppTheme.Crimson) {
+            androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color(0xFF050505), Color(0xFF0D0204), Color(0xFF000000)))
+        } else {
+            androidx.compose.ui.graphics.Brush.linearGradient(
+                listOf(Cyan.copy(alpha = 0.28f), Violet.copy(alpha = 0.50f), Color(0xFF0F0A24)),
+            )
+        }
         Column(Modifier.fillMaxSize()) {
             if (onNav != null) {
                 TopNav(
