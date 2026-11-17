@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -185,6 +186,7 @@ internal fun ChannelRow(
     live: Boolean,
     onFocus: () -> Unit,
     onToggleFav: () -> Unit,
+    number: Int? = null,
     onClick: () -> Unit,
 ) {
     var focused by remember { mutableStateOf(false) }
@@ -215,6 +217,16 @@ internal fun ChannelRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (number != null) {
+            Text(
+                number.toString(),
+                color = TextMuted,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.width(34.dp),
+            )
+        }
         Box(
             Modifier.size(54.dp).clip(RoundedCornerShape(16.dp)).background(Color(0x33000000)),
             contentAlignment = Alignment.Center,

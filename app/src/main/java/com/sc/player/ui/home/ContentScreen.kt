@@ -4,6 +4,10 @@ import com.sc.player.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -225,6 +229,7 @@ fun ContentScreen(
                         live = live,
                         onFocus = { highlighted = ch },
                         onToggleFav = { onToggleFav(ch.url) },
+                        number = if (live) i + 1 else null,
                     ) { onPlay(filtered, i) }
                 }
             }
@@ -327,10 +332,22 @@ fun ContentScreen(
                     }
                     Box(Modifier.weight(1f).fillMaxWidth()) { results() }
                 }
-                if (huge && !posters) {
+                if (live || (huge && !posters)) {
                     val shown = highlighted?.takeIf { h -> filtered.any { it === h } } ?: filtered.firstOrNull()
-                    Box(Modifier.width(320.dp).fillMaxHeight().padding(end = 24.dp, bottom = 12.dp)) {
-                        if (shown != null) {
+                    Box((if (live) Modifier.weight(0.9f) else Modifier.width(320.dp)).fillMaxHeight().padding(end = 24.dp, bottom = 12.dp)) {
+                        if (shown != null && live) {
+                            LivePreviewPanel(
+                                ch = shown,
+                                fav = shown.url in favs,
+                                epgTick = epgTick,
+                                onToggleFav = { onToggleFav(shown.url) },
+                                onGuide = { onGuide(filtered) },
+                                onPlay = {
+                                    val i = filtered.indexOfFirst { it === shown }
+                                    if (i >= 0) onPlay(filtered, i)
+                                },
+                            )
+                        } else if (shown != null) {
                             DetailsPanel(
                                 ch = shown,
                                 live = live,
@@ -603,6 +620,58 @@ private fun DetailsPanel(
             }
             GradientButton(stringResource(R.string.play), Modifier.fillMaxWidth(), onClick = onPlay)
             CategoryChip(if (fav) stringResource(R.string.in_favorites) else stringResource(R.string.add_favorites), fav, onToggleFav)
+        }
+    }
+}
+
+/** لوحة Live الكبيرة (ستايل المرجع): مربع معاينة 16:9 + اسم القناة + البرنامج الحالي/التالي + الأزرار. */
+@Composable
+private fun LivePreviewPanel(
+    ch: Channel,
+    fav: Boolean,
+    epgTick: Int,
+    onToggleFav: () -> Unit,
+    onGuide: () -> Unit,
+    onPlay: () -> Unit,
+) {
+    val now = epgNow(ch, epgTick)
+    val next = remember(ch, epgTick) { EpgStore.next(ch, System.currentTimeMillis()) }
+    val shape = RoundedCornerShape(16.dp)
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(shape)
+                .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0xFF1C1C1C), Panel)))
+                .border(1.dp, GlassBorder, shape)
+                .clickable(onClick = onPlay),
+            contentAlignment = Alignment.Center,
+        ) {
+            ChannelLogo(ch, 84.dp)
+            Box(Modifier.align(Alignment.TopStart).padding(10.dp)) { LiveBadge() }
+        }
+        Text(ch.name, color = TextMain, fontSize = 20.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(ch.group, color = TextMuted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (now != null) {
+            Text(stringResource(R.string.panel_now, hm(now.start), hm(now.stop)), color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text(now.title, color = TextMain, fontSize = 15.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            if (now.stop > now.start) {
+                val frac = ((System.currentTimeMillis() - now.start).toFloat() / (now.stop - now.start).toFloat()).coerceIn(0f, 1f)
+                Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color(0x33FFFFFF))) {
+                    Box(Modifier.fillMaxWidth(frac).height(4.dp).background(BrandBrush))
+                }
+            }
+        }
+        if (next != null) {
+            Text(stringResource(R.string.panel_next, hm(next.start)), color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text(next.title, color = TextMuted, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+        Spacer(Modifier.height(4.dp))
+        GradientButton(stringResource(R.string.play), Modifier.fillMaxWidth(), onClick = onPlay)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            CategoryChip(if (fav) stringResource(R.string.in_favorites) else stringResource(R.string.add_favorites), fav, onToggleFav)
+            CategoryChip(stringResource(R.string.guide), false, onGuide)
         }
     }
 }
