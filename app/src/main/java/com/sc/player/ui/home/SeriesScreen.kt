@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -58,6 +62,7 @@ private sealed interface SeriesState {
 @Composable
 fun SeriesScreen(entry: Channel, onBack: () -> Unit, onPlay: (List<Channel>, Int) -> Unit) {
     val ctx = LocalContext.current
+    val compact = LocalConfiguration.current.screenHeightDp < 480
     val state by produceState<SeriesState>(SeriesState.Loading, entry.url) {
         value = SeriesState.Loading
         value = XtreamClient(ctx.applicationContext).seriesInfo(entry).fold(
@@ -66,8 +71,8 @@ fun SeriesScreen(entry: Channel, onBack: () -> Unit, onPlay: (List<Channel>, Int
         )
     }
 
-    Column(Modifier.fillMaxSize().padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(
+    Column(Modifier.fillMaxSize().padding(top = if (compact) 6.dp else 16.dp), verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 12.dp)) {
+        if (!compact || state !is SeriesState.Ready) Row(
             Modifier.padding(horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -86,7 +91,7 @@ fun SeriesScreen(entry: Channel, onBack: () -> Unit, onPlay: (List<Channel>, Int
         when (val s = state) {
             SeriesState.Loading -> Message(stringResource(R.string.series_loading))
             is SeriesState.Failed -> Message(stringResource(R.string.series_failed, s.message))
-            is SeriesState.Ready -> SeriesBody(entry, s.details, onPlay)
+            is SeriesState.Ready -> SeriesBody(entry, s.details, onPlay, compact, onBack)
         }
     }
 }
@@ -99,7 +104,7 @@ private fun Message(text: String) {
 }
 
 @Composable
-private fun SeriesBody(entry: Channel, d: SeriesDetails, onPlay: (List<Channel>, Int) -> Unit) {
+private fun SeriesBody(entry: Channel, d: SeriesDetails, onPlay: (List<Channel>, Int) -> Unit, compact: Boolean, onBack: () -> Unit) {
     val seasonNumbers = remember(d) { d.seasons.keys.toList() }
     if (seasonNumbers.isEmpty()) {
         Message(stringResource(R.string.series_empty))
@@ -120,6 +125,37 @@ private fun SeriesBody(entry: Channel, d: SeriesDetails, onPlay: (List<Channel>,
         }
     }
 
+    if (compact) {
+        // موبايل أفقي (ارتفاع قليل): عمودين — يسار: بيانات المسلسل والمواسم، يمين: الحلقات بطول الشاشة
+        Row(Modifier.fillMaxSize()) {
+            Column(
+                Modifier.weight(0.42f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(start = 24.dp, end = 12.dp, bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                BackButton(onBack)
+                MediaHeader(
+                    title = entry.name,
+                    poster = d.meta.poster ?: d.cover ?: entry.logo,
+                    meta = if (d.meta.plot.isBlank() && d.plot.isNotBlank()) com.sc.player.data.MediaInfo(plot = d.plot) else d.meta,
+                    posterWidth = 78.dp,
+                    plotLines = 3,
+                )
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(seasonNumbers) { n ->
+                        CategoryChip(stringResource(R.string.series_season, n), n == season) { season = n }
+                    }
+                }
+            }
+            LazyColumn(
+                Modifier.weight(0.58f).fillMaxHeight(),
+                contentPadding = PaddingValues(start = 12.dp, end = 24.dp, top = 6.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                itemsIndexed(episodes) { i, ep -> EpisodeRow(ep, asChannels[i]) { onPlay(asChannels, i) } }
+            }
+        }
+        return
+    }
     Box(Modifier.padding(horizontal = 24.dp)) {
         MediaHeader(
             title = entry.name,

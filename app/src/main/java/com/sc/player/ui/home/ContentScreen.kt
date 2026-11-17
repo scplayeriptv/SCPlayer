@@ -350,6 +350,7 @@ fun ContentScreen(
                                 epgTick = epgTick,
                                 onToggleFav = { onToggleFav(shown.url) },
                                 onGuide = { onGuide(filtered) },
+                                compact = compactH,
                                 onPlay = {
                                     val i = filtered.indexOfFirst { it === shown }
                                     if (i >= 0) onPlay(filtered, i)
@@ -641,10 +642,49 @@ private fun LivePreviewPanel(
     onToggleFav: () -> Unit,
     onGuide: () -> Unit,
     onPlay: () -> Unit,
+    compact: Boolean = false,
 ) {
     val now = epgNow(ch, epgTick)
     val next = remember(ch, epgTick) { EpgStore.next(ch, System.currentTimeMillis()) }
     val shape = RoundedCornerShape(16.dp)
+    if (compact) {
+        // شاشة قصيرة (موبايل أفقي): كل حاجة لازم تبان من غير سكرول
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .clip(shape)
+                    .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0xFF1C1C1C), Panel)))
+                    .border(1.dp, GlassBorder, shape)
+                    .clickable(onClick = onPlay),
+                contentAlignment = Alignment.Center,
+            ) {
+                ChannelLogo(ch, 56.dp)
+                Box(Modifier.align(Alignment.TopStart).padding(8.dp)) { LiveBadge() }
+            }
+            Text(ch.name, color = TextMain, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                now?.let { it.title } ?: ch.group,
+                color = if (now != null) Cyan else TextMuted,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (now != null && now.stop > now.start) {
+                val frac = ((System.currentTimeMillis() - now.start).toFloat() / (now.stop - now.start).toFloat()).coerceIn(0f, 1f)
+                Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(Color(0x33FFFFFF))) {
+                    Box(Modifier.fillMaxWidth(frac).height(3.dp).background(BrandBrush))
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                GradientButton(stringResource(R.string.play), Modifier.weight(1f), onClick = onPlay)
+                CategoryChip(if (fav) "★" else "☆", fav, onToggleFav)
+                CategoryChip(stringResource(R.string.guide), false, onGuide)
+            }
+        }
+        return
+    }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Box(
             Modifier
