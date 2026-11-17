@@ -96,6 +96,9 @@ fun SplashScreen(onFinish: () -> Unit) {
                     },
                 ) { SCLogo(104.dp) }
                 Spacer(Modifier.height(22.dp))
+                androidx.compose.runtime.CompositionLocalProvider(
+                    androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr,
+                ) {
                 Row(
                     Modifier
                         .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -123,6 +126,7 @@ fun SplashScreen(onFinish: () -> Unit) {
                             Letter(ch, i, lerp(theme.light, theme.grad2, i / (WORD.length - 1f)))
                         }
                     }
+                }
                 }
                 Spacer(Modifier.height(10.dp))
                 Text(

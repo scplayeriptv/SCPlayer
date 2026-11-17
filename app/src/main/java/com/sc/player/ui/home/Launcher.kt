@@ -151,7 +151,7 @@ internal fun Launcher(
                     DockButton(Icons.AutoMirrored.Filled.ExitToApp, exit, Color(0xFFF87171)) { onExit() }
                 }
             }
-            ClockAndExpiry(playlistId, Modifier.padding(top = 6.dp))
+            ClockBlock(Modifier.padding(top = 6.dp))
             Row(
                 Modifier.weight(1f).fillMaxWidth().padding(top = 10.dp, bottom = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
@@ -160,6 +160,7 @@ internal fun Launcher(
                 HubPanel(movies, Icons.Filled.Movie, Blue, counts[Kind.Movies]?.toString(), null, Modifier.weight(1f).fillMaxHeight()) { onOpen(Dest.Movies) }
                 HubPanel(series, Icons.Filled.VideoLibrary, Orange, counts[Kind.Series]?.toString(), null, Modifier.weight(1f).fillMaxHeight()) { onOpen(Dest.Series) }
             }
+            PhysicalLeft { ExpiryPill(playlistId) }
         }
     } else {
         Column(
@@ -171,7 +172,7 @@ internal fun Launcher(
                 Text(status, color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 ProfileChip(profile, onProfile, Modifier.padding(top = 4.dp))
             }
-            ClockAndExpiry(playlistId)
+            ClockBlock()
             Tile3D(live, Icons.Filled.LiveTv, Purple, TileStyle.Hero, Modifier.fillMaxWidth().height(150.dp), badge = counts[Kind.Live]?.toString()) {
                 onOpen(Dest.LiveTv)
             }
@@ -185,6 +186,7 @@ internal fun Launcher(
                 Tile3D(settings, Icons.Filled.Settings, Slate, TileStyle.Mini, m) { onOpen(Dest.Settings) }
                 Tile3D(exit, Icons.AutoMirrored.Filled.ExitToApp, Red, TileStyle.Mini, m) { onExit() }
             }
+            PhysicalLeft { ExpiryPill(playlistId) }
         }
     }
     if (reloading) {
@@ -204,10 +206,9 @@ internal fun Launcher(
     }
 }
 
-/** ساعة وتاريخ + تاريخ انتهاء الاشتراك (لو القائمة Xtream) بلون حسب الأيام المتبقية. */
+/** ساعة كبيرة وتاريخ اليوم (بتتحدّث كل 10 ثواني). */
 @Composable
-private fun ClockAndExpiry(playlistId: String, modifier: Modifier = Modifier) {
-    val ctx = LocalContext.current
+private fun ClockBlock(modifier: Modifier = Modifier) {
     val locale = LocalConfiguration.current.locales[0]
     val now by produceState(System.currentTimeMillis()) {
         while (true) {
@@ -215,60 +216,68 @@ private fun ClockAndExpiry(playlistId: String, modifier: Modifier = Modifier) {
             value = System.currentTimeMillis()
         }
     }
+    val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT, locale).format(java.util.Date(now))
+    val date = java.text.SimpleDateFormat("EEE, d MMM yyyy", locale).format(java.util.Date(now))
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Icon(Icons.Filled.Schedule, null, tint = com.sc.player.ui.theme.Cyan, modifier = Modifier.size(26.dp))
+        Column {
+            Text(time, color = TextMain, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+            Text(date, color = TextMuted, fontSize = 11.sp)
+        }
+    }
+}
+
+/** كبسولة انتهاء الاشتراك (لو القائمة Xtream) بلون حسب الأيام المتبقية. */
+@Composable
+private fun ExpiryPill(playlistId: String, modifier: Modifier = Modifier) {
+    val ctx = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
     val expiry by produceState<Pair<Boolean, Long?>>(false to null, playlistId) {
         val url = com.sc.player.data.PlaylistRepository(ctx.applicationContext).playlists()
             .firstOrNull { it.id == playlistId }?.url.orEmpty()
         com.sc.player.data.XtreamClient(ctx.applicationContext).accountInfo(url).getOrNull()?.let { value = true to it.expires }
     }
-    val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT, locale).format(java.util.Date(now))
-    val date = java.text.SimpleDateFormat("EEE, d MMM yyyy", locale).format(java.util.Date(now))
-    Row(
-        modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Icon(Icons.Filled.Schedule, null, tint = com.sc.player.ui.theme.Cyan, modifier = Modifier.size(26.dp))
-            Column {
-                Text(time, color = TextMain, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
-                Text(date, color = TextMuted, fontSize = 11.sp)
-            }
-        }
-        val (loaded, exp) = expiry
-        if (loaded) {
-            val ms = (exp ?: 0L) * 1000
-            val days = if (exp == null) Int.MAX_VALUE else Math.floorDiv(ms - now, 86_400_000L).toInt()
-            val color = when {
-                days <= 7 -> Color(0xFFF87171)
-                days <= 30 -> Color(0xFFFBBF24)
-                else -> Color(0xFF34D399)
-            }
-            val dateTxt = if (exp == null) stringResource(R.string.acc_unlimited)
-            else java.text.SimpleDateFormat("d MMM yyyy", locale).format(java.util.Date(ms))
-            val sub = when {
-                exp == null -> null
-                days < 0 -> stringResource(R.string.acc_expired)
-                else -> stringResource(R.string.acc_days_left, days)
-            }
-            val shape = RoundedCornerShape(14.dp)
-            Row(
-                Modifier
-                    .clip(shape)
-                    .background(color.copy(alpha = 0.14f))
-                    .border(1.dp, color.copy(alpha = 0.5f), shape)
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Icon(Icons.Filled.CalendarMonth, null, tint = color, modifier = Modifier.size(22.dp))
-                Column {
-                    Text(stringResource(R.string.acc_expires), color = TextMuted, fontSize = 10.sp)
-                    Text(dateTxt, color = TextMain, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                }
-                if (sub != null) Text(sub, color = color, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
-        }
+    val (loaded, exp) = expiry
+    if (!loaded) return
+    val now = remember { System.currentTimeMillis() }
+    val ms = (exp ?: 0L) * 1000
+    val days = if (exp == null) Int.MAX_VALUE else Math.floorDiv(ms - now, 86_400_000L).toInt()
+    val color = when {
+        days <= 7 -> Color(0xFFF87171)
+        days <= 30 -> Color(0xFFFBBF24)
+        else -> Color(0xFF34D399)
     }
+    val dateTxt = if (exp == null) stringResource(R.string.acc_unlimited)
+    else java.text.SimpleDateFormat("d MMM yyyy", locale).format(java.util.Date(ms))
+    val sub = when {
+        exp == null -> null
+        days < 0 -> stringResource(R.string.acc_expired)
+        else -> stringResource(R.string.acc_days_left, days)
+    }
+    val shape = RoundedCornerShape(14.dp)
+    Row(
+        modifier
+            .clip(shape)
+            .background(color.copy(alpha = 0.14f))
+            .border(1.dp, color.copy(alpha = 0.5f), shape)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Icon(Icons.Filled.CalendarMonth, null, tint = color, modifier = Modifier.size(22.dp))
+        Column {
+            Text(stringResource(R.string.acc_expires), color = TextMuted, fontSize = 10.sp)
+            Text(dateTxt, color = TextMain, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        }
+        if (sub != null) Text(sub, color = color, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+/** الجانب الفعلي (يسار الشاشة) بغض النظر عن اتجاه اللغة. */
+@Composable
+private fun PhysicalLeft(content: @Composable () -> Unit) {
+    val rtl = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl
+    Box(Modifier.fillMaxWidth(), contentAlignment = if (rtl) Alignment.CenterEnd else Alignment.CenterStart) { content() }
 }
 
 @Composable
