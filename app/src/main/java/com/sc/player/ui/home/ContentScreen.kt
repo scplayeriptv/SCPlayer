@@ -4,6 +4,8 @@ import com.sc.player.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Spacer
@@ -106,6 +108,7 @@ fun ContentScreen(
     var query by rememberSaveable(kind.name) { mutableStateOf("") }
     var sortMode by rememberSaveable(kind.name) { mutableStateOf(0) }
     var highlighted by remember { mutableStateOf<Channel?>(null) }
+    var previewCh by remember { mutableStateOf<Channel?>(null) }
 
     val groups = remember(items) { items.groupingBy { it.group }.eachCount().entries.toList() }
     val favCount = remember(items, favs) { items.count { it.url in favs } }
@@ -292,7 +295,33 @@ fun ContentScreen(
                     hint = searchHint,
                 )
             }
-            Row(Modifier.weight(1f).fillMaxWidth()) {
+            if (live) {
+                val shownCh = previewCh?.takeIf { p -> filtered.any { it.url == p.url } } ?: filtered.firstOrNull()
+                LiveBrowser(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    groups = shownGroups,
+                    selected = selected,
+                    onSelect = { selected = it },
+                    allLabel = allLabel,
+                    allCount = items.size,
+                    favLabel = favLabel,
+                    favCount = favCount,
+                    contLabel = contLabel,
+                    contCount = cont.size,
+                    newLabel = newLabel,
+                    newCount = fresh.size,
+                    filtered = filtered,
+                    favs = favs,
+                    epgTick = epgTick,
+                    preview = shownCh,
+                    onPreview = { previewCh = it },
+                    onPlay = { i -> onPlay(filtered, i) },
+                    onToggleFav = onToggleFav,
+                    onGuide = { onGuide(filtered) },
+                    sortMode = sortMode,
+                    onSort = { sortMode = it },
+                )
+            } else Row(Modifier.weight(1f).fillMaxWidth()) {
                 CategoryPanel(
                     modifier = Modifier.width(panelW).fillMaxHeight(),
                     icon = kindIcon,
@@ -721,5 +750,204 @@ private fun LivePreviewPanel(
             CategoryChip(if (fav) stringResource(R.string.in_favorites) else stringResource(R.string.add_favorites), fav, onToggleFav)
             CategoryChip(stringResource(R.string.guide), false, onGuide)
         }
+    }
+}
+
+private val LiveGold = Color(0xFFFFD54F)
+private val RowBg = Color(0xFF111111)
+
+/** قائمة Live على الطريقة المرجعية: تصنيفات | قنوات بأرقام | مشغّل معاينة + معلومات + أزرار. */
+@Composable
+private fun LiveBrowser(
+    modifier: Modifier,
+    groups: List<Map.Entry<String, Int>>,
+    selected: String?,
+    onSelect: (String?) -> Unit,
+    allLabel: String,
+    allCount: Int,
+    favLabel: String,
+    favCount: Int,
+    contLabel: String,
+    contCount: Int,
+    newLabel: String,
+    newCount: Int,
+    filtered: List<Channel>,
+    favs: Set<String>,
+    epgTick: Int,
+    preview: Channel?,
+    onPreview: (Channel) -> Unit,
+    onPlay: (Int) -> Unit,
+    onToggleFav: (String) -> Unit,
+    onGuide: () -> Unit,
+    sortMode: Int,
+    onSort: (Int) -> Unit,
+) {
+    val line = Color.White.copy(alpha = 0.22f)
+    Row(modifier) {
+        LazyColumn(
+            Modifier.weight(0.23f).fillMaxHeight(),
+            contentPadding = PaddingValues(4.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            item { FlatCategoryRow(contLabel, contCount, selected == CONT_KEY) { onSelect(CONT_KEY) } }
+            item { FlatCategoryRow(allLabel, allCount, selected == null) { onSelect(null) } }
+            item { FlatCategoryRow(favLabel, favCount, selected == FAV_KEY) { onSelect(FAV_KEY) } }
+            if (newCount > 0) item { FlatCategoryRow(newLabel, newCount, selected == NEW_KEY) { onSelect(NEW_KEY) } }
+            items(groups.size) { i ->
+                val g = groups[i]
+                FlatCategoryRow(g.key, g.value, selected == g.key) { onSelect(g.key) }
+            }
+        }
+        Box(Modifier.width(1.dp).fillMaxHeight().background(line))
+        LazyColumn(
+            Modifier.weight(0.27f).fillMaxHeight(),
+            contentPadding = PaddingValues(4.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            itemsIndexed(filtered) { i, ch ->
+                FlatChannelRow(
+                    number = i + 1,
+                    ch = ch,
+                    selected = preview?.url == ch.url,
+                    fav = ch.url in favs,
+                    onFocus = { onPreview(ch) },
+                    onToggleFav = { onToggleFav(ch.url) },
+                ) {
+                    // أول لمسة = معاينة، تاني لمسة على نفس القناة (أو OK بالريموت) = ملء الشاشة
+                    if (preview?.url == ch.url) onPlay(i) else onPreview(ch)
+                }
+            }
+        }
+        Box(Modifier.width(1.dp).fillMaxHeight().background(line))
+        Column(Modifier.weight(0.5f).fillMaxHeight()) {
+            MiniPlayer(
+                url = preview?.url,
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                onTap = {
+                    val i = filtered.indexOfFirst { it.url == preview?.url }
+                    if (i >= 0) onPlay(i)
+                },
+            )
+            val now = preview?.let { epgNow(it, epgTick) }
+            val next = remember(preview, epgTick) { preview?.let { EpgStore.next(it, System.currentTimeMillis()) } }
+            Column(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 4.dp)) {
+                Text(
+                    preview?.name.orEmpty(),
+                    color = TextMain,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (now != null) {
+                    Text("${hm(now.start)}–${hm(now.stop)}  ${now.title}", color = Cyan, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                if (next != null) {
+                    Text("${hm(next.start)}  ${next.title}", color = TextMuted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                FlatButton(stringResource(R.string.guide), onGuide)
+                preview?.let { p ->
+                    FlatButton(if (p.url in favs) stringResource(R.string.in_favorites) else stringResource(R.string.add_favorites)) { onToggleFav(p.url) }
+                }
+                SortMenu(sortMode, onSort)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FlatButton(text: String, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(4.dp)
+    Text(
+        text,
+        color = TextMain,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.SemiBold,
+        maxLines = 1,
+        modifier = Modifier
+            .onFocusChanged { focused = it.isFocused }
+            .clip(shape)
+            .background(Color(0xFF161616))
+            .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else Color.White.copy(alpha = 0.3f), shape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 9.dp),
+    )
+}
+
+@Composable
+private fun FlatCategoryRow(label: String, count: Int, selected: Boolean, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(4.dp)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .onFocusChanged { focused = it.isFocused }
+            .clip(shape)
+            .background(RowBg)
+            .border(if (focused) 2.dp else 0.dp, if (focused) Cyan else Color.Transparent, shape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            label,
+            color = if (selected) LiveGold else TextMain,
+            fontSize = 14.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Text(count.toString(), color = if (selected) LiveGold else TextMuted, fontSize = 13.sp, maxLines = 1)
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun FlatChannelRow(
+    number: Int,
+    ch: Channel,
+    selected: Boolean,
+    fav: Boolean,
+    onFocus: () -> Unit,
+    onToggleFav: () -> Unit,
+    onClick: () -> Unit,
+) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(4.dp)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .onFocusChanged {
+                focused = it.isFocused
+                if (it.isFocused) onFocus()
+            }
+            .clip(shape)
+            .background(RowBg)
+            .border(if (focused) 2.dp else 0.dp, if (focused) Cyan else Color.Transparent, shape)
+            .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onToggleFav)
+            .padding(horizontal = 8.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(number.toString(), color = TextMuted, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.width(30.dp))
+        ChannelLogo(ch, 32.dp)
+        Text(
+            ch.name,
+            color = if (selected) LiveGold else TextMain,
+            fontSize = 14.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        if (fav) Text("★", color = LiveGold, fontSize = 13.sp)
     }
 }
