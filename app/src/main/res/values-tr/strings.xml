@@ -328,4 +328,5 @@
     <string name="phone_sent">Gönderildi! TV ekranına bak.</string>
     <string name="phone_bad">Bazı alanlar eksik veya geçersiz.</string>
     <string name="phone_back">Geri</string>
+    <string name="set_sec_data">Veri ve yedek</string>
 </resources>

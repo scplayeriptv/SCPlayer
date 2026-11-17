@@ -328,4 +328,5 @@
     <string name="phone_sent">Отправлено! Смотрите на экран ТВ.</string>
     <string name="phone_bad">Некоторые поля не заполнены или неверны.</string>
     <string name="phone_back">Назад</string>
+    <string name="set_sec_data">Данные и резервные копии</string>
 </resources>

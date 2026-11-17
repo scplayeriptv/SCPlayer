@@ -328,4 +328,5 @@
     <string name="phone_sent">اتبعت! بُص على شاشة التلفزيون.</string>
     <string name="phone_bad">في خانات ناقصة أو غلط.</string>
     <string name="phone_back">رجوع</string>
+    <string name="set_sec_data">البيانات والنسخ الاحتياطي</string>
 </resources>

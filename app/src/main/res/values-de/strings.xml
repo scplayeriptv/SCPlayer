@@ -328,4 +328,5 @@
     <string name="phone_sent">Gesendet! Schau auf deinen Fernseher.</string>
     <string name="phone_bad">Einige Felder fehlen oder sind ungültig.</string>
     <string name="phone_back">Zurück</string>
+    <string name="set_sec_data">Daten &amp; Backup</string>
 </resources>

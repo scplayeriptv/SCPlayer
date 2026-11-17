@@ -330,4 +330,5 @@
     <string name="phone_sent">Sent! Check your TV screen.</string>
     <string name="phone_bad">Some fields are missing or invalid.</string>
     <string name="phone_back">Back</string>
+    <string name="set_sec_data">Data &amp; backup</string>
 </resources>

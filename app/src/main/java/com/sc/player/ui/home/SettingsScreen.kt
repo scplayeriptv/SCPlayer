@@ -1,6 +1,32 @@
 package com.sc.player.ui.home
 
 import android.content.Context
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.PictureInPicture
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Equalizer
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.unit.Dp
+import com.sc.player.ui.theme.Blue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -201,120 +227,174 @@ fun SettingsScreen(
     val compactH = cfgS.screenHeightDp < 480
 
     val rows: @Composable () -> Unit = {
+        val ac = sectionAccent(section)
         when (section) {
             Section.General -> {
                 GroupLabel(stringResource(R.string.set_grp_appearance))
-                SettingRow(
-                    stringResource(R.string.set_language),
-                    null,
-                    value = appLanguages.firstOrNull { it.code == savedLang }?.nativeName ?: stringResource(R.string.set_language_system),
-                ) { showLanguages = true }
-                RowDivider()
-                ThemePicker(prefs)
-                GroupLabel(stringResource(R.string.set_grp_maintenance))
-                SettingRow(
-                    stringResource(R.string.set_clear_cache),
-                    null,
-                    value = if (cacheLoaded) mb(cache) else stringResource(R.string.calculating),
-                    icon = Icons.Filled.Delete,
-                ) {
-                    scope.launch {
-                        withContext(Dispatchers.IO) {
-                            ctx.imageLoader.diskCache?.clear()
-                            File(ctx.cacheDir, "updates").deleteRecursively()
-                        }
-                        ctx.imageLoader.memoryCache?.clear()
-                        cache = withContext(Dispatchers.IO) { cacheBytes(ctx) }
-                    }
-                }
-                RowDivider()
-                SettingRow(
-                    stringResource(R.string.set_check_updates),
-                    null,
-                    value = if (checking) stringResource(R.string.checking)
-                    else updateStatus ?: stringResource(R.string.installed_build, updater.currentVersionCode().toInt()),
-                    icon = Icons.Filled.Refresh,
-                ) {
-                    if (!checking) {
-                        checking = true
-                        scope.launch {
-                            val info = updater.check()
-                            checking = false
-                            if (info == null) {
-                                updateStatus = ctx.getString(R.string.up_to_date, updater.currentVersionCode().toInt())
-                            } else {
-                                updateStatus = ctx.getString(R.string.update_available_build, info.versionCode.toInt())
-                                update = info
-                            }
-                        }
-                    }
-                }
-                RowDivider()
-                SettingRow(stringResource(R.string.set_backup), stringResource(R.string.set_backup_sub), null) {
-                    backupLauncher.launch("scplayer-backup.json")
-                }
-                RowDivider()
-                SettingRow(stringResource(R.string.set_backup_restore), stringResource(R.string.set_backup_restore_sub), null) {
-                    restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
-                }
-                GroupLabel(stringResource(R.string.set_grp_reset))
-                SettingRow(
-                    stringResource(R.string.set_reset),
-                    null,
-                    value = if (resetDone) stringResource(R.string.done) else stringResource(R.string.set_reset_sub),
-                ) {
-                    com.sc.player.data.PositionStore(ctx).clear()
-                    onResetUserData()
-                    resetDone = true
-                }
-                RowDivider()
-                SettingRow(
-                    stringResource(R.string.set_restore),
-                    null,
-                    value = null,
-                ) {
-                    prefs.restoreDefaults()
-                    autoPlay = prefs.autoPlay()
-                    hw = prefs.hardwareDecoding()
-                    bg = prefs.backgroundPlay()
-                    pip = prefs.pip()
-                    reconnect = prefs.autoReconnect()
-                    bufferMode = prefs.bufferMode()
-                    stats = prefs.showStats()
+                SettingsCard {
+                    SettingRow(
+                        stringResource(R.string.set_language),
+                        null,
+                        value = appLanguages.firstOrNull { it.code == savedLang }?.nativeName ?: stringResource(R.string.set_language_system),
+                        lead = Icons.Filled.Language,
+                        accent = ac,
+                    ) { showLanguages = true }
+                    RowDivider()
+                    ThemePicker(prefs)
                 }
             }
-            Section.Tools -> {
-                SettingRow(stringResource(R.string.nav_radio), null, null) { onTool("radio") }
-                RowDivider()
-                SettingRow(stringResource(R.string.guide), null, null) { onTool("guide") }
-                RowDivider()
-                SettingRow(stringResource(R.string.multi_view), null, null) { onTool("multi") }
-                RowDivider()
-                SettingRow(stringResource(R.string.nav_search), null, null) { onTool("search") }
+            Section.Playback -> {
+                GroupLabel(stringResource(R.string.set_grp_playback))
+                SettingsCard {
+                    ToggleRow(stringResource(R.string.set_auto_play), stringResource(R.string.set_auto_play_sub), autoPlay, Icons.Filled.PlayCircle, ac) {
+                        autoPlay = it
+                        prefs.setAutoPlay(it)
+                    }
+                    RowDivider()
+                    ToggleRow(stringResource(R.string.set_bg_play), stringResource(R.string.set_bg_play_sub), bg, Icons.Filled.Headphones, ac) {
+                        bg = it
+                        prefs.setBackgroundPlay(it)
+                    }
+                    RowDivider()
+                    ToggleRow(stringResource(R.string.set_pip), stringResource(R.string.set_pip_sub), pip, Icons.Filled.PictureInPicture, ac) {
+                        pip = it
+                        prefs.setPip(it)
+                    }
+                    RowDivider()
+                    SettingRow(
+                        stringResource(R.string.set_intro),
+                        stringResource(R.string.set_intro_sub),
+                        value = if (introSkip == 0) stringResource(R.string.set_intro_off) else stringResource(R.string.set_intro_sec, introSkip),
+                        lead = Icons.Filled.SkipNext,
+                        accent = ac,
+                    ) {
+                        val opts = listOf(0, 60, 85, 90, 120)
+                        introSkip = opts[(opts.indexOf(introSkip).let { if (it < 0) 0 else it } + 1) % opts.size]
+                        prefs.setIntroSkip(introSkip)
+                    }
+                }
+                GroupLabel(stringResource(R.string.set_grp_performance))
+                SettingsCard {
+                    ToggleRow(stringResource(R.string.set_hw), stringResource(R.string.set_hw_sub), hw, Icons.Filled.Memory, ac) {
+                        hw = it
+                        prefs.setHardwareDecoding(it)
+                    }
+                    RowDivider()
+                    ToggleRow(stringResource(R.string.set_reconnect), stringResource(R.string.set_reconnect_sub), reconnect, Icons.Filled.Sync, ac) {
+                        reconnect = it
+                        prefs.setAutoReconnect(it)
+                    }
+                    RowDivider()
+                    SettingRow(
+                        stringResource(R.string.set_buffer),
+                        stringResource(R.string.set_buffer_sub),
+                        value = stringResource(
+                            when (bufferMode) {
+                                0 -> R.string.buffer_low
+                                2 -> R.string.buffer_high
+                                else -> R.string.buffer_normal
+                            },
+                        ),
+                        lead = Icons.Filled.Speed,
+                        accent = ac,
+                    ) {
+                        bufferMode = (bufferMode + 1) % 3
+                        prefs.setBufferMode(bufferMode)
+                    }
+                }
+                GroupLabel(stringResource(R.string.set_grp_diag))
+                SettingsCard {
+                    ToggleRow(stringResource(R.string.set_stats), stringResource(R.string.set_stats_sub), stats, Icons.Filled.Equalizer, ac) {
+                        stats = it
+                        prefs.setShowStats(it)
+                    }
+                }
             }
-            Section.Cleanup -> {
-                ToggleRow(stringResource(R.string.set_dedupe), stringResource(R.string.set_dedupe_sub), dedupe) {
+            Section.Cleanup -> SettingsCard {
+                ToggleRow(stringResource(R.string.set_dedupe), stringResource(R.string.set_dedupe_sub), dedupe, Icons.Filled.ContentCopy, ac) {
                     dedupe = it
                     prefs.setDedupe(it)
                     onCleanupChanged()
                 }
+                RowDivider()
                 SettingRow(
                     stringResource(R.string.set_hide_groups),
                     stringResource(R.string.set_hide_groups_sub),
                     stringResource(R.string.set_hidden_count, hiddenSet.size),
+                    lead = Icons.Filled.VisibilityOff,
+                    accent = ac,
                 ) { showHide = true }
+                RowDivider()
                 SettingRow(
                     stringResource(R.string.set_check),
                     stringResource(R.string.set_check_sub),
                     stringResource(R.string.set_dead_count, deadCount),
+                    lead = Icons.Filled.Build,
+                    accent = ac,
                 ) { showCheck = true }
-                ToggleRow(stringResource(R.string.set_hide_dead), stringResource(R.string.set_hide_dead_sub), hideDead) {
+                RowDivider()
+                ToggleRow(stringResource(R.string.set_hide_dead), stringResource(R.string.set_hide_dead_sub), hideDead, Icons.Filled.Block, ac) {
                     hideDead = it
                     prefs.setHideDead(it)
                     onCleanupChanged()
                 }
             }
-            Section.Account -> {
+            Section.Guide -> SettingsCard {
+                SettingRow(
+                    stringResource(R.string.epg_title),
+                    null,
+                    value = if (epgUrl.isBlank()) stringResource(R.string.epg_auto) else epgUrl,
+                    lead = Icons.Filled.DateRange,
+                    accent = ac,
+                ) { showEpg = true }
+            }
+            Section.Playlists -> SettingsCard {
+                SettingRow(
+                    stringResource(R.string.nav_playlist),
+                    null,
+                    value = stringResource(R.string.set_playlists_sub),
+                    lead = Icons.Filled.VideoLibrary,
+                    accent = ac,
+                    onClick = onPlaylists,
+                )
+            }
+            Section.Profiles -> SettingsCard {
+                val all = profilesTick.let { prefs.profiles() }
+                val activeId = profilesTick.let { prefs.activeProfile().id }
+                all.forEach { p ->
+                    SettingRow(
+                        "${p.avatarEmoji()}  ${p.displayName()}",
+                        if (p.kids) stringResource(R.string.profile_kids_badge) else null,
+                        value = if (p.id == activeId) stringResource(R.string.profile_active) else null,
+                        lead = Icons.Filled.Person,
+                        accent = ac,
+                    ) { editingProfile = p }
+                    RowDivider()
+                }
+                if (all.size < com.sc.player.data.UserPrefs.MAX_PROFILES) {
+                    SettingRow(stringResource(R.string.profile_add), null, value = null, lead = Icons.Filled.PersonAdd, accent = ac) { addingProfile = true }
+                } else {
+                    Spacer(Modifier.height(2.dp))
+                }
+            }
+            Section.Parental -> SettingsCard {
+                SettingRow(
+                    stringResource(R.string.parental_title),
+                    null,
+                    // parentalTick بس عشان السطر يتحدّث بعد أي تغيير
+                    value = parentalTick.let {
+                        val n = prefs.lockedGroups().size
+                        when {
+                            !prefs.hasPin() -> stringResource(R.string.parental_off)
+                            ParentalSession.unlocked -> stringResource(R.string.parental_unlocked)
+                            else -> stringResource(R.string.parental_on, n)
+                        }
+                    },
+                    lead = Icons.Filled.Lock,
+                    accent = ac,
+                ) { showParental = true }
+            }
+            Section.Account -> SettingsCard {
                 val acc = account
                 when {
                     acc == null -> InfoRow(stringResource(R.string.set_sec_account), stringResource(R.string.acc_loading))
@@ -351,140 +431,151 @@ fun SettingsScreen(
                     }
                 }
             }
-            Section.Profiles -> {
-                val all = profilesTick.let { prefs.profiles() }
-                val activeId = profilesTick.let { prefs.activeProfile().id }
-                all.forEach { p ->
+            Section.Tools -> SettingsCard {
+                SettingRow(stringResource(R.string.nav_radio), null, null, lead = Icons.Filled.Radio, accent = ac) { onTool("radio") }
+                RowDivider()
+                SettingRow(stringResource(R.string.guide), null, null, lead = Icons.Filled.DateRange, accent = ac) { onTool("guide") }
+                RowDivider()
+                SettingRow(stringResource(R.string.multi_view), null, null, lead = Icons.Filled.GridView, accent = ac) { onTool("multi") }
+                RowDivider()
+                SettingRow(stringResource(R.string.nav_search), null, null, lead = Icons.Filled.Search, accent = ac) { onTool("search") }
+            }
+            Section.Data -> {
+                GroupLabel(stringResource(R.string.set_grp_maintenance))
+                SettingsCard {
                     SettingRow(
-                        "${p.avatarEmoji()}  ${p.displayName()}",
-                        if (p.kids) stringResource(R.string.profile_kids_badge) else null,
-                        value = if (p.id == activeId) stringResource(R.string.profile_active) else null,
-                    ) { editingProfile = p }
-                    RowDivider()
-                }
-                if (all.size < com.sc.player.data.UserPrefs.MAX_PROFILES) {
-                    SettingRow(stringResource(R.string.profile_add), null, value = null) { addingProfile = true }
-                }
-            }
-            Section.Parental -> SettingRow(
-                stringResource(R.string.parental_title),
-                null,
-                // parentalTick بس عشان السطر يتحدّث بعد أي تغيير
-                value = parentalTick.let {
-                    val n = prefs.lockedGroups().size
-                    when {
-                        !prefs.hasPin() -> stringResource(R.string.parental_off)
-                        ParentalSession.unlocked -> stringResource(R.string.parental_unlocked)
-                        else -> stringResource(R.string.parental_on, n)
+                        stringResource(R.string.set_clear_cache),
+                        null,
+                        value = if (cacheLoaded) mb(cache) else stringResource(R.string.calculating),
+                        icon = Icons.Filled.Delete,
+                        lead = Icons.Filled.Storage,
+                        accent = ac,
+                    ) {
+                        scope.launch {
+                            withContext(Dispatchers.IO) {
+                                ctx.imageLoader.diskCache?.clear()
+                                File(ctx.cacheDir, "updates").deleteRecursively()
+                            }
+                            ctx.imageLoader.memoryCache?.clear()
+                            cache = withContext(Dispatchers.IO) { cacheBytes(ctx) }
+                        }
                     }
-                },
-            ) { showParental = true }
-            Section.Playback -> {
-                GroupLabel(stringResource(R.string.set_grp_playback))
-                ToggleRow(stringResource(R.string.set_auto_play), stringResource(R.string.set_auto_play_sub), autoPlay) {
-                    autoPlay = it
-                    prefs.setAutoPlay(it)
+                    RowDivider()
+                    SettingRow(stringResource(R.string.set_backup), stringResource(R.string.set_backup_sub), null, lead = Icons.Filled.Backup, accent = ac) {
+                        backupLauncher.launch("scplayer-backup.json")
+                    }
+                    RowDivider()
+                    SettingRow(stringResource(R.string.set_backup_restore), stringResource(R.string.set_backup_restore_sub), null, lead = Icons.Filled.Restore, accent = ac) {
+                        restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+                    }
                 }
-                RowDivider()
-                ToggleRow(stringResource(R.string.set_bg_play), stringResource(R.string.set_bg_play_sub), bg) {
-                    bg = it
-                    prefs.setBackgroundPlay(it)
-                }
-                RowDivider()
-                ToggleRow(stringResource(R.string.set_pip), stringResource(R.string.set_pip_sub), pip) {
-                    pip = it
-                    prefs.setPip(it)
-                }
-                GroupLabel(stringResource(R.string.set_grp_performance))
-                ToggleRow(stringResource(R.string.set_hw), stringResource(R.string.set_hw_sub), hw) {
-                    hw = it
-                    prefs.setHardwareDecoding(it)
-                }
-                RowDivider()
-                ToggleRow(stringResource(R.string.set_reconnect), stringResource(R.string.set_reconnect_sub), reconnect) {
-                    reconnect = it
-                    prefs.setAutoReconnect(it)
-                }
-                RowDivider()
-                SettingRow(
-                    stringResource(R.string.set_buffer),
-                    stringResource(R.string.set_buffer_sub),
-                    value = stringResource(
-                        when (bufferMode) {
-                            0 -> R.string.buffer_low
-                            2 -> R.string.buffer_high
-                            else -> R.string.buffer_normal
-                        },
-                    ),
-                ) {
-                    bufferMode = (bufferMode + 1) % 3
-                    prefs.setBufferMode(bufferMode)
-                }
-                SettingRow(
-                    stringResource(R.string.set_intro),
-                    stringResource(R.string.set_intro_sub),
-                    value = if (introSkip == 0) stringResource(R.string.set_intro_off) else stringResource(R.string.set_intro_sec, introSkip),
-                ) {
-                    val opts = listOf(0, 60, 85, 90, 120)
-                    introSkip = opts[(opts.indexOf(introSkip).let { if (it < 0) 0 else it } + 1) % opts.size]
-                    prefs.setIntroSkip(introSkip)
-                }
-                GroupLabel(stringResource(R.string.set_grp_diag))
-                ToggleRow(stringResource(R.string.set_stats), stringResource(R.string.set_stats_sub), stats) {
-                    stats = it
-                    prefs.setShowStats(it)
+                GroupLabel(stringResource(R.string.set_grp_reset))
+                SettingsCard {
+                    SettingRow(
+                        stringResource(R.string.set_reset),
+                        null,
+                        value = if (resetDone) stringResource(R.string.done) else stringResource(R.string.set_reset_sub),
+                        lead = Icons.Filled.DeleteForever,
+                        accent = ac,
+                    ) {
+                        com.sc.player.data.PositionStore(ctx).clear()
+                        onResetUserData()
+                        resetDone = true
+                    }
+                    RowDivider()
+                    SettingRow(stringResource(R.string.set_restore), null, value = null, lead = Icons.Filled.RestartAlt, accent = ac) {
+                        prefs.restoreDefaults()
+                        autoPlay = prefs.autoPlay()
+                        hw = prefs.hardwareDecoding()
+                        bg = prefs.backgroundPlay()
+                        pip = prefs.pip()
+                        reconnect = prefs.autoReconnect()
+                        bufferMode = prefs.bufferMode()
+                        stats = prefs.showStats()
+                        introSkip = prefs.introSkip()
+                    }
                 }
             }
-            Section.Guide -> SettingRow(
-                stringResource(R.string.epg_title),
-                null,
-                value = if (epgUrl.isBlank()) stringResource(R.string.epg_auto) else epgUrl,
-            ) { showEpg = true }
-            Section.Playlists -> SettingRow(
-                stringResource(R.string.nav_playlist),
-                null,
-                value = stringResource(R.string.set_playlists_sub),
-                onClick = onPlaylists,
-            )
-            Section.About -> SettingRow(
-                stringResource(R.string.nav_about),
-                null,
-                value = stringResource(R.string.set_about_sub),
-                onClick = onAbout,
-            )
+            Section.About -> SettingsCard {
+                SettingRow(
+                    stringResource(R.string.set_check_updates),
+                    null,
+                    value = if (checking) stringResource(R.string.checking)
+                    else updateStatus ?: stringResource(R.string.installed_build, updater.currentVersionCode().toInt()),
+                    icon = Icons.Filled.Refresh,
+                    lead = Icons.Filled.Sync,
+                    accent = ac,
+                ) {
+                    if (!checking) {
+                        checking = true
+                        scope.launch {
+                            val info = updater.check()
+                            checking = false
+                            if (info == null) {
+                                updateStatus = ctx.getString(R.string.up_to_date, updater.currentVersionCode().toInt())
+                            } else {
+                                updateStatus = ctx.getString(R.string.update_available_build, info.versionCode.toInt())
+                                update = info
+                            }
+                        }
+                    }
+                }
+                RowDivider()
+                SettingRow(
+                    stringResource(R.string.nav_about),
+                    null,
+                    value = stringResource(R.string.set_about_sub),
+                    lead = Icons.Filled.Info,
+                    accent = ac,
+                    onClick = onAbout,
+                )
+            }
         }
     }
 
     if (wide) {
         Row(Modifier.fillMaxSize().padding(24.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            GlassCard(Modifier.width(280.dp).fillMaxHeight()) {
+            GlassCard(Modifier.width(300.dp).fillMaxHeight()) {
                 Column(
                     Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
                         stringResource(R.string.nav_settings),
                         color = TextMain,
-                        fontSize = 24.sp,
+                        fontSize = 26.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        modifier = Modifier.padding(start = 8.dp, top = 6.dp, bottom = 10.dp),
+                        modifier = Modifier.padding(start = 8.dp, top = 6.dp),
+                    )
+                    Text(
+                        "SC Player  ·  " + stringResource(R.string.installed_build, updater.currentVersionCode().toInt()),
+                        color = TextMuted,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 8.dp, bottom = 12.dp),
                     )
                     Section.values().forEach { s ->
-                        SectionItem(s, s == section) { sectionName = s.name }
+                        if (s.groupStart && s != Section.General) {
+                            Box(Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 8.dp).height(1.dp).background(GlassBorder))
+                        }
+                        SectionItem(s, s == section, sectionAccent(s)) { sectionName = s.name }
                     }
                 }
             }
-            GlassCard(Modifier.weight(1f).fillMaxHeight()) {
-                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 6.dp)) {
+            Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(bottom = 8.dp)) {
+                Row(
+                    Modifier.padding(start = 4.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    IconBadge(section.icon, sectionAccent(section), 48.dp)
                     Text(
                         stringResource(section.titleRes),
                         color = TextMain,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 14.dp, top = 14.dp, bottom = 8.dp),
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.ExtraBold,
                     )
-                    rows()
                 }
+                rows()
             }
         }
     } else {
@@ -499,9 +590,7 @@ fun SettingsScreen(
                 }
             }
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
-                GlassCard(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(vertical = 6.dp)) { rows() }
-                }
+                rows()
             }
         }
     }
@@ -629,21 +718,54 @@ fun SettingsScreen(
     }
 }
 
-private enum class Section(val titleRes: Int, val icon: ImageVector) {
-    General(R.string.set_sec_general, Icons.Filled.Settings),
-    Tools(R.string.set_sec_tools, Icons.Filled.Apps),
-    Cleanup(R.string.set_sec_cleanup, Icons.Filled.Build),
-    Account(R.string.set_sec_account, Icons.Filled.AccountCircle),
-    Profiles(R.string.set_sec_profiles, Icons.Filled.Person),
-    Parental(R.string.parental_title, Icons.Filled.Lock),
+private enum class Section(val titleRes: Int, val icon: ImageVector, val groupStart: Boolean = false) {
+    General(R.string.set_sec_general, Icons.Filled.Palette, true),
     Playback(R.string.set_sec_playback, Icons.Filled.PlayArrow),
+    Cleanup(R.string.set_sec_cleanup, Icons.Filled.Build, true),
     Guide(R.string.set_sec_guide, Icons.Filled.DateRange),
     Playlists(R.string.nav_playlist, Icons.Filled.VideoLibrary),
+    Profiles(R.string.set_sec_profiles, Icons.Filled.Person, true),
+    Parental(R.string.parental_title, Icons.Filled.Lock),
+    Account(R.string.set_sec_account, Icons.Filled.AccountCircle),
+    Tools(R.string.set_sec_tools, Icons.Filled.Apps, true),
+    Data(R.string.set_sec_data, Icons.Filled.Storage),
     About(R.string.nav_about, Icons.Filled.Info),
 }
 
 @Composable
-private fun SectionItem(s: Section, selected: Boolean, onClick: () -> Unit) {
+private fun sectionAccent(s: Section): Color = when (s.ordinal % 5) {
+    0 -> Cyan
+    1 -> Violet
+    2 -> Blue
+    3 -> Color(0xFFFFA94D)
+    else -> Color(0xFFB388FF)
+}
+
+@Composable
+private fun IconBadge(icon: ImageVector, accent: Color, size: Dp = 38.dp) {
+    Box(
+        Modifier.size(size).clip(RoundedCornerShape(size / 3.4f)).background(accent.copy(alpha = 0.18f)),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, null, tint = accent, modifier = Modifier.size(size * 0.55f)) }
+}
+
+@Composable
+private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
+    val shape = RoundedCornerShape(20.dp)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = 6.dp)
+            .clip(shape)
+            .background(Glass)
+            .border(1.dp, GlassBorder, shape)
+            .padding(vertical = 4.dp),
+        content = content,
+    )
+}
+
+@Composable
+private fun SectionItem(s: Section, selected: Boolean, accent: Color, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(16.dp)
     Row(
@@ -658,7 +780,7 @@ private fun SectionItem(s: Section, selected: Boolean, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Icon(s.icon, null, tint = if (selected) Ink else TextMuted, modifier = Modifier.size(20.dp))
+        Icon(s.icon, null, tint = if (selected) Ink else accent, modifier = Modifier.size(21.dp))
         Text(
             stringResource(s.titleRes),
             color = if (selected) Ink else TextMain,
@@ -700,7 +822,7 @@ private fun InfoRow(title: String, value: String) {
 
 @Composable
 private fun RowDivider() {
-    Box(Modifier.fillMaxWidth().padding(horizontal = 14.dp).height(1.dp).background(GlassBorder))
+    Box(Modifier.fillMaxWidth().padding(start = 62.dp, end = 14.dp).height(1.dp).background(GlassBorder))
 }
 
 @Composable
@@ -709,6 +831,8 @@ private fun SettingRow(
     subtitle: String?,
     value: String?,
     icon: ImageVector? = null,
+    lead: ImageVector? = null,
+    accent: Color = Cyan,
     onClick: () -> Unit,
 ) {
     var focused by remember { mutableStateOf(false) }
@@ -726,6 +850,7 @@ private fun SettingRow(
     ) {
         // قيمة طويلة تنزل تحت العنوان بدل ما تضغطه
         val stacked = value != null && value.length > 18
+        if (lead != null) IconBadge(lead, accent)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(title, color = TextMain, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             subtitle?.let { Text(it, color = TextMuted, fontSize = 13.sp) }
@@ -752,7 +877,7 @@ private fun GroupLabel(text: String) {
 }
 
 @Composable
-private fun ToggleRow(title: String, subtitle: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun ToggleRow(title: String, subtitle: String, checked: Boolean, lead: ImageVector? = null, accent: Color = Cyan, onChange: (Boolean) -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(16.dp)
     Row(
@@ -766,6 +891,7 @@ private fun ToggleRow(title: String, subtitle: String, checked: Boolean, onChang
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (lead != null) IconBadge(lead, accent)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(title, color = TextMain, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Text(subtitle, color = TextMuted, fontSize = 13.sp)
