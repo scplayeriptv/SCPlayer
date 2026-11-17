@@ -1,6 +1,12 @@
 package com.sc.player.ui.home
 
 import android.content.Context
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Headphones
@@ -202,6 +208,7 @@ fun SettingsScreen(
     }
 
     var sectionName by rememberSaveable { mutableStateOf(Section.General.name) }
+    var showSection by rememberSaveable { mutableStateOf(false) }
     val section = Section.valueOf(sectionName)
     var autoPlay by remember { mutableStateOf(prefs.autoPlay()) }
     var hw by remember { mutableStateOf(prefs.hardwareDecoding()) }
@@ -533,49 +540,154 @@ fun SettingsScreen(
         }
     }
 
-    if (wide) {
-        Row(Modifier.fillMaxSize().padding(24.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            GlassCard(Modifier.width(300.dp).fillMaxHeight()) {
-                Column(
-                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        stringResource(R.string.nav_settings),
-                        color = TextMain,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        modifier = Modifier.padding(start = 8.dp, top = 6.dp),
-                    )
-                    Text(
-                        "SC Player  ·  " + stringResource(R.string.installed_build, updater.currentVersionCode().toInt()),
-                        color = TextMuted,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(start = 8.dp, bottom = 12.dp),
-                    )
-                    Section.values().forEach { s ->
-                        if (s.groupStart && s != Section.General) {
-                            Box(Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 8.dp).height(1.dp).background(GlassBorder))
+    if (cfgS.screenWidthDp >= 600) {
+        val installedTxt = stringResource(R.string.installed_build, updater.currentVersionCode().toInt())
+        val parentalValue = parentalTick.let {
+            val n = prefs.lockedGroups().size
+            when {
+                !prefs.hasPin() -> stringResource(R.string.parental_off)
+                ParentalSession.unlocked -> stringResource(R.string.parental_unlocked)
+                else -> stringResource(R.string.parental_on, n)
+            }
+        }
+        val tiles = listOf(
+            TileData(Icons.Filled.Palette, stringResource(Section.General.titleRes), appLanguages.firstOrNull { it.code == savedLang }?.nativeName ?: stringResource(R.string.set_language_system), null) {
+                sectionName = Section.General.name; showSection = true
+            },
+            TileData(Icons.Filled.VideoLibrary, stringResource(R.string.nav_playlist), null, null) { onPlaylists() },
+            TileData(Icons.Filled.DateRange, stringResource(R.string.epg_title), if (epgUrl.isBlank()) stringResource(R.string.epg_auto) else epgUrl, null) { showEpg = true },
+            TileData(Icons.Filled.Person, stringResource(R.string.set_sec_profiles), null, null) { sectionName = Section.Profiles.name; showSection = true },
+            TileData(Icons.Filled.Lock, stringResource(R.string.parental_title), parentalValue, null) { showParental = true },
+            TileData(Icons.Filled.AccountCircle, stringResource(R.string.set_sec_account), null, null) { sectionName = Section.Account.name; showSection = true },
+            TileData(Icons.Filled.PlayCircle, stringResource(R.string.set_auto_play), null, autoPlay) { autoPlay = !autoPlay; prefs.setAutoPlay(autoPlay) },
+            TileData(Icons.Filled.Headphones, stringResource(R.string.set_bg_play), null, bg) { bg = !bg; prefs.setBackgroundPlay(bg) },
+            TileData(Icons.Filled.PictureInPicture, stringResource(R.string.set_pip), null, pip) { pip = !pip; prefs.setPip(pip) },
+            TileData(Icons.Filled.Memory, stringResource(R.string.set_hw), null, hw) { hw = !hw; prefs.setHardwareDecoding(hw) },
+            TileData(Icons.Filled.Sync, stringResource(R.string.set_reconnect), null, reconnect) { reconnect = !reconnect; prefs.setAutoReconnect(reconnect) },
+            TileData(
+                Icons.Filled.Speed,
+                stringResource(R.string.set_buffer),
+                stringResource(
+                    when (bufferMode) {
+                        0 -> R.string.buffer_low
+                        2 -> R.string.buffer_high
+                        else -> R.string.buffer_normal
+                    },
+                ),
+                null,
+            ) { bufferMode = (bufferMode + 1) % 3; prefs.setBufferMode(bufferMode) },
+            TileData(
+                Icons.Filled.SkipNext,
+                stringResource(R.string.set_intro),
+                if (introSkip == 0) stringResource(R.string.set_intro_off) else stringResource(R.string.set_intro_sec, introSkip),
+                null,
+            ) {
+                val opts = listOf(0, 60, 85, 90, 120)
+                introSkip = opts[(opts.indexOf(introSkip).let { if (it < 0) 0 else it } + 1) % opts.size]
+                prefs.setIntroSkip(introSkip)
+            },
+            TileData(Icons.Filled.Equalizer, stringResource(R.string.set_stats), null, stats) { stats = !stats; prefs.setShowStats(stats) },
+            TileData(Icons.Filled.ContentCopy, stringResource(R.string.set_dedupe), null, dedupe) { dedupe = !dedupe; prefs.setDedupe(dedupe); onCleanupChanged() },
+            TileData(Icons.Filled.VisibilityOff, stringResource(R.string.set_hide_groups), stringResource(R.string.set_hidden_count, hiddenSet.size), null) { showHide = true },
+            TileData(Icons.Filled.Build, stringResource(R.string.set_check), stringResource(R.string.set_dead_count, deadCount), null) { showCheck = true },
+            TileData(Icons.Filled.Block, stringResource(R.string.set_hide_dead), null, hideDead) { hideDead = !hideDead; prefs.setHideDead(hideDead); onCleanupChanged() },
+            TileData(Icons.Filled.Radio, stringResource(R.string.nav_radio), null, null) { onTool("radio") },
+            TileData(Icons.Filled.DateRange, stringResource(R.string.guide), null, null) { onTool("guide") },
+            TileData(Icons.Filled.GridView, stringResource(R.string.multi_view), null, null) { onTool("multi") },
+            TileData(Icons.Filled.Search, stringResource(R.string.nav_search), null, null) { onTool("search") },
+            TileData(Icons.Filled.Storage, stringResource(R.string.set_clear_cache), if (cacheLoaded) mb(cache) else stringResource(R.string.calculating), null) {
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        ctx.imageLoader.diskCache?.clear()
+                        File(ctx.cacheDir, "updates").deleteRecursively()
+                    }
+                    ctx.imageLoader.memoryCache?.clear()
+                    cache = withContext(Dispatchers.IO) { cacheBytes(ctx) }
+                }
+            },
+            TileData(Icons.Filled.Backup, stringResource(R.string.set_backup), null, null) { backupLauncher.launch("scplayer-backup.json") },
+            TileData(Icons.Filled.Restore, stringResource(R.string.set_backup_restore), null, null) {
+                restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+            },
+            TileData(Icons.Filled.DeleteForever, stringResource(R.string.set_reset), if (resetDone) stringResource(R.string.done) else stringResource(R.string.set_reset_sub), null) {
+                com.sc.player.data.PositionStore(ctx).clear()
+                onResetUserData()
+                resetDone = true
+            },
+            TileData(Icons.Filled.RestartAlt, stringResource(R.string.set_restore), null, null) {
+                prefs.restoreDefaults()
+                autoPlay = prefs.autoPlay()
+                hw = prefs.hardwareDecoding()
+                bg = prefs.backgroundPlay()
+                pip = prefs.pip()
+                reconnect = prefs.autoReconnect()
+                bufferMode = prefs.bufferMode()
+                stats = prefs.showStats()
+                introSkip = prefs.introSkip()
+            },
+            TileData(
+                Icons.Filled.Refresh,
+                stringResource(R.string.set_check_updates),
+                if (checking) stringResource(R.string.checking) else updateStatus ?: installedTxt,
+                null,
+            ) {
+                if (!checking) {
+                    checking = true
+                    scope.launch {
+                        val info = updater.check()
+                        checking = false
+                        if (info == null) {
+                            updateStatus = ctx.getString(R.string.up_to_date, updater.currentVersionCode().toInt())
+                        } else {
+                            updateStatus = ctx.getString(R.string.update_available_build, info.versionCode.toInt())
+                            update = info
                         }
-                        SectionItem(s, s == section, sectionAccent(s)) { sectionName = s.name }
                     }
                 }
+            },
+            TileData(Icons.Filled.Info, stringResource(R.string.nav_about), installedTxt, null) { onAbout() },
+        )
+        Column(Modifier.fillMaxSize().padding(horizontal = 24.dp).padding(top = if (compactH) 8.dp else 20.dp)) {
+            Text(
+                stringResource(R.string.nav_settings),
+                color = TextMain,
+                fontSize = if (compactH) 20.sp else 24.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+            )
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(if (compactH) 170.dp else 210.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(tiles) { t -> SettingTile(t) }
             }
-            Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(bottom = 8.dp)) {
-                Row(
-                    Modifier.padding(start = 4.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+        }
+        if (showSection) {
+            Dialog(onDismissRequest = { showSection = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+                val shape = RoundedCornerShape(24.dp)
+                Column(
+                    Modifier
+                        .widthIn(max = 560.dp)
+                        .fillMaxWidth(0.9f)
+                        .heightIn(max = (cfgS.screenHeightDp - 32).dp)
+                        .clip(shape)
+                        .background(com.sc.player.ui.theme.Bg)
+                        .border(1.dp, GlassBorder, shape)
+                        .padding(16.dp),
                 ) {
-                    IconBadge(section.icon, sectionAccent(section), 48.dp)
                     Text(
                         stringResource(section.titleRes),
                         color = TextMain,
-                        fontSize = 26.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
                     )
+                    Column(Modifier.verticalScroll(rememberScrollState())) { rows() }
                 }
-                rows()
             }
         }
     } else {
@@ -907,5 +1019,46 @@ private fun ToggleRow(title: String, subtitle: String, checked: Boolean, lead: I
                 uncheckedBorderColor = GlassBorder,
             ),
         )
+    }
+}
+
+private class TileData(
+    val icon: ImageVector,
+    val title: String,
+    val value: String?,
+    val on: Boolean?,
+    val onClick: () -> Unit,
+)
+
+/** زر في شبكة الإعدادات: أيقونة + عنوان + قيمة صغيرة، ونقطة خضرا/رمادي للمفاتيح. */
+@Composable
+private fun SettingTile(t: TileData) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(12.dp)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 68.dp)
+            .onFocusChanged { focused = it.isFocused }
+            .clip(shape)
+            .background(Color.White.copy(alpha = if (focused) 0.12f else 0.06f))
+            .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else Color.White.copy(alpha = 0.14f), shape)
+            .clickable(role = Role.Button, onClick = t.onClick)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(t.icon, null, tint = Cyan, modifier = Modifier.size(26.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(t.title, color = TextMain, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            t.value?.let { Text(it, color = TextMuted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        }
+        if (t.on != null) {
+            Box(
+                Modifier
+                    .size(11.dp)
+                    .background(if (t.on) Color(0xFF34D399) else Color.White.copy(alpha = 0.25f), androidx.compose.foundation.shape.CircleShape),
+            )
+        }
     }
 }
