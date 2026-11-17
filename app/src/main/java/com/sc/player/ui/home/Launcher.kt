@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -85,6 +86,8 @@ import com.sc.player.data.Profile
 import com.sc.player.ui.theme.BrandBrush
 import com.sc.player.ui.theme.SCLogo
 import com.sc.player.ui.theme.TextMain
+import com.sc.player.ui.theme.AppTheme
+import com.sc.player.ui.theme.ThemeState
 import com.sc.player.ui.theme.TextMuted
 
 private enum class TileStyle { Hero, Card, Action, Mini }
@@ -138,29 +141,40 @@ internal fun Launcher(
     val status = stringResource(R.string.home_playlist, playlistName)
 
     if (wide) {
+        val crimson = ThemeState.current == AppTheme.Crimson
+        val cLive = if (crimson) Color(0xFFE11D2E) to Color(0xFF2A0508) else Purple
+        val cMovies = if (crimson) Color(0xFFB91C1C) to Color(0xFF1C0306) else Blue
+        val cSeries = if (crimson) Color(0xFF9F1239) to Color(0xFF1C0306) else Orange
+        val cMini = if (crimson) Color(0xFFB91C1C) to Color(0xFF140406) else Slate
         Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 14.dp)) {
-            Box(Modifier.fillMaxWidth().height(60.dp), contentAlignment = Alignment.Center) {
-                ProfileChip(profile, onProfile, Modifier.align(Alignment.CenterStart).widthIn(max = 190.dp))
-                Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Brand()
-                    Text(status, color = TextMuted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 240.dp))
-                }
-                Row(Modifier.align(Alignment.CenterEnd), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    DockButton(Icons.Filled.Refresh, reload, Color(0xFF38BDF8), spinning = reloading) { if (!reloading) onReload() }
-                    DockButton(Icons.Filled.Settings, settings, Color(0xFFA78BFA)) { onOpen(Dest.Settings) }
-                    DockButton(Icons.AutoMirrored.Filled.ExitToApp, exit, Color(0xFFF87171)) { onExit() }
-                }
-            }
-            ClockBlock(Modifier.padding(top = 6.dp))
             Row(
-                Modifier.weight(1f).fillMaxWidth().padding(top = 10.dp, bottom = 10.dp),
+                Modifier.fillMaxWidth().height(64.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Brand()
+                TopPill(playlistId, status, profile, onProfile, Modifier.weight(1f, fill = false).padding(horizontal = 12.dp))
+                ClockBlock(big = true)
+            }
+            Row(
+                Modifier.weight(1f).fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                HubPanel(live, Icons.Filled.LiveTv, Purple, counts[Kind.Live]?.toString(), "LIVE", Modifier.weight(1.35f).fillMaxHeight()) { onOpen(Dest.LiveTv) }
-                HubPanel(movies, Icons.Filled.Movie, Blue, counts[Kind.Movies]?.toString(), null, Modifier.weight(1f).fillMaxHeight()) { onOpen(Dest.Movies) }
-                HubPanel(series, Icons.Filled.VideoLibrary, Orange, counts[Kind.Series]?.toString(), null, Modifier.weight(1f).fillMaxHeight()) { onOpen(Dest.Series) }
+                HubPanel(live, Icons.Filled.LiveTv, cLive, counts[Kind.Live]?.toString(), "LIVE", Modifier.weight(1f).fillMaxHeight()) { onOpen(Dest.LiveTv) }
+                Column(Modifier.weight(1.7f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                    Row(Modifier.weight(1.3f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                        HubPanel(movies, Icons.Filled.Movie, cMovies, counts[Kind.Movies]?.toString(), null, Modifier.weight(1f).fillMaxHeight()) { onOpen(Dest.Movies) }
+                        HubPanel(series, Icons.Filled.VideoLibrary, cSeries, counts[Kind.Series]?.toString(), null, Modifier.weight(1f).fillMaxHeight()) { onOpen(Dest.Series) }
+                    }
+                    Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        val m = Modifier.weight(1f).fillMaxHeight()
+                        Tile3D(settings, Icons.Filled.Settings, cMini, TileStyle.Mini, m) { onOpen(Dest.Settings) }
+                        Tile3D(playlists, Icons.Filled.VideoLibrary, cMini, TileStyle.Mini, m) { onOpen(Dest.Playlist) }
+                        Tile3D(reload, Icons.Filled.Refresh, cMini, TileStyle.Mini, m) { if (!reloading) onReload() }
+                        Tile3D(exit, Icons.AutoMirrored.Filled.ExitToApp, Red, TileStyle.Mini, m) { onExit() }
+                    }
+                }
             }
-            PhysicalLeft { ExpiryPill(playlistId) }
         }
     } else {
         Column(
@@ -208,7 +222,7 @@ internal fun Launcher(
 
 /** ساعة كبيرة وتاريخ اليوم (بتتحدّث كل 10 ثواني). */
 @Composable
-private fun ClockBlock(modifier: Modifier = Modifier) {
+private fun ClockBlock(modifier: Modifier = Modifier, big: Boolean = false) {
     val locale = LocalConfiguration.current.locales[0]
     val now by produceState(System.currentTimeMillis()) {
         while (true) {
@@ -218,6 +232,13 @@ private fun ClockBlock(modifier: Modifier = Modifier) {
     }
     val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT, locale).format(java.util.Date(now))
     val date = java.text.SimpleDateFormat("EEE, d MMM yyyy", locale).format(java.util.Date(now))
+    if (big) {
+        Column(modifier, horizontalAlignment = Alignment.End) {
+            Text(time, color = TextMain, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
+            Text(date, color = TextMuted, fontSize = 12.sp)
+        }
+        return
+    }
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Icon(Icons.Filled.Schedule, null, tint = com.sc.player.ui.theme.Cyan, modifier = Modifier.size(26.dp))
         Column {
@@ -229,7 +250,7 @@ private fun ClockBlock(modifier: Modifier = Modifier) {
 
 /** كبسولة انتهاء الاشتراك (لو القائمة Xtream) بلون حسب الأيام المتبقية. */
 @Composable
-private fun ExpiryPill(playlistId: String, modifier: Modifier = Modifier) {
+private fun ExpiryPill(playlistId: String, modifier: Modifier = Modifier, compact: Boolean = false) {
     val ctx = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
     val expiry by produceState<Pair<Boolean, Long?>>(false to null, playlistId) {
@@ -256,7 +277,7 @@ private fun ExpiryPill(playlistId: String, modifier: Modifier = Modifier) {
     }
     val shape = RoundedCornerShape(14.dp)
     Row(
-        modifier
+        if (compact) modifier else modifier
             .clip(shape)
             .background(color.copy(alpha = 0.14f))
             .border(1.dp, color.copy(alpha = 0.5f), shape)
@@ -270,6 +291,32 @@ private fun ExpiryPill(playlistId: String, modifier: Modifier = Modifier) {
             Text(dateTxt, color = TextMain, fontSize = 14.sp, fontWeight = FontWeight.Bold)
         }
         if (sub != null) Text(sub, color = color, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        if (compact) VDivider()
+    }
+}
+
+@Composable
+private fun VDivider() {
+    Box(Modifier.width(1.dp).height(28.dp).background(Color.White.copy(alpha = 0.2f)))
+}
+
+/** كبسولة علوية زجاجية: انتهاء الاشتراك | اسم القائمة | البروفايل. */
+@Composable
+private fun TopPill(playlistId: String, status: String, profile: Profile, onProfile: () -> Unit, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(28.dp)
+    Row(
+        modifier
+            .clip(shape)
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(1.dp, Color.White.copy(alpha = 0.18f), shape)
+            .padding(horizontal = 18.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        ExpiryPill(playlistId, compact = true)
+        Text(status, color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 150.dp))
+        VDivider()
+        ProfileChip(profile, onProfile, Modifier.widthIn(max = 170.dp))
     }
 }
 
