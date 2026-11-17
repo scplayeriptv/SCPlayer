@@ -321,6 +321,7 @@ private fun Shell(
         }
         when (dest) {
             Dest.Home -> Launcher(
+                playlistId = playlistId,
                 playlistName = playlistName,
                 counts = counts,
                 recents = recents,

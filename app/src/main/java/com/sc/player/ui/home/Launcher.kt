@@ -1,5 +1,11 @@
 package com.sc.player.ui.home
 
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.delay
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -78,6 +84,7 @@ import com.sc.player.data.Kind
 import com.sc.player.data.Profile
 import com.sc.player.ui.theme.BrandBrush
 import com.sc.player.ui.theme.SCLogo
+import com.sc.player.ui.theme.TextMain
 import com.sc.player.ui.theme.TextMuted
 
 private enum class TileStyle { Hero, Card, Action, Mini }
@@ -96,6 +103,7 @@ private fun Color.darken(f: Float) = Color(red * f, green * f, blue * f, alpha)
 /** الشاشة الرئيسية على شكل مشغّل (Launcher) بمربعات ثلاثية الأبعاد. */
 @Composable
 internal fun Launcher(
+    playlistId: String,
     playlistName: String,
     counts: Map<Kind, Int>,
     recents: List<Channel>,
@@ -143,8 +151,9 @@ internal fun Launcher(
                     DockButton(Icons.AutoMirrored.Filled.ExitToApp, exit, Color(0xFFF87171)) { onExit() }
                 }
             }
+            ClockAndExpiry(playlistId, Modifier.padding(top = 6.dp))
             Row(
-                Modifier.weight(1f).fillMaxWidth().padding(top = 14.dp, bottom = 10.dp),
+                Modifier.weight(1f).fillMaxWidth().padding(top = 10.dp, bottom = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
             ) {
                 HubPanel(live, Icons.Filled.LiveTv, Purple, counts[Kind.Live]?.toString(), "LIVE", Modifier.weight(1.35f).fillMaxHeight()) { onOpen(Dest.LiveTv) }
@@ -162,6 +171,7 @@ internal fun Launcher(
                 Text(status, color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 ProfileChip(profile, onProfile, Modifier.padding(top = 4.dp))
             }
+            ClockAndExpiry(playlistId)
             Tile3D(live, Icons.Filled.LiveTv, Purple, TileStyle.Hero, Modifier.fillMaxWidth().height(150.dp), badge = counts[Kind.Live]?.toString()) {
                 onOpen(Dest.LiveTv)
             }
@@ -189,6 +199,73 @@ internal fun Launcher(
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 androidx.compose.material3.CircularProgressIndicator(color = com.sc.player.ui.theme.Cyan)
                 Text(reload, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+/** ساعة وتاريخ + تاريخ انتهاء الاشتراك (لو القائمة Xtream) بلون حسب الأيام المتبقية. */
+@Composable
+private fun ClockAndExpiry(playlistId: String, modifier: Modifier = Modifier) {
+    val ctx = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
+    val now by produceState(System.currentTimeMillis()) {
+        while (true) {
+            delay(10_000)
+            value = System.currentTimeMillis()
+        }
+    }
+    val expiry by produceState<Pair<Boolean, Long?>>(false to null, playlistId) {
+        val url = com.sc.player.data.PlaylistRepository(ctx.applicationContext).playlists()
+            .firstOrNull { it.id == playlistId }?.url.orEmpty()
+        com.sc.player.data.XtreamClient(ctx.applicationContext).accountInfo(url).getOrNull()?.let { value = true to it.expires }
+    }
+    val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT, locale).format(java.util.Date(now))
+    val date = java.text.SimpleDateFormat("EEE, d MMM yyyy", locale).format(java.util.Date(now))
+    Row(
+        modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Icon(Icons.Filled.Schedule, null, tint = com.sc.player.ui.theme.Cyan, modifier = Modifier.size(26.dp))
+            Column {
+                Text(time, color = TextMain, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                Text(date, color = TextMuted, fontSize = 11.sp)
+            }
+        }
+        val (loaded, exp) = expiry
+        if (loaded) {
+            val ms = (exp ?: 0L) * 1000
+            val days = if (exp == null) Int.MAX_VALUE else Math.floorDiv(ms - now, 86_400_000L).toInt()
+            val color = when {
+                days <= 7 -> Color(0xFFF87171)
+                days <= 30 -> Color(0xFFFBBF24)
+                else -> Color(0xFF34D399)
+            }
+            val dateTxt = if (exp == null) stringResource(R.string.acc_unlimited)
+            else java.text.SimpleDateFormat("d MMM yyyy", locale).format(java.util.Date(ms))
+            val sub = when {
+                exp == null -> null
+                days < 0 -> stringResource(R.string.acc_expired)
+                else -> stringResource(R.string.acc_days_left, days)
+            }
+            val shape = RoundedCornerShape(14.dp)
+            Row(
+                Modifier
+                    .clip(shape)
+                    .background(color.copy(alpha = 0.14f))
+                    .border(1.dp, color.copy(alpha = 0.5f), shape)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Icon(Icons.Filled.CalendarMonth, null, tint = color, modifier = Modifier.size(22.dp))
+                Column {
+                    Text(stringResource(R.string.acc_expires), color = TextMuted, fontSize = 10.sp)
+                    Text(dateTxt, color = TextMain, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+                if (sub != null) Text(sub, color = color, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
