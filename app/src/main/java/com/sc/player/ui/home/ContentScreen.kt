@@ -439,8 +439,9 @@ private fun TopNav(current: Dest, onNav: (Dest) -> Unit, query: String, onQuery:
         Dest.Movies to R.string.nav_movies,
         Dest.Series to R.string.nav_series,
     )
+    val tight = LocalConfiguration.current.screenHeightDp < 480
     Row(
-        Modifier.fillMaxWidth().height(56.dp).background(Panel.copy(alpha = 0.95f)).padding(horizontal = 14.dp),
+        Modifier.fillMaxWidth().height(if (tight) 38.dp else 56.dp).background(Panel.copy(alpha = 0.95f)).padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -450,7 +451,7 @@ private fun TopNav(current: Dest, onNav: (Dest) -> Unit, query: String, onQuery:
             Text(
                 stringResource(res),
                 color = if (sel) Cyan else TextMain,
-                fontSize = 17.sp,
+                fontSize = if (tight) 13.sp else 17.sp,
                 fontWeight = if (sel) FontWeight.ExtraBold else FontWeight.Medium,
                 maxLines = 1,
                 modifier = Modifier
@@ -458,12 +459,12 @@ private fun TopNav(current: Dest, onNav: (Dest) -> Unit, query: String, onQuery:
                     .clip(RoundedCornerShape(10.dp))
                     .then(if (focused) Modifier.border(2.dp, Cyan, RoundedCornerShape(10.dp)) else Modifier)
                     .clickable(role = Role.Tab) { onNav(d) }
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                    .padding(horizontal = 12.dp, vertical = if (tight) 4.dp else 8.dp),
             )
-            Box(Modifier.width(1.dp).height(22.dp).background(GlassBorder))
+            Box(Modifier.width(1.dp).height(if (tight) 16.dp else 22.dp).background(GlassBorder))
         }
-        SearchPill(query, onQuery, hint, Modifier.weight(1f).padding(horizontal = 10.dp).height(40.dp))
-        com.sc.player.ui.theme.SCLogo(34.dp)
+        SearchPill(query, onQuery, hint, Modifier.weight(1f).padding(horizontal = 10.dp).height(if (tight) 30.dp else 40.dp))
+        com.sc.player.ui.theme.SCLogo(if (tight) 24.dp else 34.dp)
     }
     Box(Modifier.fillMaxWidth().height(1.dp).background(GlassBorder))
 }
@@ -783,26 +784,27 @@ private fun LiveBrowser(
     onSort: (Int) -> Unit,
 ) {
     val line = Color.White.copy(alpha = 0.22f)
+    val dense = LocalConfiguration.current.screenHeightDp < 480
     Row(modifier) {
         LazyColumn(
             Modifier.weight(0.23f).fillMaxHeight(),
-            contentPadding = PaddingValues(4.dp),
-            verticalArrangement = Arrangement.spacedBy(3.dp),
+            contentPadding = PaddingValues(3.dp),
+            verticalArrangement = Arrangement.spacedBy(if (dense) 1.dp else 3.dp),
         ) {
-            item { FlatCategoryRow(contLabel, contCount, selected == CONT_KEY) { onSelect(CONT_KEY) } }
-            item { FlatCategoryRow(allLabel, allCount, selected == null) { onSelect(null) } }
-            item { FlatCategoryRow(favLabel, favCount, selected == FAV_KEY) { onSelect(FAV_KEY) } }
-            if (newCount > 0) item { FlatCategoryRow(newLabel, newCount, selected == NEW_KEY) { onSelect(NEW_KEY) } }
+            item { FlatCategoryRow(contLabel, contCount, selected == CONT_KEY, dense) { onSelect(CONT_KEY) } }
+            item { FlatCategoryRow(allLabel, allCount, selected == null, dense) { onSelect(null) } }
+            item { FlatCategoryRow(favLabel, favCount, selected == FAV_KEY, dense) { onSelect(FAV_KEY) } }
+            if (newCount > 0) item { FlatCategoryRow(newLabel, newCount, selected == NEW_KEY, dense) { onSelect(NEW_KEY) } }
             items(groups.size) { i ->
                 val g = groups[i]
-                FlatCategoryRow(g.key, g.value, selected == g.key) { onSelect(g.key) }
+                FlatCategoryRow(g.key, g.value, selected == g.key, dense) { onSelect(g.key) }
             }
         }
         Box(Modifier.width(1.dp).fillMaxHeight().background(line))
         LazyColumn(
             Modifier.weight(0.27f).fillMaxHeight(),
-            contentPadding = PaddingValues(4.dp),
-            verticalArrangement = Arrangement.spacedBy(3.dp),
+            contentPadding = PaddingValues(3.dp),
+            verticalArrangement = Arrangement.spacedBy(if (dense) 1.dp else 3.dp),
         ) {
             itemsIndexed(filtered) { i, ch ->
                 FlatChannelRow(
@@ -810,6 +812,7 @@ private fun LiveBrowser(
                     ch = ch,
                     selected = preview?.url == ch.url,
                     fav = ch.url in favs,
+                    dense = dense,
                     onFocus = { onPreview(ch) },
                     onToggleFav = { onToggleFav(ch.url) },
                 ) {
@@ -834,7 +837,7 @@ private fun LiveBrowser(
                 Text(
                     preview?.name.orEmpty(),
                     color = TextMain,
-                    fontSize = 17.sp,
+                    fontSize = if (dense) 14.sp else 17.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -847,7 +850,7 @@ private fun LiveBrowser(
                 }
             }
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = if (dense) 3.dp else 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -868,7 +871,7 @@ private fun FlatButton(text: String, onClick: () -> Unit) {
     Text(
         text,
         color = TextMain,
-        fontSize = 13.sp,
+        fontSize = 12.sp,
         fontWeight = FontWeight.SemiBold,
         maxLines = 1,
         modifier = Modifier
@@ -877,12 +880,12 @@ private fun FlatButton(text: String, onClick: () -> Unit) {
             .background(Color(0xFF161616))
             .border(if (focused) 2.dp else 1.dp, if (focused) Cyan else Color.White.copy(alpha = 0.3f), shape)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 9.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
     )
 }
 
 @Composable
-private fun FlatCategoryRow(label: String, count: Int, selected: Boolean, onClick: () -> Unit) {
+private fun FlatCategoryRow(label: String, count: Int, selected: Boolean, dense: Boolean, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(4.dp)
     Row(
@@ -893,19 +896,19 @@ private fun FlatCategoryRow(label: String, count: Int, selected: Boolean, onClic
             .background(RowBg)
             .border(if (focused) 2.dp else 0.dp, if (focused) Cyan else Color.Transparent, shape)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 11.dp),
+            .padding(horizontal = 8.dp, vertical = if (dense) 5.dp else 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
             label,
             color = if (selected) LiveGold else TextMain,
-            fontSize = 14.sp,
+            fontSize = if (dense) 11.sp else 14.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        Text(count.toString(), color = if (selected) LiveGold else TextMuted, fontSize = 13.sp, maxLines = 1)
+        Text(count.toString(), color = if (selected) LiveGold else TextMuted, fontSize = if (dense) 10.sp else 13.sp, maxLines = 1)
     }
 }
 
@@ -916,6 +919,7 @@ private fun FlatChannelRow(
     ch: Channel,
     selected: Boolean,
     fav: Boolean,
+    dense: Boolean,
     onFocus: () -> Unit,
     onToggleFav: () -> Unit,
     onClick: () -> Unit,
@@ -933,21 +937,21 @@ private fun FlatChannelRow(
             .background(RowBg)
             .border(if (focused) 2.dp else 0.dp, if (focused) Cyan else Color.Transparent, shape)
             .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onToggleFav)
-            .padding(horizontal = 8.dp, vertical = 7.dp),
+            .padding(horizontal = 6.dp, vertical = if (dense) 2.dp else 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(number.toString(), color = TextMuted, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.width(30.dp))
-        ChannelLogo(ch, 32.dp)
+        Text(number.toString(), color = TextMuted, fontSize = if (dense) 10.sp else 13.sp, textAlign = TextAlign.Center, modifier = Modifier.width(if (dense) 24.dp else 30.dp))
+        ChannelLogo(ch, if (dense) 20.dp else 30.dp)
         Text(
             ch.name,
             color = if (selected) LiveGold else TextMain,
-            fontSize = 14.sp,
+            fontSize = if (dense) 11.sp else 14.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        if (fav) Text("★", color = LiveGold, fontSize = 13.sp)
+        if (fav) Text("★", color = LiveGold, fontSize = if (dense) 10.sp else 13.sp)
     }
 }

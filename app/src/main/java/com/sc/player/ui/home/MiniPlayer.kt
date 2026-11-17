@@ -25,6 +25,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
@@ -46,6 +47,8 @@ internal fun MiniPlayer(url: String?, modifier: Modifier = Modifier, onTap: () -
     var ratio by remember { mutableFloatStateOf(16f / 9f) }
     var buffering by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
+    val triedHls = remember { booleanArrayOf(false) }
+    val retries = remember { intArrayOf(0) }
     val player = remember {
         val http = DefaultHttpDataSource.Factory()
             .setUserAgent("SCPlayer/0.1 (Android)")
@@ -70,8 +73,24 @@ internal fun MiniPlayer(url: String?, modifier: Modifier = Modifier, onTap: () -
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                failed = true
-                buffering = false
+                val uri = player.currentMediaItem?.localConfiguration?.uri
+                val unknownFormat = error.errorCode == PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED ||
+                    error.cause is androidx.media3.exoplayer.source.UnrecognizedInputFormatException
+                if (unknownFormat && !triedHls[0] && uri != null) {
+                    // نفس أسلوب المشغّل الكامل: ملف بدون امتداد واضح → جرّب كـ HLS
+                    triedHls[0] = true
+                    player.setMediaItem(MediaItem.Builder().setUri(uri).setMimeType(MimeTypes.APPLICATION_M3U8).build())
+                    player.prepare()
+                    player.playWhenReady = true
+                } else if (retries[0] < 2 && uri != null) {
+                    retries[0]++
+                    player.setMediaItem(MediaItem.fromUri(uri))
+                    player.prepare()
+                    player.playWhenReady = true
+                } else {
+                    failed = true
+                    buffering = false
+                }
             }
         }
         player.addListener(l)
@@ -82,6 +101,8 @@ internal fun MiniPlayer(url: String?, modifier: Modifier = Modifier, onTap: () -
     }
     LaunchedEffect(url) {
         failed = false
+        triedHls[0] = false
+        retries[0] = 0
         if (url == null) {
             player.stop()
             return@LaunchedEffect
