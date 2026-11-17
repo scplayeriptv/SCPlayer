@@ -329,4 +329,5 @@
     <string name="phone_bad">Des champs sont manquants ou invalides.</string>
     <string name="phone_back">Retour</string>
     <string name="set_sec_data">Données et sauvegarde</string>
+    <string name="theme_crimson">Cramoisi</string>
 </resources>

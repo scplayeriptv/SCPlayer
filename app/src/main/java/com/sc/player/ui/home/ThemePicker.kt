@@ -41,6 +41,7 @@ private fun AppTheme.nameRes() = when (this) {
     AppTheme.Sunset -> R.string.theme_sunset
     AppTheme.Rose -> R.string.theme_rose
     AppTheme.Amoled -> R.string.theme_amoled
+    AppTheme.Crimson -> R.string.theme_crimson
 }
 
 /** صف اختيار الثيم: دواير ملوّنة، الاختيار بيتطبّق فورًا ويتحفظ. */

@@ -15,6 +15,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 
@@ -34,7 +36,8 @@ enum class AppTheme(
     Emerald("emerald", Color(0xFF04120D), Color(0xFF072A1E), Color(0xFF10B981), Color(0xFF6EE7B7), Color(0xFF059669), Color(0xFF34D399), Color(0xFF0EA5E9)),
     Sunset("sunset", Color(0xFF140A04), Color(0xFF2A1508), Color(0xFFF97316), Color(0xFFFDBA74), Color(0xFFEA580C), Color(0xFFFB923C), Color(0xFFEC4899)),
     Rose("rose", Color(0xFF14040C), Color(0xFF2A0816), Color(0xFFEC4899), Color(0xFFF9A8D4), Color(0xFFDB2777), Color(0xFFF472B6), Color(0xFF8B5CF6)),
-    Amoled("amoled", Color(0xFF000000), Color(0xFF0A0A0A), Color(0xFF8B5CF6), Color(0xFFC4B5FD), Color(0xFF7C3AED), Color(0xFFA855F7), Color(0xFF1E3A8A));
+    Amoled("amoled", Color(0xFF000000), Color(0xFF0A0A0A), Color(0xFF8B5CF6), Color(0xFFC4B5FD), Color(0xFF7C3AED), Color(0xFFA855F7), Color(0xFF1E3A8A)),
+    Crimson("crimson", Color(0xFF000000), Color(0xFF0C0C0C), Color(0xFFE11D2E), Color(0xFFFF6B6B), Color(0xFFB91C1C), Color(0xFFEF4444), Color(0xFF7F1D1D));
 
     companion object {
         fun byId(id: String?): AppTheme = values().firstOrNull { it.id == id } ?: Violet
@@ -85,6 +88,10 @@ fun ScreenBackground(content: @Composable () -> Unit) {
             .fillMaxSize()
             .background(Bg)
             .drawBehind {
+                if (ThemeState.current == AppTheme.Crimson) {
+                    redWaves()
+                    return@drawBehind
+                }
                 val r = size.width * 0.5f
                 val tr = Offset(size.width * 0.85f, 0f)
                 val bl = Offset(0f, size.height)
@@ -98,4 +105,30 @@ fun ScreenBackground(content: @Composable () -> Unit) {
                 )
             },
     ) { content() }
+}
+
+/** موجات حمراء سفلية (ثيم Crimson). */
+private fun DrawScope.redWaves() {
+    val w = size.width
+    val h = size.height
+    fun wave(y0: Float, amp: Float, a: Float, shift: Float) {
+        val path = Path().apply {
+            moveTo(0f, h)
+            lineTo(0f, y0)
+            cubicTo(w * 0.25f, y0 - amp + shift, w * 0.5f, y0 + amp, w * 0.75f, y0 - amp * 0.4f)
+            cubicTo(w * 0.85f, y0 - amp * 0.8f, w * 0.95f, y0 - amp * 0.9f, w, y0 - amp * 1.4f)
+            lineTo(w, h)
+            close()
+        }
+        drawPath(
+            path,
+            Brush.verticalGradient(
+                listOf(Color(0xFFFF1E2D).copy(alpha = a), Color(0xFF3B0004).copy(alpha = a * 0.5f), Color.Transparent),
+                startY = y0 - amp * 1.5f,
+                endY = h,
+            ),
+        )
+    }
+    wave(h * 0.80f, h * 0.10f, 0.55f, 0f)
+    wave(h * 0.88f, h * 0.07f, 0.45f, h * 0.03f)
 }
