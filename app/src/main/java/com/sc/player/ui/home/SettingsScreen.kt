@@ -218,6 +218,7 @@ fun SettingsScreen(
     var bufferMode by remember { mutableStateOf(prefs.bufferMode()) }
     var stats by remember { mutableStateOf(prefs.showStats()) }
     var introSkip by remember { mutableStateOf(prefs.introSkip()) }
+    var engine by remember { mutableStateOf(prefs.playerEngine()) }
     var profilesTick by remember { mutableStateOf(0) }
     var editingProfile by remember { mutableStateOf<com.sc.player.data.Profile?>(null) }
     var addingProfile by remember { mutableStateOf(false) }
@@ -278,6 +279,18 @@ fun SettingsScreen(
                         val opts = listOf(0, 60, 85, 90, 120)
                         introSkip = opts[(opts.indexOf(introSkip).let { if (it < 0) 0 else it } + 1) % opts.size]
                         prefs.setIntroSkip(introSkip)
+                    }
+                }
+                SettingsCard {
+                    SettingRow(
+                        stringResource(R.string.set_player_engine),
+                        stringResource(R.string.set_player_engine_sub),
+                        value = stringResource(if (engine == 1) R.string.engine_mpv else R.string.engine_exo),
+                        lead = Icons.Filled.PlayCircle,
+                        accent = ac,
+                    ) {
+                        engine = if (engine == 1) 0 else 1
+                        prefs.setPlayerEngine(engine)
                     }
                 }
                 GroupLabel(stringResource(R.string.set_grp_performance))
@@ -500,6 +513,7 @@ fun SettingsScreen(
                         bufferMode = prefs.bufferMode()
                         stats = prefs.showStats()
                         introSkip = prefs.introSkip()
+                engine = prefs.playerEngine()
                     }
                 }
             }
@@ -586,6 +600,10 @@ fun SettingsScreen(
                 introSkip = opts[(opts.indexOf(introSkip).let { if (it < 0) 0 else it } + 1) % opts.size]
                 prefs.setIntroSkip(introSkip)
             },
+            TileData(Icons.Filled.PlayCircle, stringResource(R.string.set_player_engine), stringResource(if (engine == 1) R.string.engine_mpv else R.string.engine_exo), null) {
+                engine = if (engine == 1) 0 else 1
+                prefs.setPlayerEngine(engine)
+            },
             TileData(Icons.Filled.Equalizer, stringResource(R.string.set_stats), null, stats) { stats = !stats; prefs.setShowStats(stats) },
             TileData(Icons.Filled.ContentCopy, stringResource(R.string.set_dedupe), null, dedupe) { dedupe = !dedupe; prefs.setDedupe(dedupe); onCleanupChanged() },
             TileData(Icons.Filled.VisibilityOff, stringResource(R.string.set_hide_groups), stringResource(R.string.set_hidden_count, hiddenSet.size), null) { showHide = true },
@@ -624,6 +642,7 @@ fun SettingsScreen(
                 bufferMode = prefs.bufferMode()
                 stats = prefs.showStats()
                 introSkip = prefs.introSkip()
+                engine = prefs.playerEngine()
             },
             TileData(
                 Icons.Filled.Refresh,

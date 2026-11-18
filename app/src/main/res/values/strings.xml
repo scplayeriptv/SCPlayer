@@ -332,4 +332,9 @@
     <string name="phone_back">Back</string>
     <string name="set_sec_data">Data &amp; backup</string>
     <string name="theme_crimson">Crimson</string>
+    <string name="set_player_engine">Player engine</string>
+    <string name="set_player_engine_sub">ExoPlayer (default) or mpv</string>
+    <string name="engine_exo">ExoPlayer</string>
+    <string name="engine_mpv">mpv</string>
+    <string name="mpv_unavailable">mpv isn&apos;t available on this device — using ExoPlayer</string>
 </resources>

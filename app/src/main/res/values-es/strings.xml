@@ -330,4 +330,9 @@
     <string name="phone_back">Volver</string>
     <string name="set_sec_data">Datos y copia</string>
     <string name="theme_crimson">Carmesí</string>
+    <string name="set_player_engine">Motor de reproducción</string>
+    <string name="set_player_engine_sub">ExoPlayer (predeterminado) o mpv</string>
+    <string name="engine_exo">ExoPlayer</string>
+    <string name="engine_mpv">mpv</string>
+    <string name="mpv_unavailable">mpv no está disponible en este dispositivo — se usa ExoPlayer</string>
 </resources>

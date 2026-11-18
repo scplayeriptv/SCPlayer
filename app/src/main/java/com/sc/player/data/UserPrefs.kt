@@ -199,6 +199,13 @@ class UserPrefs(context: Context) {
     }
 
     /** يرجّع إعدادات التشغيل للوضع الافتراضي. */
+    /** محرّك التشغيل: 0 = ExoPlayer، 1 = mpv. */
+    fun playerEngine(): Int = sp.getInt("player_engine", 0).coerceIn(0, 1)
+
+    fun setPlayerEngine(v: Int) {
+        sp.edit().putInt("player_engine", v).apply()
+    }
+
     /** مدة تخطي مقدمة المسلسل بالثواني (0 = الزر مقفول). */
     fun introSkip(): Int = sp.getInt("intro_skip", 85).coerceIn(0, 300)
 
@@ -207,7 +214,7 @@ class UserPrefs(context: Context) {
     }
 
     fun restoreDefaults() {
-        sp.edit().remove("auto_reconnect").remove("buffer_mode").remove("show_stats").remove("auto_play").remove("hw_decoding").remove("bg_play").remove("pip").remove("aspect").remove("intro_skip").apply()
+        sp.edit().remove("auto_reconnect").remove("buffer_mode").remove("show_stats").remove("auto_play").remove("hw_decoding").remove("bg_play").remove("pip").remove("aspect").remove("intro_skip").remove("player_engine").apply()
     }
 
     private fun hash(pin: String): String =

@@ -330,4 +330,9 @@
     <string name="phone_back">Retour</string>
     <string name="set_sec_data">Données et sauvegarde</string>
     <string name="theme_crimson">Cramoisi</string>
+    <string name="set_player_engine">Moteur de lecture</string>
+    <string name="set_player_engine_sub">ExoPlayer (par défaut) ou mpv</string>
+    <string name="engine_exo">ExoPlayer</string>
+    <string name="engine_mpv">mpv</string>
+    <string name="mpv_unavailable">mpv n&apos;est pas disponible sur cet appareil — ExoPlayer est utilisé</string>
 </resources>

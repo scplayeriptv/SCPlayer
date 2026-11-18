@@ -330,4 +330,9 @@
     <string name="phone_back">Voltar</string>
     <string name="set_sec_data">Dados e backup</string>
     <string name="theme_crimson">Carmesim</string>
+    <string name="set_player_engine">Motor de reprodução</string>
+    <string name="set_player_engine_sub">ExoPlayer (padrão) ou mpv</string>
+    <string name="engine_exo">ExoPlayer</string>
+    <string name="engine_mpv">mpv</string>
+    <string name="mpv_unavailable">mpv não está disponível neste dispositivo — usando ExoPlayer</string>
 </resources>

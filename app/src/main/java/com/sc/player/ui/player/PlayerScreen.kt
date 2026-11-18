@@ -118,6 +118,12 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     }
 
     val ctx = LocalContext.current
+    // محرّك mpv الاختياري (من الإعدادات)؛ لو فشل بنكمل بـ ExoPlayer
+    var mpvFailed by rememberSaveable { mutableStateOf(false) }
+    if (!mpvFailed && com.sc.player.data.UserPrefs(ctx).playerEngine() == 1) {
+        MpvPlayerScreen(startIndex, onBack, onFail = { mpvFailed = true })
+        return
+    }
     val view = LocalView.current
     var index by rememberSaveable { mutableIntStateOf(startIndex.coerceIn(0, queue.lastIndex)) }
     val channel = queue[index.coerceIn(0, queue.lastIndex)]

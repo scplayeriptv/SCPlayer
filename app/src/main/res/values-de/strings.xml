@@ -330,4 +330,9 @@
     <string name="phone_back">Zurück</string>
     <string name="set_sec_data">Daten &amp; Backup</string>
     <string name="theme_crimson">Karmesin</string>
+    <string name="set_player_engine">Player-Engine</string>
+    <string name="set_player_engine_sub">ExoPlayer (Standard) oder mpv</string>
+    <string name="engine_exo">ExoPlayer</string>
+    <string name="engine_mpv">mpv</string>
+    <string name="mpv_unavailable">mpv ist auf diesem Gerät nicht verfügbar — ExoPlayer wird verwendet</string>
 </resources>

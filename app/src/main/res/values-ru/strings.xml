@@ -330,4 +330,9 @@
     <string name="phone_back">Назад</string>
     <string name="set_sec_data">Данные и резервные копии</string>
     <string name="theme_crimson">Багровый</string>
+    <string name="set_player_engine">Движок воспроизведения</string>
+    <string name="set_player_engine_sub">ExoPlayer (по умолчанию) или mpv</string>
+    <string name="engine_exo">ExoPlayer</string>
+    <string name="engine_mpv">mpv</string>
+    <string name="mpv_unavailable">mpv недоступен на этом устройстве — используется ExoPlayer</string>
 </resources>

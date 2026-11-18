@@ -17,6 +17,8 @@ android {
         targetSdk = 34
         versionCode = buildNumber
         versionName = "0.1.$buildNumber"
+        // libmpv ثقيلة: نكتفي بمعماريات الموبايل/التلفزيون الحقيقية
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
 
     signingConfigs {
@@ -54,6 +56,7 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
     implementation("com.google.zxing:core:3.5.3")
+    implementation("dev.jdtech.mpv:libmpv:0.5.1")
     implementation("androidx.media3:media3-exoplayer:1.4.1")
     implementation("androidx.media3:media3-exoplayer-hls:1.4.1")
     implementation("androidx.media3:media3-ui:1.4.1")

@@ -330,4 +330,9 @@
     <string name="phone_back">Geri</string>
     <string name="set_sec_data">Veri ve yedek</string>
     <string name="theme_crimson">Kızıl</string>
+    <string name="set_player_engine">Oynatıcı motoru</string>
+    <string name="set_player_engine_sub">ExoPlayer (varsayılan) veya mpv</string>
+    <string name="engine_exo">ExoPlayer</string>
+    <string name="engine_mpv">mpv</string>
+    <string name="mpv_unavailable">mpv bu cihazda kullanılamıyor — ExoPlayer kullanılıyor</string>
 </resources>

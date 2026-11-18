@@ -330,4 +330,9 @@
     <string name="phone_back">رجوع</string>
     <string name="set_sec_data">البيانات والنسخ الاحتياطي</string>
     <string name="theme_crimson">قرمزي</string>
+    <string name="set_player_engine">محرّك التشغيل</string>
+    <string name="set_player_engine_sub">ExoPlayer (الافتراضي) أو mpv</string>
+    <string name="engine_exo">ExoPlayer</string>
+    <string name="engine_mpv">mpv</string>
+    <string name="mpv_unavailable">mpv غير متاح على هذا الجهاز — هيتم استخدام ExoPlayer</string>
 </resources>
