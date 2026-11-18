@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
@@ -84,7 +85,8 @@ internal fun PosterCard(
     val ctx = LocalContext.current
     val progress = remember(ch.url) { PositionStore(ctx).progress(ch.url) }
     var focused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(18.dp)
+    val dense = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp < 480
+    val shape = RoundedCornerShape(if (dense) 10.dp else 18.dp)
     Box(
         Modifier
             .onFocusChanged {
@@ -110,19 +112,20 @@ internal fun PosterCard(
             Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .height(78.dp)
+                .height(if (dense) 40.dp else 78.dp)
                 .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color.Transparent, Color(0xE6000000)))),
         )
         Text(
             ch.name,
             color = Color.White,
-            fontSize = 12.sp,
+            fontSize = if (dense) 8.sp else 12.sp,
+            lineHeight = if (dense) 10.sp else 14.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.align(Alignment.BottomStart).padding(start = 10.dp, end = 10.dp, bottom = if (progress != null && progress > 0.01f) 10.dp else 8.dp),
+            modifier = Modifier.align(Alignment.BottomStart).padding(start = if (dense) 5.dp else 10.dp, end = if (dense) 5.dp else 10.dp, bottom = if (progress != null && progress > 0.01f) (if (dense) 6.dp else 10.dp) else (if (dense) 4.dp else 8.dp)),
         )
-        FavStar(fav, onToggleFav, Modifier.align(Alignment.TopEnd).padding(4.dp).background(Color(0x66000000), RoundedCornerShape(20.dp)))
+        FavStar(fav, onToggleFav, Modifier.align(Alignment.TopEnd).padding(if (dense) 1.dp else 4.dp).then(if (dense) Modifier.scale(0.7f) else Modifier).background(Color(0x66000000), RoundedCornerShape(20.dp)))
         if (progress != null && progress > 0.01f) {
             Box(Modifier.align(Alignment.BottomStart).fillMaxWidth().height(4.dp).background(Color(0x99000000))) {
                 Box(Modifier.fillMaxWidth(progress).height(4.dp).background(BrandBrush))

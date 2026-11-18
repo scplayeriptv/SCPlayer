@@ -203,11 +203,11 @@ fun ContentScreen(
             }
         } else if (posters) {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(if (compactH) 92.dp else 128.dp),
+                columns = GridCells.Adaptive(if (compactH) 72.dp else 116.dp),
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(if (compactH) 6.dp else 10.dp),
+                verticalArrangement = Arrangement.spacedBy(if (compactH) 8.dp else 12.dp),
             ) {
                 gridItemsIndexed(filtered) { i, ch ->
                     PosterCard(
@@ -271,7 +271,7 @@ fun ContentScreen(
     val paneShape = RoundedCornerShape(28.dp)
 
     if (wide) {
-        val panelW = if (compactH) 210.dp else 280.dp
+        val panelW = if (compactH) 160.dp else 240.dp
         val kindIcon = when (kind) {
             Kind.Live -> Icons.Filled.LiveTv
             Kind.Movies -> Icons.Filled.Movie
@@ -322,15 +322,9 @@ fun ContentScreen(
                     onSort = { sortMode = it },
                 )
             } else Row(Modifier.weight(1f).fillMaxWidth()) {
-                CategoryPanel(
+                FlatCategoryPanel(
                     modifier = Modifier.width(panelW).fillMaxHeight(),
-                    icon = kindIcon,
-                    compactH = compactH,
-                    onBack = { onNav?.invoke(Dest.Home) },
-                    showBack = onNav != null,
-                    catQuery = catQuery,
-                    onCatQuery = { catQuery = it },
-                    hint = searchHint,
+                    dense = compactH,
                     allLabel = allLabel,
                     allCount = items.size,
                     favLabel = favLabel,
@@ -346,7 +340,7 @@ fun ContentScreen(
                 Box(Modifier.width(1.dp).fillMaxHeight().background(GlassBorder))
                 Column(Modifier.weight(1f).fillMaxHeight().background(wideBrush)) {
                     Row(
-                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 6.dp),
+                        Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = if (compactH) 4.dp else 10.dp, bottom = if (compactH) 2.dp else 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
@@ -360,7 +354,7 @@ fun ContentScreen(
                         Text(
                             "$title (${filtered.size})",
                             color = Color.White,
-                            fontSize = if (compactH) 18.sp else 22.sp,
+                            fontSize = if (compactH) 13.sp else 20.sp,
                             fontWeight = FontWeight.ExtraBold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -473,6 +467,7 @@ private fun TopNav(current: Dest, onNav: (Dest) -> Unit, query: String, onQuery:
 @Composable
 private fun SortMenu(mode: Int, onPick: (Int) -> Unit) {
     var open by remember { mutableStateOf(false) }
+    val tight = LocalConfiguration.current.screenHeightDp < 480
     val labels = listOf(
         stringResource(R.string.sort_default),
         stringResource(R.string.sort_az),
@@ -486,12 +481,12 @@ private fun SortMenu(mode: Int, onPick: (Int) -> Unit) {
                 .background(Color(0x33000000))
                 .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
                 .clickable(role = Role.DropdownList) { open = true }
-                .padding(horizontal = 14.dp, vertical = 9.dp),
+                .padding(horizontal = if (tight) 10.dp else 14.dp, vertical = if (tight) 4.dp else 9.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(labels[mode.coerceIn(0, 3)], color = Color.White, fontSize = 14.sp, maxLines = 1)
-            Text("▾", color = Color.White, fontSize = 14.sp)
+            Text(labels[mode.coerceIn(0, 3)], color = Color.White, fontSize = if (tight) 11.sp else 14.sp, maxLines = 1)
+            Text("▾", color = Color.White, fontSize = if (tight) 11.sp else 14.sp)
         }
         androidx.compose.material3.DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             labels.forEachIndexed { i, l ->
@@ -953,5 +948,38 @@ private fun FlatChannelRow(
             modifier = Modifier.weight(1f),
         )
         if (fav) Text("★", color = LiveGold, fontSize = if (dense) 10.sp else 13.sp)
+    }
+}
+
+/** لوحة تصنيفات مسطّحة (أفلام/مسلسلات) بنفس شكل قائمة Live. */
+@Composable
+private fun FlatCategoryPanel(
+    modifier: Modifier,
+    dense: Boolean,
+    allLabel: String,
+    allCount: Int,
+    favLabel: String,
+    favCount: Int,
+    contLabel: String,
+    contCount: Int,
+    newLabel: String,
+    newCount: Int,
+    groups: List<Map.Entry<String, Int>>,
+    selected: String?,
+    onSelect: (String?) -> Unit,
+) {
+    LazyColumn(
+        modifier,
+        contentPadding = PaddingValues(3.dp),
+        verticalArrangement = Arrangement.spacedBy(if (dense) 1.dp else 3.dp),
+    ) {
+        if (contCount > 0) item { FlatCategoryRow(contLabel, contCount, selected == CONT_KEY, dense) { onSelect(CONT_KEY) } }
+        item { FlatCategoryRow(allLabel, allCount, selected == null, dense) { onSelect(null) } }
+        item { FlatCategoryRow(favLabel, favCount, selected == FAV_KEY, dense) { onSelect(FAV_KEY) } }
+        if (newCount > 0) item { FlatCategoryRow(newLabel, newCount, selected == NEW_KEY, dense) { onSelect(NEW_KEY) } }
+        items(groups.size) { i ->
+            val g = groups[i]
+            FlatCategoryRow(g.key, g.value, selected == g.key, dense) { onSelect(g.key) }
+        }
     }
 }
