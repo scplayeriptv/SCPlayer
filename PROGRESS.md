@@ -465,3 +465,6 @@
 - حجم الـ APK هيكبر (مكتبات native): قصرنا المعماريات على arm64-v8a و armeabi-v7a (مفيش x86/محاكي). وأضفت tools:overrideLibrary في المانيفست احتياطًا لو الـ minSdk بتاع المكتبة أعلى من 24.
 - غير موجود لسه في mpv: تسجيلات صوت/ترجمة، نسبة العرض، تخطي المقدمة، قائمة القنوات الجانبية، PiP، Cast (دول لسه في ExoPlayer بس).
 - نصوص جديدة × 9 لغات (ترجمة آلية): set_player_engine, set_player_engine_sub, engine_exo, engine_mpv, mpv_unavailable. ملفات: build.gradle.kts, AndroidManifest.xml, UserPrefs.kt, PlayerScreen.kt, SettingsScreen.kt + الجديدين. مش متجرّب.
+
+## فيكس بيلد (mpv)
+- الخطأ: نص mpv_unavailable في الإنجليزي والفرنسي فيه apostrophe متشفّر غلط (&apos;) فـ aapt رفضه. اتصلّح بـ \' (باقي اللغات ما فيهاش apostrophe).

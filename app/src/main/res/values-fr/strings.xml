@@ -334,5 +334,5 @@
     <string name="set_player_engine_sub">ExoPlayer (par défaut) ou mpv</string>
     <string name="engine_exo">ExoPlayer</string>
     <string name="engine_mpv">mpv</string>
-    <string name="mpv_unavailable">mpv n&apos;est pas disponible sur cet appareil — ExoPlayer est utilisé</string>
+    <string name="mpv_unavailable">mpv n\'est pas disponible sur cet appareil — ExoPlayer est utilisé</string>
 </resources>
