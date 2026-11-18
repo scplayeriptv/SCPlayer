@@ -101,6 +101,16 @@ internal fun PlayerOptionsDialog(
                         Choice(stringResource(res), aspect == i, Modifier.weight(1f)) { onAspect(i) }
                     }
                 }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("16:9", "4:3", "21:9").forEachIndexed { i, label ->
+                        Choice(label, aspect == i + 3, Modifier.weight(1f)) { onAspect(i + 3) }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf("125%", "150%", "175%").forEachIndexed { i, label ->
+                        Choice("🔍 $label", aspect == i + 6, Modifier.weight(1f)) { onAspect(i + 6) }
+                    }
+                }
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done)) } },

@@ -115,6 +115,8 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
     var loadedAt by remember { mutableStateOf(0L) }
     var attempt by remember { mutableIntStateOf(0) }
     val focus = remember { FocusRequester() }
+    val prefs = remember { UserPrefs(ctx) }
+    var aspect by remember { mutableIntStateOf(prefs.aspectMode().coerceIn(0, 8)) }
     val isVod = dur >= 60f // البث المباشر بيرجّع مدة صغيرة (نافذة HLS) — مش فيلم
 
     fun saveNow() {
@@ -210,6 +212,29 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
         }
     }
 
+    fun applyAspect(mode: Int) {
+        if (started != true) return
+        engine.setString("keepaspect", "yes")
+        engine.setString("panscan", "0")
+        engine.setString("video-zoom", "0")
+        engine.setString("video-aspect-override", "-1")
+        when (mode) {
+            1 -> engine.setString("keepaspect", "no")
+            2 -> engine.setString("panscan", "1.0")
+            3 -> engine.setString("video-aspect-override", "16:9")
+            4 -> engine.setString("video-aspect-override", "4:3")
+            5 -> engine.setString("video-aspect-override", "21:9")
+            6 -> engine.setString("video-zoom", "0.3219")
+            7 -> engine.setString("video-zoom", "0.585")
+            8 -> engine.setString("video-zoom", "0.807")
+        }
+    }
+    LaunchedEffect(aspect, started, surfaceReady) { if (surfaceReady) applyAspect(aspect) }
+    val aspectLabels = listOf(
+        stringResource(R.string.aspect_fit), stringResource(R.string.aspect_stretch), stringResource(R.string.aspect_zoom),
+        "16:9", "4:3", "21:9", "125%", "150%", "175%",
+    )
+
     fun next() { if (index < queue.lastIndex) index++ }
     fun prev() { if (index > 0) index-- }
 
@@ -298,6 +323,11 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
             ) {
                 BackButton(onBack)
                 Text(channel.name, color = TextMain, fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                MpvPill("⛶ " + aspectLabels[aspect.coerceIn(0, 8)]) {
+                    aspect = (aspect + 1) % 9
+                    prefs.setAspectMode(aspect)
+                    touch++
+                }
                 MpvPill(stringResource(R.string.engine_exo)) { onFail() }
                 Text("mpv", color = Cyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }

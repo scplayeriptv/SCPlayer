@@ -548,11 +548,19 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             val mw = maxWidth
             val mh = maxHeight
             val boxRatio = mw / mh
-            // 0 = Fit (الصورة كاملة)، 1 = Stretch (تملأ الشاشة)، 2 = Zoom (تقص الأطراف)
+            // 0 = Fit، 1 = Stretch، 2 = Zoom (تقص الأطراف)، 3/4/5 = نسبة 16:9 / 4:3 / 21:9، 6/7/8 = تكبير 125% / 150% / 175%
+            fun forced(r: Float) = if (boxRatio > r) mh * r to mh else mw to mw / r
+            val fit = forced(ratio)
             val (w, h) = when (aspect) {
                 1 -> mw to mh
                 2 -> if (boxRatio > ratio) mw to mw / ratio else mh * ratio to mh
-                else -> if (boxRatio > ratio) mh * ratio to mh else mw to mw / ratio
+                3 -> forced(16f / 9f)
+                4 -> forced(4f / 3f)
+                5 -> forced(21f / 9f)
+                6 -> fit.first * 1.25f to fit.second * 1.25f
+                7 -> fit.first * 1.5f to fit.second * 1.5f
+                8 -> fit.first * 1.75f to fit.second * 1.75f
+                else -> fit
             }
             AndroidView(
                 factory = { c -> SurfaceView(c).also { player.setVideoSurfaceView(it) } },
