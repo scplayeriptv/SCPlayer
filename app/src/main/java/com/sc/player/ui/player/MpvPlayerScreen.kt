@@ -115,6 +115,7 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
     var loadedAt by remember { mutableStateOf(0L) }
     var attempt by remember { mutableIntStateOf(0) }
     val focus = remember { FocusRequester() }
+    val isVod = dur >= 60f // البث المباشر بيرجّع مدة صغيرة (نافذة HLS) — مش فيلم
 
     fun saveNow() {
         if (started != true || dur < 60f) return
@@ -197,7 +198,7 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
                     buffering = false
                 }
             }
-            if (engine.bool("eof-reached") == true && dur > 0f && index < queue.lastIndex) index++
+            if (engine.bool("eof-reached") == true && dur >= 60f && index < queue.lastIndex) index++
             if (dur > 0f && (System.currentTimeMillis() / 1000) % 15L == 0L) saveNow()
         }
     }
@@ -232,8 +233,8 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
                     }
                     Key.MediaPlay -> { engine.setBool("pause", false); true }
                     Key.MediaPause -> { engine.setBool("pause", true); true }
-                    Key.DirectionRight -> { if (dur > 0f) engine.seekRel(10.0) else controls = true; true }
-                    Key.DirectionLeft -> { if (dur > 0f) engine.seekRel(-10.0) else controls = true; true }
+                    Key.DirectionRight -> { if (isVod) engine.seekRel(10.0) else controls = true; true }
+                    Key.DirectionLeft -> { if (isVod) engine.seekRel(-10.0) else controls = true; true }
                     Key.DirectionUp, Key.MediaNext, Key.ChannelUp -> { next(); true }
                     Key.DirectionDown, Key.MediaPrevious, Key.ChannelDown -> { prev(); true }
                     else -> false
@@ -300,6 +301,7 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
                 MpvPill(stringResource(R.string.engine_exo)) { onFail() }
                 Text("mpv", color = Cyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr) {
             Column(
                 Modifier
                     .align(Alignment.BottomStart)
@@ -308,7 +310,7 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
                     .padding(horizontal = 20.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                if (dur > 0f) {
+                if (isVod) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(fmt(pos.toDouble()), color = TextMuted, fontSize = 12.sp)
                         Slider(
@@ -328,6 +330,7 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
                     Box(Modifier.size(12.dp))
                     MpvPill("⏭") { next() }
                 }
+            }
             }
         }
     }
