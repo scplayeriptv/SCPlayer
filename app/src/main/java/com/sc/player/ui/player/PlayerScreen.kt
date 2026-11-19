@@ -467,8 +467,10 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     }
     androidx.activity.compose.BackHandler(enabled = showList) { showList = false }
     fun seekBy(ms: Long) {
-        if (!isVod) return
-        player.seekTo((player.currentPosition + ms).coerceIn(0L, duration))
+        if (!player.isCurrentMediaItemSeekable) { poke(); return }
+        val d = player.duration
+        val target = player.currentPosition + ms
+        player.seekTo(if (d > 0) target.coerceIn(0L, d) else target.coerceAtLeast(0L))
         position = player.currentPosition
         poke()
     }
@@ -704,13 +706,13 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                             RoundButton("↩", stringResource(R.string.player_last)) { recall() }
                         }
                         RoundButton("⏮", stringResource(R.string.previous)) { prev() }
-                        if (isVod) RoundButton("⏪", stringResource(R.string.player_back10)) { seekBy(-10_000) }
+                        RoundButton("⏪", stringResource(R.string.player_back10)) { seekBy(-10_000) }
                         RoundButton(
                             if (playing) "⏸" else "▶",
                             if (playing) stringResource(R.string.pause) else stringResource(R.string.resume),
                             big = true,
                         ) { toggle() }
-                        if (isVod) RoundButton("⏩", stringResource(R.string.player_fwd10)) { seekBy(10_000) }
+                        RoundButton("⏩", stringResource(R.string.player_fwd10)) { seekBy(10_000) }
                         RoundButton("⏭", stringResource(R.string.next)) { next() }
                         ZoomButton(zoomLabels[aspect.coerceIn(0, 8)]) {
                             aspect = (aspect + 1) % 9

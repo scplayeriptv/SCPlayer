@@ -356,7 +356,11 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                     MpvPill("⏮") { prev() }
                     Box(Modifier.size(12.dp))
+                    MpvPill("⏪ 10") { engine.seekRel(-10.0); touch++ }
+                    Box(Modifier.size(12.dp))
                     MpvPill(if (paused) "▶" else "⏸") { engine.setBool("pause", !paused) }
+                    Box(Modifier.size(12.dp))
+                    MpvPill("10 ⏩") { engine.seekRel(10.0); touch++ }
                     Box(Modifier.size(12.dp))
                     MpvPill("⏭") { next() }
                 }
