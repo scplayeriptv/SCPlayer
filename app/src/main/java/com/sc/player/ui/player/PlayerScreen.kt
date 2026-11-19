@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -180,6 +181,14 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     val showStats = remember { prefs.showStats() }
     var aspect by remember { mutableIntStateOf(prefs.aspectMode()) }
     var showOptions by remember { mutableStateOf(false) }
+    var zoomToast by remember { mutableIntStateOf(0) }
+    val zoomLabels = listOf(
+        stringResource(R.string.aspect_fit), stringResource(R.string.aspect_stretch), stringResource(R.string.aspect_zoom),
+        "16:9", "4:3", "21:9", "125%", "150%", "175%",
+    )
+    LaunchedEffect(zoomToast) {
+        if (zoomToast > 0) { kotlinx.coroutines.delay(1300); zoomToast = 0 }
+    }
     var tracks by remember { mutableStateOf(androidx.media3.common.Tracks.EMPTY) }
     val subtitleView = remember {
         androidx.media3.ui.SubtitleView(ctx).apply {
@@ -700,8 +709,27 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                         ) { toggle() }
                         if (isVod) RoundButton("⏩", stringResource(R.string.player_fwd10)) { seekBy(10_000) }
                         RoundButton("⏭", stringResource(R.string.next)) { next() }
+                        ZoomButton(zoomLabels[aspect.coerceIn(0, 8)]) {
+                            aspect = (aspect + 1) % 9
+                            prefs.setAspectMode(aspect)
+                            zoomToast++
+                            poke()
+                        }
                     }
                 }
+            }
+        }
+
+        if (zoomToast > 0 && !inPip) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    "⛶  " + zoomLabels[aspect.coerceIn(0, 8)],
+                    color = Ink, fontSize = 20.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .background(Color(0xCC000000), RoundedCornerShape(24.dp))
+                        .border(1.dp, GlassBorder, RoundedCornerShape(24.dp))
+                        .padding(horizontal = 22.dp, vertical = 10.dp),
+                )
             }
         }
 
@@ -834,5 +862,27 @@ private fun RoundButton(glyph: String, description: String, big: Boolean = false
         contentAlignment = Alignment.Center,
     ) {
         Text(glyph, color = Ink, fontSize = if (big) 30.sp else 22.sp)
+    }
+}
+
+@Composable
+private fun ZoomButton(label: String, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(26.dp)
+    Row(
+        Modifier
+            .height(52.dp)
+            .onFocusChanged { focused = it.isFocused }
+            .clip(shape)
+            .background(Brush.linearGradient(listOf(Glass, Glass)))
+            .border(if (focused) 3.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
+            .semantics { contentDescription = label }
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("⛶", color = Cyan, fontSize = 22.sp)
+        Text(label, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Bold)
     }
 }
