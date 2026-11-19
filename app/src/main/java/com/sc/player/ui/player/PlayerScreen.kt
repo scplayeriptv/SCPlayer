@@ -678,6 +678,9 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     if (isVod) {
+                        androidx.compose.runtime.CompositionLocalProvider(
+                            androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr,
+                        ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Text(clock(position), color = TextMuted, fontSize = 12.sp)
                             Slider(
@@ -693,6 +696,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                                 modifier = Modifier.weight(1f),
                             )
                             Text(clock(duration), color = TextMuted, fontSize = 12.sp)
+                        }
                         }
                     }
                     androidx.compose.runtime.CompositionLocalProvider(

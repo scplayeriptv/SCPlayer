@@ -41,7 +41,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
-private const val SPLASH_MS = 2000L
+private const val SPLASH_MS = 1000L
 private const val WORD = "SC Player"
 
 /** مقدمة التشغيل: اللوجو يظهر بنبضة، وحروف "SC Player" بتتجمّع من أماكن متفرّقة، وبعدها لمعة بتعدّي على الكلمة. */
@@ -53,15 +53,15 @@ fun SplashScreen(onFinish: () -> Unit) {
     val tagline = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
-        launch { glow.animateTo(1f, tween(700, easing = FastOutSlowInEasing)) }
-        launch { logo.animateTo(1f, spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessLow)) }
+        launch { glow.animateTo(1f, tween(400, easing = FastOutSlowInEasing)) }
+        launch { logo.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMedium)) }
         launch {
-            delay(1000)
-            shine.animateTo(1f, tween(600, easing = LinearEasing))
+            delay(500)
+            shine.animateTo(1f, tween(400, easing = LinearEasing))
         }
         launch {
-            delay(900)
-            tagline.animateTo(1f, tween(500))
+            delay(450)
+            tagline.animateTo(1f, tween(300))
         }
         delay(SPLASH_MS)
         onFinish()
@@ -150,8 +150,8 @@ private fun Letter(ch: Char, index: Int, color: Color) {
     val rot = remember { (r.nextFloat() * 2 - 1) * 80f }
     val density = LocalDensity.current.density
     LaunchedEffect(Unit) {
-        delay(150L + index * 50L)
-        p.animateTo(1f, tween(500, easing = FastOutSlowInEasing))
+        delay(40L + index * 30L)
+        p.animateTo(1f, tween(350, easing = FastOutSlowInEasing))
     }
     Text(
         ch.toString(),
