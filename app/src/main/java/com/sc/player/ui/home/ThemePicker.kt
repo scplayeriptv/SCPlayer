@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
@@ -42,6 +43,12 @@ private fun AppTheme.nameRes() = when (this) {
     AppTheme.Rose -> R.string.theme_rose
     AppTheme.Amoled -> R.string.theme_amoled
     AppTheme.Crimson -> R.string.theme_crimson
+    AppTheme.Aurora -> R.string.theme_aurora
+    AppTheme.Starry -> R.string.theme_starry
+    AppTheme.Neon -> R.string.theme_neon
+    AppTheme.Gold -> R.string.theme_gold
+    AppTheme.Forest -> R.string.theme_forest
+    AppTheme.Dusk -> R.string.theme_dusk
 }
 
 /** صف اختيار الثيم: دواير ملوّنة، الاختيار بيتطبّق فورًا ويتحفظ. */
@@ -53,7 +60,10 @@ internal fun ThemePicker(prefs: UserPrefs) {
             Text(stringResource(R.string.set_theme), color = TextMain, fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
             Text(stringResource(current.nameRes()), color = TextMuted, fontSize = 14.sp)
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()).padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             AppTheme.values().forEach { t ->
                 var focused by remember { mutableStateOf(false) }
                 val sel = t == current

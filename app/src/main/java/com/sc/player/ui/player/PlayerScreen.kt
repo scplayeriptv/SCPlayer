@@ -693,6 +693,9 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                             Text(clock(duration), color = TextMuted, fontSize = 12.sp)
                         }
                     }
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr,
+                    ) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically,
@@ -715,6 +718,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                             zoomToast++
                             poke()
                         }
+                    }
                     }
                 }
             }
@@ -869,20 +873,35 @@ private fun RoundButton(glyph: String, description: String, big: Boolean = false
 private fun ZoomButton(label: String, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(26.dp)
+    val accent = Cyan
     Row(
         Modifier
             .height(52.dp)
             .onFocusChanged { focused = it.isFocused }
             .clip(shape)
-            .background(Brush.linearGradient(listOf(Glass, Glass)))
-            .border(if (focused) 3.dp else 1.dp, if (focused) Cyan else GlassBorder, shape)
+            .background(Brush.horizontalGradient(listOf(Color(0x40FFFFFF), Color(0x14FFFFFF))))
+            .border(
+                if (focused) 3.dp else 1.dp,
+                if (focused) Brush.linearGradient(listOf(accent, accent)) else Brush.linearGradient(listOf(accent.copy(alpha = 0.7f), Color(0x26FFFFFF))),
+                shape,
+            )
             .semantics { contentDescription = label }
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("⛶", color = Cyan, fontSize = 22.sp)
-        Text(label, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        androidx.compose.foundation.Canvas(Modifier.size(22.dp)) {
+            val w = size.width
+            val l = w * 0.36f
+            val st = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.6f * density, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            val m = 1.5f * density
+            fun corner(x: Float, y: Float, dx: Float, dy: Float) {
+                drawLine(accent, androidx.compose.ui.geometry.Offset(x, y), androidx.compose.ui.geometry.Offset(x + dx * l, y), st.width, st.cap)
+                drawLine(accent, androidx.compose.ui.geometry.Offset(x, y), androidx.compose.ui.geometry.Offset(x, y + dy * l), st.width, st.cap)
+            }
+            corner(m, m, 1f, 1f); corner(w - m, m, -1f, 1f); corner(m, w - m, 1f, -1f); corner(w - m, w - m, -1f, -1f)
+        }
+        Text(label, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }
 }

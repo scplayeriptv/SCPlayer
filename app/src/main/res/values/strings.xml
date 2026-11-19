@@ -337,4 +337,10 @@
     <string name="engine_exo">ExoPlayer</string>
     <string name="engine_mpv">mpv</string>
     <string name="mpv_unavailable">mpv isn\'t available on this device — using ExoPlayer</string>
+    <string name="theme_aurora">Aurora</string>
+    <string name="theme_starry">Starry night</string>
+    <string name="theme_neon">Neon grid</string>
+    <string name="theme_gold">Royal gold</string>
+    <string name="theme_forest">Forest</string>
+    <string name="theme_dusk">Dusk</string>
 </resources>
