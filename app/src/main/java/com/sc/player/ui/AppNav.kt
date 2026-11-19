@@ -16,6 +16,7 @@ import com.sc.player.ui.guide.GuideScreen
 import com.sc.player.ui.home.HomeScreen
 import com.sc.player.ui.multi.MultiViewScreen
 import com.sc.player.ui.onboarding.OnboardingScreen
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -48,10 +49,20 @@ fun AppNav() {
     NavHost(
         nav,
         startDestination = "splash",
-        enterTransition = { fadeIn(tween(260)) },
-        exitTransition = { fadeOut(tween(180)) },
-        popEnterTransition = { fadeIn(tween(260)) },
-        popExitTransition = { fadeOut(tween(180)) },
+        enterTransition = {
+            if (initialState.destination.route == "splash") fadeIn(tween(400))
+            else slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(320), initialOffset = { it / 7 }) + fadeIn(tween(320))
+        },
+        exitTransition = {
+            if (initialState.destination.route == "splash") fadeOut(tween(250))
+            else slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(260), targetOffset = { it / 12 }) + fadeOut(tween(220))
+        },
+        popEnterTransition = {
+            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(320), initialOffset = { it / 12 }) + fadeIn(tween(320))
+        },
+        popExitTransition = {
+            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(260), targetOffset = { it / 7 }) + fadeOut(tween(220))
+        },
     ) {
         composable("splash") {
             SplashScreen(onFinish = {

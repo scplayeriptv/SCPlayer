@@ -85,6 +85,7 @@ internal fun PosterCard(
     val ctx = LocalContext.current
     val progress = remember(ch.url) { PositionStore(ctx).progress(ch.url) }
     var focused by remember { mutableStateOf(false) }
+    val focusScale by androidx.compose.animation.core.animateFloatAsState(if (focused) 1.06f else 1f, androidx.compose.animation.core.tween(160), label = "posterScale")
     val dense = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp < 480
     val shape = RoundedCornerShape(if (dense) 10.dp else 18.dp)
     Box(
@@ -93,7 +94,7 @@ internal fun PosterCard(
                 focused = it.isFocused
                 if (it.isFocused) onFocus()
             }
-            .graphicsLayer { scaleX = if (focused) 1.06f else 1f; scaleY = if (focused) 1.06f else 1f }
+            .graphicsLayer { scaleX = focusScale; scaleY = focusScale }
             .shadow(if (focused) 18.dp else 4.dp, shape, ambientColor = Cyan, spotColor = Cyan)
             .fillMaxWidth()
             .aspectRatio(2f / 3f)
