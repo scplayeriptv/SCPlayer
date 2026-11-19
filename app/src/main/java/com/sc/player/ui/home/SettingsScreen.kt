@@ -330,89 +330,97 @@ fun SettingsScreen(
                     }
                 }
             }
-            Section.Cleanup -> SettingsCard {
-                ToggleRow(stringResource(R.string.set_dedupe), stringResource(R.string.set_dedupe_sub), dedupe, Icons.Filled.ContentCopy, ac) {
-                    dedupe = it
-                    prefs.setDedupe(it)
-                    onCleanupChanged()
-                }
-                RowDivider()
-                SettingRow(
-                    stringResource(R.string.set_hide_groups),
-                    stringResource(R.string.set_hide_groups_sub),
-                    stringResource(R.string.set_hidden_count, hiddenSet.size),
-                    lead = Icons.Filled.VisibilityOff,
-                    accent = ac,
-                ) { showHide = true }
-                RowDivider()
-                SettingRow(
-                    stringResource(R.string.set_check),
-                    stringResource(R.string.set_check_sub),
-                    stringResource(R.string.set_dead_count, deadCount),
-                    lead = Icons.Filled.Build,
-                    accent = ac,
-                ) { showCheck = true }
-                RowDivider()
-                ToggleRow(stringResource(R.string.set_hide_dead), stringResource(R.string.set_hide_dead_sub), hideDead, Icons.Filled.Block, ac) {
-                    hideDead = it
-                    prefs.setHideDead(it)
-                    onCleanupChanged()
-                }
-            }
-            Section.Guide -> SettingsCard {
-                SettingRow(
-                    stringResource(R.string.epg_title),
-                    null,
-                    value = if (epgUrl.isBlank()) stringResource(R.string.epg_auto) else epgUrl,
-                    lead = Icons.Filled.DateRange,
-                    accent = ac,
-                ) { showEpg = true }
-            }
-            Section.Playlists -> SettingsCard {
-                SettingRow(
-                    stringResource(R.string.nav_playlist),
-                    null,
-                    value = stringResource(R.string.set_playlists_sub),
-                    lead = Icons.Filled.VideoLibrary,
-                    accent = ac,
-                    onClick = onPlaylists,
-                )
-            }
-            Section.Profiles -> SettingsCard {
-                val all = profilesTick.let { prefs.profiles() }
-                val activeId = profilesTick.let { prefs.activeProfile().id }
-                all.forEach { p ->
+            Section.Content -> {
+                SettingsCard {
                     SettingRow(
-                        "${p.avatarEmoji()}  ${p.displayName()}",
-                        if (p.kids) stringResource(R.string.profile_kids_badge) else null,
-                        value = if (p.id == activeId) stringResource(R.string.profile_active) else null,
-                        lead = Icons.Filled.Person,
+                        stringResource(R.string.nav_playlist),
+                        null,
+                        value = stringResource(R.string.set_playlists_sub),
+                        lead = Icons.Filled.VideoLibrary,
                         accent = ac,
-                    ) { editingProfile = p }
-                    RowDivider()
+                        onClick = onPlaylists,
+                    )
                 }
-                if (all.size < com.sc.player.data.UserPrefs.MAX_PROFILES) {
-                    SettingRow(stringResource(R.string.profile_add), null, value = null, lead = Icons.Filled.PersonAdd, accent = ac) { addingProfile = true }
-                } else {
-                    Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(12.dp))
+                SettingsCard {
+                    SettingRow(
+                        stringResource(R.string.epg_title),
+                        null,
+                        value = if (epgUrl.isBlank()) stringResource(R.string.epg_auto) else epgUrl,
+                        lead = Icons.Filled.DateRange,
+                        accent = ac,
+                    ) { showEpg = true }
+                }
+                Spacer(Modifier.height(12.dp))
+                GroupLabel(stringResource(R.string.set_sec_cleanup))
+                SettingsCard {
+                    ToggleRow(stringResource(R.string.set_dedupe), stringResource(R.string.set_dedupe_sub), dedupe, Icons.Filled.ContentCopy, ac) {
+                        dedupe = it
+                        prefs.setDedupe(it)
+                        onCleanupChanged()
+                    }
+                    RowDivider()
+                    SettingRow(
+                        stringResource(R.string.set_hide_groups),
+                        stringResource(R.string.set_hide_groups_sub),
+                        stringResource(R.string.set_hidden_count, hiddenSet.size),
+                        lead = Icons.Filled.VisibilityOff,
+                        accent = ac,
+                    ) { showHide = true }
+                    RowDivider()
+                    SettingRow(
+                        stringResource(R.string.set_check),
+                        stringResource(R.string.set_check_sub),
+                        stringResource(R.string.set_dead_count, deadCount),
+                        lead = Icons.Filled.Build,
+                        accent = ac,
+                    ) { showCheck = true }
+                    RowDivider()
+                    ToggleRow(stringResource(R.string.set_hide_dead), stringResource(R.string.set_hide_dead_sub), hideDead, Icons.Filled.Block, ac) {
+                        hideDead = it
+                        prefs.setHideDead(it)
+                        onCleanupChanged()
+                    }
                 }
             }
-            Section.Parental -> SettingsCard {
-                SettingRow(
-                    stringResource(R.string.parental_title),
-                    null,
-                    // parentalTick بس عشان السطر يتحدّث بعد أي تغيير
-                    value = parentalTick.let {
-                        val n = prefs.lockedGroups().size
-                        when {
-                            !prefs.hasPin() -> stringResource(R.string.parental_off)
-                            ParentalSession.unlocked -> stringResource(R.string.parental_unlocked)
-                            else -> stringResource(R.string.parental_on, n)
-                        }
-                    },
-                    lead = Icons.Filled.Lock,
-                    accent = ac,
-                ) { showParental = true }
+            Section.Profiles -> {
+                SettingsCard {
+                    val all = profilesTick.let { prefs.profiles() }
+                    val activeId = profilesTick.let { prefs.activeProfile().id }
+                    all.forEach { p ->
+                        SettingRow(
+                            "${p.avatarEmoji()}  ${p.displayName()}",
+                            if (p.kids) stringResource(R.string.profile_kids_badge) else null,
+                            value = if (p.id == activeId) stringResource(R.string.profile_active) else null,
+                            lead = Icons.Filled.Person,
+                            accent = ac,
+                        ) { editingProfile = p }
+                        RowDivider()
+                    }
+                    if (all.size < com.sc.player.data.UserPrefs.MAX_PROFILES) {
+                        SettingRow(stringResource(R.string.profile_add), null, value = null, lead = Icons.Filled.PersonAdd, accent = ac) { addingProfile = true }
+                    } else {
+                        Spacer(Modifier.height(2.dp))
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                SettingsCard {
+                    SettingRow(
+                        stringResource(R.string.parental_title),
+                        null,
+                        // parentalTick بس عشان السطر يتحدّث بعد أي تغيير
+                        value = parentalTick.let {
+                            val n = prefs.lockedGroups().size
+                            when {
+                                !prefs.hasPin() -> stringResource(R.string.parental_off)
+                                ParentalSession.unlocked -> stringResource(R.string.parental_unlocked)
+                                else -> stringResource(R.string.parental_on, n)
+                            }
+                        },
+                        lead = Icons.Filled.Lock,
+                        accent = ac,
+                    ) { showParental = true }
+                }
             }
             Section.Account -> SettingsCard {
                 val acc = account
@@ -450,15 +458,6 @@ fun SettingsScreen(
                         )
                     }
                 }
-            }
-            Section.Tools -> SettingsCard {
-                SettingRow(stringResource(R.string.nav_radio), null, null, lead = Icons.Filled.Radio, accent = ac) { onTool("radio") }
-                RowDivider()
-                SettingRow(stringResource(R.string.guide), null, null, lead = Icons.Filled.DateRange, accent = ac) { onTool("guide") }
-                RowDivider()
-                SettingRow(stringResource(R.string.multi_view), null, null, lead = Icons.Filled.GridView, accent = ac) { onTool("multi") }
-                RowDivider()
-                SettingRow(stringResource(R.string.nav_search), null, null, lead = Icons.Filled.Search, accent = ac) { onTool("search") }
             }
             Section.Data -> {
                 GroupLabel(stringResource(R.string.set_grp_maintenance))
@@ -568,103 +567,24 @@ fun SettingsScreen(
             TileData(Icons.Filled.Palette, stringResource(Section.General.titleRes), appLanguages.firstOrNull { it.code == savedLang }?.nativeName ?: stringResource(R.string.set_language_system), null) {
                 sectionName = Section.General.name; showSection = true
             },
-            TileData(Icons.Filled.VideoLibrary, stringResource(R.string.nav_playlist), null, null) { onPlaylists() },
-            TileData(Icons.Filled.DateRange, stringResource(R.string.epg_title), if (epgUrl.isBlank()) stringResource(R.string.epg_auto) else epgUrl, null) { showEpg = true },
-            TileData(Icons.Filled.Person, stringResource(R.string.set_sec_profiles), null, null) { sectionName = Section.Profiles.name; showSection = true },
-            TileData(Icons.Filled.Lock, stringResource(R.string.parental_title), parentalValue, null) { showParental = true },
-            TileData(Icons.Filled.AccountCircle, stringResource(R.string.set_sec_account), null, null) { sectionName = Section.Account.name; showSection = true },
-            TileData(Icons.Filled.PlayCircle, stringResource(R.string.set_auto_play), null, autoPlay) { autoPlay = !autoPlay; prefs.setAutoPlay(autoPlay) },
-            TileData(Icons.Filled.Headphones, stringResource(R.string.set_bg_play), null, bg) { bg = !bg; prefs.setBackgroundPlay(bg) },
-            TileData(Icons.Filled.PictureInPicture, stringResource(R.string.set_pip), null, pip) { pip = !pip; prefs.setPip(pip) },
-            TileData(Icons.Filled.Memory, stringResource(R.string.set_hw), null, hw) { hw = !hw; prefs.setHardwareDecoding(hw) },
-            TileData(Icons.Filled.Sync, stringResource(R.string.set_reconnect), null, reconnect) { reconnect = !reconnect; prefs.setAutoReconnect(reconnect) },
-            TileData(
-                Icons.Filled.Speed,
-                stringResource(R.string.set_buffer),
-                stringResource(
-                    when (bufferMode) {
-                        0 -> R.string.buffer_low
-                        2 -> R.string.buffer_high
-                        else -> R.string.buffer_normal
-                    },
-                ),
-                null,
-            ) { bufferMode = (bufferMode + 1) % 3; prefs.setBufferMode(bufferMode) },
-            TileData(
-                Icons.Filled.SkipNext,
-                stringResource(R.string.set_intro),
-                if (introSkip == 0) stringResource(R.string.set_intro_off) else stringResource(R.string.set_intro_sec, introSkip),
-                null,
-            ) {
-                val opts = listOf(0, 60, 85, 90, 120)
-                introSkip = opts[(opts.indexOf(introSkip).let { if (it < 0) 0 else it } + 1) % opts.size]
-                prefs.setIntroSkip(introSkip)
+            TileData(Icons.Filled.PlayArrow, stringResource(Section.Playback.titleRes), stringResource(if (engine == 1) R.string.engine_mpv else R.string.engine_exo), null) {
+                sectionName = Section.Playback.name; showSection = true
             },
-            TileData(Icons.Filled.PlayCircle, stringResource(R.string.set_player_engine), stringResource(if (engine == 1) R.string.engine_mpv else R.string.engine_exo), null) {
-                engine = if (engine == 1) 0 else 1
-                prefs.setPlayerEngine(engine)
+            TileData(Icons.Filled.VideoLibrary, stringResource(Section.Content.titleRes), stringResource(R.string.set_dead_count, deadCount), null) {
+                sectionName = Section.Content.name; showSection = true
             },
-            TileData(Icons.Filled.Equalizer, stringResource(R.string.set_stats), null, stats) { stats = !stats; prefs.setShowStats(stats) },
-            TileData(Icons.Filled.ContentCopy, stringResource(R.string.set_dedupe), null, dedupe) { dedupe = !dedupe; prefs.setDedupe(dedupe); onCleanupChanged() },
-            TileData(Icons.Filled.VisibilityOff, stringResource(R.string.set_hide_groups), stringResource(R.string.set_hidden_count, hiddenSet.size), null) { showHide = true },
-            TileData(Icons.Filled.Build, stringResource(R.string.set_check), stringResource(R.string.set_dead_count, deadCount), null) { showCheck = true },
-            TileData(Icons.Filled.Block, stringResource(R.string.set_hide_dead), null, hideDead) { hideDead = !hideDead; prefs.setHideDead(hideDead); onCleanupChanged() },
-            TileData(Icons.Filled.Radio, stringResource(R.string.nav_radio), null, null) { onTool("radio") },
-            TileData(Icons.Filled.DateRange, stringResource(R.string.guide), null, null) { onTool("guide") },
-            TileData(Icons.Filled.GridView, stringResource(R.string.multi_view), null, null) { onTool("multi") },
-            TileData(Icons.Filled.Search, stringResource(R.string.nav_search), null, null) { onTool("search") },
-            TileData(Icons.Filled.Storage, stringResource(R.string.set_clear_cache), if (cacheLoaded) mb(cache) else stringResource(R.string.calculating), null) {
-                scope.launch {
-                    withContext(Dispatchers.IO) {
-                        ctx.imageLoader.diskCache?.clear()
-                        File(ctx.cacheDir, "updates").deleteRecursively()
-                    }
-                    ctx.imageLoader.memoryCache?.clear()
-                    cache = withContext(Dispatchers.IO) { cacheBytes(ctx) }
-                }
+            TileData(Icons.Filled.Person, stringResource(Section.Profiles.titleRes), parentalValue, null) {
+                sectionName = Section.Profiles.name; showSection = true
             },
-            TileData(Icons.Filled.Backup, stringResource(R.string.set_backup), null, null) { backupLauncher.launch("scplayer-backup.json") },
-            TileData(Icons.Filled.Restore, stringResource(R.string.set_backup_restore), null, null) {
-                restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+            TileData(Icons.Filled.AccountCircle, stringResource(Section.Account.titleRes), null, null) {
+                sectionName = Section.Account.name; showSection = true
             },
-            TileData(Icons.Filled.DeleteForever, stringResource(R.string.set_reset), if (resetDone) stringResource(R.string.done) else stringResource(R.string.set_reset_sub), null) {
-                com.sc.player.data.PositionStore(ctx).clear()
-                onResetUserData()
-                resetDone = true
+            TileData(Icons.Filled.Storage, stringResource(Section.Data.titleRes), if (cacheLoaded) mb(cache) else stringResource(R.string.calculating), null) {
+                sectionName = Section.Data.name; showSection = true
             },
-            TileData(Icons.Filled.RestartAlt, stringResource(R.string.set_restore), null, null) {
-                prefs.restoreDefaults()
-                autoPlay = prefs.autoPlay()
-                hw = prefs.hardwareDecoding()
-                bg = prefs.backgroundPlay()
-                pip = prefs.pip()
-                reconnect = prefs.autoReconnect()
-                bufferMode = prefs.bufferMode()
-                stats = prefs.showStats()
-                introSkip = prefs.introSkip()
-                engine = prefs.playerEngine()
+            TileData(Icons.Filled.Info, stringResource(R.string.nav_about), installedTxt, null) {
+                sectionName = Section.About.name; showSection = true
             },
-            TileData(
-                Icons.Filled.Refresh,
-                stringResource(R.string.set_check_updates),
-                if (checking) stringResource(R.string.checking) else updateStatus ?: installedTxt,
-                null,
-            ) {
-                if (!checking) {
-                    checking = true
-                    scope.launch {
-                        val info = updater.check()
-                        checking = false
-                        if (info == null) {
-                            updateStatus = ctx.getString(R.string.up_to_date, updater.currentVersionCode().toInt())
-                        } else {
-                            updateStatus = ctx.getString(R.string.update_available_build, info.versionCode.toInt())
-                            update = info
-                        }
-                    }
-                }
-            },
-            TileData(Icons.Filled.Info, stringResource(R.string.nav_about), installedTxt, null) { onAbout() },
         )
         Column(Modifier.fillMaxSize().padding(horizontal = 24.dp).padding(top = if (compactH) 8.dp else 20.dp)) {
             Text(
@@ -849,16 +769,12 @@ fun SettingsScreen(
     }
 }
 
-private enum class Section(val titleRes: Int, val icon: ImageVector, val groupStart: Boolean = false) {
-    General(R.string.set_sec_general, Icons.Filled.Palette, true),
+private enum class Section(val titleRes: Int, val icon: ImageVector) {
+    General(R.string.set_sec_general, Icons.Filled.Palette),
     Playback(R.string.set_sec_playback, Icons.Filled.PlayArrow),
-    Cleanup(R.string.set_sec_cleanup, Icons.Filled.Build, true),
-    Guide(R.string.set_sec_guide, Icons.Filled.DateRange),
-    Playlists(R.string.nav_playlist, Icons.Filled.VideoLibrary),
-    Profiles(R.string.set_sec_profiles, Icons.Filled.Person, true),
-    Parental(R.string.parental_title, Icons.Filled.Lock),
+    Content(R.string.set_sec_content, Icons.Filled.VideoLibrary),
+    Profiles(R.string.set_sec_profiles, Icons.Filled.Person),
     Account(R.string.set_sec_account, Icons.Filled.AccountCircle),
-    Tools(R.string.set_sec_tools, Icons.Filled.Apps, true),
     Data(R.string.set_sec_data, Icons.Filled.Storage),
     About(R.string.nav_about, Icons.Filled.Info),
 }
