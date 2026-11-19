@@ -138,8 +138,28 @@ fun HomeScreen(
                 onReload = {
                     if (!reloading) {
                         reloading = true
+                        ReloadProgress.stage = 0
+                        ReloadProgress.counts = listOf(0, 0, 0)
                         scope.launch {
                             val r = repo.refresh(playlistId)
+                            if (r.isSuccess) {
+                                val list = repo.channels(playlistId)
+                                val byKind = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                                    list.groupingBy { it.kind() }.eachCount()
+                                }
+                                ReloadProgress.counts = listOf(
+                                    byKind[Kind.Live] ?: 0, byKind[Kind.Movies] ?: 0, byKind[Kind.Series] ?: 0,
+                                )
+                                for (st in 1..3) {
+                                    ReloadProgress.stage = st
+                                    kotlinx.coroutines.delay(550)
+                                }
+                                ReloadProgress.stage = 4
+                                val pl = repo.playlists().firstOrNull { it.id == playlistId }
+                                if (pl != null && runCatching { epg.load(pl, force = true) }.getOrDefault(false)) epgTick++
+                                ReloadProgress.stage = 5
+                                kotlinx.coroutines.delay(600)
+                            }
                             reloadKey++
                             reloading = false
                             val msg = r.fold(

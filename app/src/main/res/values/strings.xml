@@ -343,4 +343,6 @@
     <string name="theme_gold">Royal gold</string>
     <string name="theme_forest">Forest</string>
     <string name="theme_dusk">Dusk</string>
+    <string name="reload_stage_download">Downloading playlist...</string>
+    <string name="reload_guide">TV Guide</string>
 </resources>
