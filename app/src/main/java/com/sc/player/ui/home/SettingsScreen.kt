@@ -194,6 +194,7 @@ fun SettingsScreen(
     var showParental by remember { mutableStateOf(false) }
     var parentalTick by remember { mutableStateOf(0) }
     var showEpg by remember { mutableStateOf(false) }
+    var showDiag by remember { mutableStateOf(false) }
     var dedupe by remember { mutableStateOf(prefs.dedupe()) }
     var hiddenSet by remember { mutableStateOf(prefs.hiddenGroups()) }
     var showHide by remember { mutableStateOf(false) }
@@ -350,6 +351,10 @@ fun SettingsScreen(
                         lead = Icons.Filled.DateRange,
                         accent = ac,
                     ) { showEpg = true }
+                }
+                Spacer(Modifier.height(12.dp))
+                SettingsCard {
+                    SettingRow(stringResource(R.string.diag_title), stringResource(R.string.diag_sub), value = null, lead = Icons.Filled.Build, accent = ac) { showDiag = true }
                 }
                 Spacer(Modifier.height(12.dp))
                 GroupLabel(stringResource(R.string.set_sec_cleanup))
@@ -669,6 +674,8 @@ fun SettingsScreen(
             onClose = { showParental = false },
         )
     }
+
+    if (showDiag) DiagnosticsDialog(playlistId, onClose = { showDiag = false })
 
     if (showEpg) {
         var text by remember { mutableStateOf(epgUrl) }
