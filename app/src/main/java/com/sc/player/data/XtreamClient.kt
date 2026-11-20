@@ -24,6 +24,18 @@ internal fun parseSeriesRef(url: String): SeriesRef? {
     return SeriesRef(m.groupValues[1], dec(m.groupValues[2]), dec(m.groupValues[3]), m.groupValues[4])
 }
 
+private val liveRefRx = Regex("^(https?://[^/]+)/(?:live/)?([^/]+)/([^/]+)/(\\d+)(?:\\.\\w+)?$")
+
+/** رابط قناة لايف Xtream (من غير مسارات movie/series) ← بيانات الحساب والـ id، أو null. */
+internal fun parseLiveRef(url: String): SeriesRef? {
+    val m = liveRefRx.find(url) ?: return null
+    fun dec(s: String) = runCatching { URLDecoder.decode(s, "UTF-8") }.getOrDefault(s)
+    return SeriesRef(m.groupValues[1], dec(m.groupValues[2]), dec(m.groupValues[3]), m.groupValues[4])
+}
+
+/** برنامج فات من دليل Xtream؛ url != null لو السيرفر مسجّله (قابل للإعادة). */
+class CatchUpItem(val title: String, val start: Long, val stop: Long, val url: String?)
+
 class Episode(val season: Int, val number: Int, val title: String, val url: String, val image: String?, val duration: String?)
 
 /** بيانات العرض لفيلم أو مسلسل (كلها اختيارية). */
@@ -171,6 +183,34 @@ class XtreamClient(@Suppress("UNUSED_PARAMETER") context: Context) {
             val ref = parseVodRef(entry.url) ?: throw IllegalArgumentException("not an xtream movie")
             val json = api(ref.base, ref.user, ref.pass, "&action=get_vod_info&vod_id=${ref.id}")
             parseMediaInfo(JSONObject(json).optJSONObject("info"))
+        }
+    }
+
+    /** برامج القناة اللي فاتت (آخر 7 أيام) مع رابط الإعادة (timeshift) لو السيرفر بيدعمه. */
+    suspend fun catchUp(ch: Channel): Result<List<CatchUpItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val ref = parseLiveRef(ch.url) ?: throw NotXtreamPanelException()
+            val json = JSONObject(api(ref.base, ref.user, ref.pass, "&action=get_simple_data_table&stream_id=${ref.id}"))
+            val arr = json.optJSONArray("epg_listings") ?: return@runCatching emptyList()
+            val now = System.currentTimeMillis()
+            fun b64(v: String): String = runCatching {
+                String(android.util.Base64.decode(v, android.util.Base64.DEFAULT), Charsets.UTF_8)
+            }.getOrDefault(v).ifBlank { v }
+            val out = ArrayList<CatchUpItem>()
+            for (i in 0 until arr.length()) {
+                val o = arr.optJSONObject(i) ?: continue
+                val start = (o.str("start_timestamp").toLongOrNull() ?: continue) * 1000
+                val stop = (o.str("stop_timestamp").toLongOrNull() ?: continue) * 1000
+                if (stop > now || start < now - 7L * 86_400_000L) continue
+                val startStr = o.str("start")
+                val url = if (o.str("has_archive") == "1" && startStr.length >= 16) {
+                    val minutes = ((stop - start) / 60_000L).toInt().coerceAtLeast(1)
+                    val stamp = startStr.substring(0, 10) + ":" + startStr.substring(11, 13) + "-" + startStr.substring(14, 16)
+                    "${ref.base}/timeshift/${Uri.encode(ref.user)}/${Uri.encode(ref.pass)}/$minutes/$stamp/${ref.id}.ts"
+                } else null
+                out += CatchUpItem(b64(o.str("title")), start, stop, url)
+            }
+            out.sortedByDescending { it.start }
         }
     }
 

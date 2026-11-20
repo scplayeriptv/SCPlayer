@@ -391,4 +391,8 @@
     <string name="diag_v_account">The server works but there is a problem with your subscription.</string>
     <string name="diag_v_stream">The server works but the stream is slow or refused. Try again later or check your line speed.</string>
     <string name="diag_v_conn">The server works but all your connections are in use. Close the stream on other devices.</string>
+    <string name="catchup_title">Catch-up</string>
+    <string name="catchup_none">This server does not provide replay for this channel.</string>
+    <string name="catchup_error">Could not load the programme list.</string>
+    <string name="catchup_live">Back to live</string>
 </resources>

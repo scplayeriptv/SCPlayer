@@ -141,6 +141,8 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     var lastIndex by remember { mutableIntStateOf(-1) }
     var attempt by remember { mutableIntStateOf(0) }
     var retryKey by remember { mutableIntStateOf(0) }
+    var replay by remember { mutableStateOf<com.sc.player.data.CatchUpItem?>(null) }
+    var showCatchUp by remember { mutableStateOf(false) }
     var stats by remember { mutableStateOf("") }
 
     val player = remember {
@@ -393,6 +395,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     }
 
     LaunchedEffect(index) {
+        replay = null
         attempt = 0
         saveNow() // يحفظ موضع العنصر السابق قبل ما نبدّل
         triedHls = false
@@ -452,6 +455,31 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     }
     fun next() = switchTo((index + 1) % queue.size)
     fun prev() = switchTo((index - 1 + queue.size) % queue.size)
+    fun playReplay(it: com.sc.player.data.CatchUpItem) {
+        val u = it.url ?: return
+        replay = it
+        showCatchUp = false
+        attempt = 0
+        error = null
+        buffering = true
+        position = 0L
+        duration = 0L
+        isVod = false
+        player.setMediaItem(MediaItem.Builder().setUri(u).setMediaId(u).build())
+        player.prepare()
+        player.playWhenReady = true
+    }
+
+    fun backToLive() {
+        replay = null
+        attempt = 0
+        error = null
+        buffering = true
+        player.setMediaItem(MediaItem.Builder().setUri(channel.url).setMediaId(channel.url).build())
+        player.prepare()
+        player.playWhenReady = true
+    }
+
     fun recall() { if (lastIndex in queue.indices) switchTo(lastIndex) }
     fun commitNumber() {
         val n = numberBuffer.toIntOrNull()
@@ -642,7 +670,8 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        Text(channel.group, color = TextMuted, fontSize = 12.sp, maxLines = 1)
+                        if (replay != null) Text("⏪ " + replay!!.title, color = Cyan, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        else Text(channel.group, color = TextMuted, fontSize = 12.sp, maxLines = 1)
                         val nowMs = remember(index) { System.currentTimeMillis() }
                         val onNow = remember(index) { EpgStore.now(channel, nowMs) }
                         val onNext = remember(index) { EpgStore.next(channel, nowMs) }
@@ -659,6 +688,10 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     }
                     if (sleepLeft > 0) {
                         Text("⏲ ${sleepLeft}m", color = TextMain, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+                    if (channel.kind() == com.sc.player.data.Kind.Live && com.sc.player.data.parseLiveRef(channel.url) != null) {
+                        if (replay != null) RoundButton("🔴", stringResource(R.string.catchup_live)) { backToLive(); poke() }
+                        RoundButton("⏪", stringResource(R.string.catchup_title)) { showCatchUp = true; poke() }
                     }
                     RoundButton("⏲", stringResource(R.string.sleep_title)) { showSleep = true; poke() }
                     if (cast.supported) {
@@ -773,6 +806,10 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                 modifier = Modifier.align(Alignment.CenterStart),
             )
         }
+    }
+
+    if (showCatchUp && !inPip) {
+        CatchUpDialog(channel, onPlay = { playReplay(it) }, onClose = { showCatchUp = false })
     }
 
     if (showSleep && !inPip) {

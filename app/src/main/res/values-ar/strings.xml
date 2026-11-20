@@ -380,4 +380,8 @@
     <string name="diag_v_account">السيرفر شغال بس فيه مشكلة في الاشتراك.</string>
     <string name="diag_v_stream">السيرفر شغال بس البث بطيء أو مرفوض. جرّب بعدين أو اتأكد من سرعة الخط.</string>
     <string name="diag_v_conn">السيرفر شغال بس كل اتصالاتك مستخدمة. اقفل البث على الأجهزة التانية.</string>
+    <string name="catchup_title">برامج فاتت</string>
+    <string name="catchup_none">السيرفر مش بيوفّر إعادة للقناة دي.</string>
+    <string name="catchup_error">مقدرش يحمّل قائمة البرامج.</string>
+    <string name="catchup_live">رجوع للبث المباشر</string>
 </resources>
