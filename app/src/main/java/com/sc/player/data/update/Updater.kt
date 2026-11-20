@@ -8,12 +8,6 @@ import android.provider.Settings
 import androidx.core.content.FileProvider
 import androidx.core.content.pm.PackageInfoCompat
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.ensureActive
-import java.io.RandomAccessFile
-import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -116,7 +110,7 @@ class Updater(private val context: Context) {
         if (info.patchUrl != null && info.sha256 != null) {
             val patch = File(dir, "update.patch")
             try {
-                fetchFast(info.patchUrl, patch, info.patchSize, onProgress)
+                fetch(info.patchUrl, patch, info.patchSize, onProgress)
                 val base = baseApk() ?: throw IOException("no base apk")
                 val built = BsPatch.apply(base.readBytes(), patch.readBytes())
                 if (sha256(built) != info.sha256) throw IOException("hash mismatch")
@@ -129,78 +123,8 @@ class Updater(private val context: Context) {
                 out.delete()
             }
         }
-        fetchFast(info.url, out, info.size, onProgress)
+        fetch(info.url, out, info.size, onProgress)
         out
-    }
-
-    /** تنزيل بـ 4 اتصالات متوازية (Range) — أسرع بكتير من اتصال واحد على GitHub؛ ولو مش مدعوم يرجع للتنزيل العادي. */
-    private suspend fun fetchFast(url: String, out: File, fallbackTotal: Long, onProgress: (Float, Long, Long) -> Unit) {
-        try {
-            var total = 0L
-            var finalUrl = url
-            val probe = Request.Builder().url(url).header("User-Agent", "SCPlayer").header("Range", "bytes=0-0").build()
-            client.newCall(probe).execute().use { r ->
-                if (r.code == 206) {
-                    total = r.header("Content-Range")?.substringAfter('/')?.toLongOrNull() ?: 0L
-                    finalUrl = r.request.url.toString()
-                }
-            }
-            if (total < 4L * 1024 * 1024) { fetch(url, out, fallbackTotal, onProgress); return }
-            RandomAccessFile(out, "rw").use { it.setLength(total) }
-            val parts = 4
-            val chunk = (total + parts - 1) / parts
-            val done = AtomicLong(0)
-            val lastReport = AtomicLong(0)
-            coroutineScope {
-                (0 until parts).map { i ->
-                    async(Dispatchers.IO) {
-                        val start = i * chunk
-                        val end = minOf(total - 1, start + chunk - 1)
-                        if (start > end) return@async
-                        var attempt = 0
-                        var pos = start
-                        while (pos <= end) {
-                            try {
-                                val req = Request.Builder().url(finalUrl).header("User-Agent", "SCPlayer")
-                                    .header("Range", "bytes=$pos-$end").build()
-                                client.newCall(req).execute().use { resp ->
-                                    if (resp.code != 206) throw IOException("HTTP ${resp.code}")
-                                    val body = resp.body ?: throw IOException("empty body")
-                                    RandomAccessFile(out, "rw").use { raf ->
-                                        raf.seek(pos)
-                                        val buf = ByteArray(128 * 1024)
-                                        body.byteStream().use { input ->
-                                            while (true) {
-                                                val n = input.read(buf)
-                                                if (n < 0) break
-                                                ensureActive()
-                                                raf.write(buf, 0, n)
-                                                pos += n
-                                                val d = done.addAndGet(n.toLong())
-                                                val now = System.currentTimeMillis()
-                                                val last = lastReport.get()
-                                                if (now - last > 120 && lastReport.compareAndSet(last, now)) {
-                                                    onProgress((d.toFloat() / total).coerceIn(0f, 1f), d, total)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            } catch (e: IOException) {
-                                if (++attempt > 3) throw e
-                            }
-                        }
-                    }
-                }.awaitAll()
-            }
-            if (done.get() < total) throw IOException("incomplete")
-            onProgress(1f, total, total)
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            out.delete()
-            fetch(url, out, fallbackTotal, onProgress)
-        }
     }
 
     private fun fetch(url: String, out: File, fallbackTotal: Long, onProgress: (Float, Long, Long) -> Unit) {
