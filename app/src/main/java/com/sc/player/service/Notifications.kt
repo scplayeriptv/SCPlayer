@@ -10,6 +10,7 @@ object Notifications {
     const val CH_UPDATE = "update"
     const val CH_UPDATE_READY = "update_ready"
     const val CH_REMINDER = "reminders"
+    const val CH_DOWNLOAD = "downloads"
 
     fun ensureChannels(ctx: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -17,6 +18,7 @@ object Notifications {
         nm.createNotificationChannel(NotificationChannel(CH_PLAYBACK, "Playback", NotificationManager.IMPORTANCE_LOW))
         nm.createNotificationChannel(NotificationChannel(CH_UPDATE, "Update download", NotificationManager.IMPORTANCE_LOW))
         nm.createNotificationChannel(NotificationChannel(CH_UPDATE_READY, "Update ready", NotificationManager.IMPORTANCE_DEFAULT))
+        nm.createNotificationChannel(NotificationChannel(CH_DOWNLOAD, "Downloads", NotificationManager.IMPORTANCE_LOW))
         nm.createNotificationChannel(NotificationChannel(CH_REMINDER, "Reminders", NotificationManager.IMPORTANCE_HIGH))
     }
 }

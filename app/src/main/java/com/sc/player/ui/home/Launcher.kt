@@ -40,6 +40,7 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Radio
@@ -119,6 +120,7 @@ internal fun Launcher(
     onOpen: (Dest) -> Unit,
     onGuide: () -> Unit,
     onMulti: () -> Unit,
+    onDownloads: () -> Unit = {},
     onReload: () -> Unit,
     onExit: () -> Unit,
     onPlayRecent: (Int) -> Unit,
@@ -137,6 +139,7 @@ internal fun Launcher(
     val playlists = stringResource(R.string.change_playlist)
     val reload = if (reloading) stringResource(R.string.reloading) else stringResource(R.string.tile_reload)
     val settings = stringResource(R.string.nav_settings)
+    val downloads = stringResource(R.string.dl_title)
     val exit = stringResource(R.string.nav_exit)
     val status = stringResource(R.string.home_playlist, playlistName)
 
@@ -170,6 +173,7 @@ internal fun Launcher(
                         val m = Modifier.weight(1f).fillMaxHeight()
                         Tile3D(settings, Icons.Filled.Settings, cMini, TileStyle.Mini, m) { onOpen(Dest.Settings) }
                         Tile3D(playlists, Icons.Filled.VideoLibrary, cMini, TileStyle.Mini, m) { onOpen(Dest.Playlist) }
+                        Tile3D(downloads, Icons.Filled.Download, cMini, TileStyle.Mini, m) { onDownloads() }
                         Tile3D(reload, Icons.Filled.Refresh, cMini, TileStyle.Mini, m) { if (!reloading) onReload() }
                         Tile3D(exit, Icons.AutoMirrored.Filled.ExitToApp, Red, TileStyle.Mini, m) { onExit() }
                     }
@@ -197,6 +201,7 @@ internal fun Launcher(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 val m = Modifier.weight(1f).height(92.dp)
                 Tile3D(reload, Icons.Filled.Refresh, Slate, TileStyle.Mini, m) { if (!reloading) onReload() }
+                Tile3D(downloads, Icons.Filled.Download, Slate, TileStyle.Mini, m) { onDownloads() }
                 Tile3D(settings, Icons.Filled.Settings, Slate, TileStyle.Mini, m) { onOpen(Dest.Settings) }
                 Tile3D(exit, Icons.AutoMirrored.Filled.ExitToApp, Red, TileStyle.Mini, m) { onExit() }
             }

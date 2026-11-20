@@ -102,6 +102,7 @@ fun HomeScreen(
     onPlaylists: () -> Unit,
     onGuide: (List<Channel>) -> Unit,
     onMulti: (List<Channel>) -> Unit,
+    onDownloads: () -> Unit = {},
 ) {
     val ctx = LocalContext.current
     val repo = remember { PlaylistRepository(ctx.applicationContext) }
@@ -174,6 +175,7 @@ fun HomeScreen(
                 onPlaylists = onPlaylists,
                 onGuide = onGuide,
                 onMulti = onMulti,
+                onDownloads = onDownloads,
             )
         }
     }
@@ -192,6 +194,7 @@ private fun Shell(
     onPlaylists: () -> Unit,
     onGuide: (List<Channel>) -> Unit,
     onMulti: (List<Channel>) -> Unit,
+    onDownloads: () -> Unit = {},
 ) {
     val ctx = LocalContext.current
     val cfg = LocalConfiguration.current
@@ -354,6 +357,7 @@ private fun Shell(
                 onOpen = { go(it) },
                 onGuide = { onGuide(byKind[Kind.Live]?.takeIf { it.isNotEmpty() } ?: visible) },
                 onMulti = { onMulti(byKind[Kind.Live]?.takeIf { it.isNotEmpty() } ?: visible) },
+                onDownloads = onDownloads,
                 onReload = onReload,
                 onExit = { ctx.findActivity()?.finish() },
                 onPlayRecent = { play(recents, it) },

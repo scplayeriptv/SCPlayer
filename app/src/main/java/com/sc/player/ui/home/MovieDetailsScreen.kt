@@ -93,6 +93,7 @@ fun MovieDetailsScreen(
                         trailer = meta.trailer,
                         onPlay = onPlay,
                         onToggleFav = onToggleFav,
+                        onDownload = { download(ctx, ch) },
                         wide = wide,
                     )
                 }
@@ -105,6 +106,7 @@ fun MovieDetailsScreen(
                         Modifier.fillMaxWidth(),
                         onClick = onPlay,
                     )
+                    CategoryChip(stringResource(R.string.dl_download), false) { download(ctx, ch) }
                 }
             }
             if (similar.isNotEmpty()) {
@@ -134,6 +136,7 @@ private fun DetailActions(
     trailer: String,
     onPlay: () -> Unit,
     onToggleFav: () -> Unit,
+    onDownload: () -> Unit,
     wide: Boolean,
 ) {
     val ctx = LocalContext.current
@@ -143,6 +146,7 @@ private fun DetailActions(
             onClick = onPlay,
         )
     }
+    CategoryChip(stringResource(R.string.dl_download), false, onDownload)
     CategoryChip(if (fav) stringResource(R.string.in_favorites) else stringResource(R.string.add_favorites), fav, onToggleFav)
     if (trailer.isNotBlank()) {
         CategoryChip(stringResource(R.string.det_trailer), false) {
@@ -152,6 +156,11 @@ private fun DetailActions(
             }
         }
     }
+}
+
+private fun download(ctx: android.content.Context, ch: Channel) {
+    val added = com.sc.player.data.Downloads.enqueue(ctx, ch.name, ch.url, ch.logo, 0)
+    android.widget.Toast.makeText(ctx, if (added) R.string.dl_added else R.string.dl_exists, android.widget.Toast.LENGTH_SHORT).show()
 }
 
 private fun clock(ms: Long): String {

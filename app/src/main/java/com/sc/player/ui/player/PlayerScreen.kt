@@ -143,6 +143,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     var retryKey by remember { mutableIntStateOf(0) }
     var replay by remember { mutableStateOf<com.sc.player.data.CatchUpItem?>(null) }
     var showCatchUp by remember { mutableStateOf(false) }
+    var showRecord by remember { mutableStateOf(false) }
     var stats by remember { mutableStateOf("") }
 
     val player = remember {
@@ -692,6 +693,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     if (channel.kind() == com.sc.player.data.Kind.Live && com.sc.player.data.parseLiveRef(channel.url) != null) {
                         if (replay != null) RoundButton("🔴", stringResource(R.string.catchup_live)) { backToLive(); poke() }
                         RoundButton("⏪", stringResource(R.string.catchup_title)) { showCatchUp = true; poke() }
+                        RoundButton("⏺", stringResource(R.string.dl_record)) { showRecord = true; poke() }
                     }
                     RoundButton("⏲", stringResource(R.string.sleep_title)) { showSleep = true; poke() }
                     if (cast.supported) {
@@ -809,7 +811,37 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     }
 
     if (showCatchUp && !inPip) {
-        CatchUpDialog(channel, onPlay = { playReplay(it) }, onClose = { showCatchUp = false })
+        CatchUpDialog(
+            channel,
+            onPlay = { playReplay(it) },
+            onSave = {
+                val u = it.url
+                if (u != null) {
+                    com.sc.player.data.Downloads.enqueue(ctx, channel.name + " - " + it.title, u, channel.logo, 2)
+                    android.widget.Toast.makeText(ctx, R.string.dl_added, android.widget.Toast.LENGTH_SHORT).show()
+                }
+            },
+            onClose = { showCatchUp = false },
+        )
+    }
+
+    if (showRecord && !inPip) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showRecord = false },
+            title = { Text(stringResource(R.string.dl_rec_title)) },
+            text = {
+                Column {
+                    listOf(30 to R.string.dl_rec_30, 60 to R.string.dl_rec_60, 120 to R.string.dl_rec_120, 0 to R.string.dl_rec_open).forEach { (m, label) ->
+                        androidx.compose.material3.TextButton(onClick = {
+                            com.sc.player.data.Downloads.enqueue(ctx, channel.name, channel.url, channel.logo, 1, m)
+                            android.widget.Toast.makeText(ctx, R.string.dl_added, android.widget.Toast.LENGTH_SHORT).show()
+                            showRecord = false
+                        }) { Text(stringResource(label)) }
+                    }
+                }
+            },
+            confirmButton = { androidx.compose.material3.TextButton(onClick = { showRecord = false }) { Text(stringResource(R.string.cancel)) } },
+        )
     }
 
     if (showSleep && !inPip) {

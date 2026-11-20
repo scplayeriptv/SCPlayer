@@ -12,6 +12,7 @@ import com.sc.player.data.PlayQueue
 import com.sc.player.data.PlaylistRepository
 import com.sc.player.data.UserPrefs
 import com.sc.player.ui.add.AddPlaylistScreen
+import com.sc.player.ui.downloads.DownloadsScreen
 import com.sc.player.ui.guide.GuideScreen
 import com.sc.player.ui.home.HomeScreen
 import com.sc.player.ui.multi.MultiViewScreen
@@ -110,7 +111,11 @@ fun AppNav() {
                     PlayQueue.list = list
                     nav.navigate("multi")
                 },
+                onDownloads = { nav.navigate("downloads") },
             )
+        }
+        composable("downloads") {
+            DownloadsScreen(onPlay = { nav.navigate("player/0") }, onBack = { nav.popBackStack() })
         }
         composable("multi") {
             MultiViewScreen(

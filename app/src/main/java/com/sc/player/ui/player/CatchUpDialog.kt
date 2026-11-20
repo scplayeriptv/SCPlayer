@@ -43,7 +43,7 @@ import java.util.Locale
 
 /** البرامج اللي فاتت للقناة؛ اللمس على برنامج مسجّل بيشغّله من البداية (لو السيرفر بيدعم الأرشيف). */
 @Composable
-internal fun CatchUpDialog(channel: Channel, onPlay: (CatchUpItem) -> Unit, onClose: () -> Unit) {
+internal fun CatchUpDialog(channel: Channel, onPlay: (CatchUpItem) -> Unit, onSave: (CatchUpItem) -> Unit, onClose: () -> Unit) {
     val ctx = LocalContext.current
     var result by remember { mutableStateOf<Result<List<CatchUpItem>>?>(null) }
     LaunchedEffect(channel.url) { result = XtreamClient(ctx.applicationContext).catchUp(channel) }
@@ -80,7 +80,10 @@ internal fun CatchUpDialog(channel: Channel, onPlay: (CatchUpItem) -> Unit, onCl
                                 ) {
                                     Text(hm.format(Date(it.start)), color = TextMuted, fontSize = 12.sp)
                                     Text(it.title, color = TextMain, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                                    if (playable) Text("▶", color = Cyan, fontSize = 14.sp)
+                                    if (playable) {
+                                        Text("⬇", color = TextMuted, fontSize = 16.sp, modifier = Modifier.clickable { onSave(it) }.padding(horizontal = 6.dp))
+                                        Text("▶", color = Cyan, fontSize = 14.sp)
+                                    }
                                 }
                             }
                         }
