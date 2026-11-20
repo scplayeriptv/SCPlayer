@@ -161,10 +161,10 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             .setMediaCodecSelector(selector)
             .setEnableDecoderFallback(true)
         val lc = when (com.sc.player.data.UserPrefs(ctx).bufferMode()) {
-            0 -> androidx.media3.exoplayer.DefaultLoadControl.Builder().setBufferDurationsMs(5_000, 15_000, 1_000, 2_000)
+            0 -> androidx.media3.exoplayer.DefaultLoadControl.Builder().setBufferDurationsMs(3_000, 12_000, 500, 1_500)
             2 -> androidx.media3.exoplayer.DefaultLoadControl.Builder().setBufferDurationsMs(30_000, 120_000, 2_500, 5_000)
-            else -> androidx.media3.exoplayer.DefaultLoadControl.Builder()
-        }.build()
+            else -> androidx.media3.exoplayer.DefaultLoadControl.Builder().setBufferDurationsMs(15_000, 50_000, 1_000, 2_500)
+        }.setPrioritizeTimeOverSizeThresholds(true).build()
         ExoPlayer.Builder(ctx, renderers)
             .setLoadControl(lc)
             .setAudioAttributes(
@@ -176,7 +176,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             )
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(androidx.media3.common.C.WAKE_MODE_NETWORK)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(ctx).setDataSourceFactory(http))
+            .setMediaSourceFactory(DefaultMediaSourceFactory(ctx, fastExtractors()).setDataSourceFactory(http))
             .build()
     }
     val prefs = remember { com.sc.player.data.UserPrefs(ctx) }
@@ -980,3 +980,13 @@ private fun ZoomButton(label: String, onClick: () -> Unit) {
         Text(label, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }
 }
+
+/** TS أسرع في البداية: بيقبل keyframes من غير IDR (شائع في بث IPTV) فبيقلّل الشاشة السودا. */
+@OptIn(UnstableApi::class)
+internal fun fastExtractors(): androidx.media3.extractor.ExtractorsFactory =
+    androidx.media3.extractor.DefaultExtractorsFactory()
+        .setTsExtractorFlags(
+            androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES or
+                androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory.FLAG_DETECT_ACCESS_UNITS,
+        )
+        .setConstantBitrateSeekingEnabled(true)

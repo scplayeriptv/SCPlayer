@@ -123,13 +123,16 @@ class DownloadService : Service() {
         var written = offset
         var total = 0L
         try {
-            val rb = Request.Builder().url(item.url).header("User-Agent", "VLC/3.0.18 LibVLC/3.0.18")
+            val rb = Request.Builder().url(item.url).header("User-Agent", "SCPlayer/0.1 (Android)")
             if (offset > 0) rb.header("Range", "bytes=$offset-")
             client.newCall(rb.build()).execute().use { resp ->
                 if (!resp.isSuccessful) throw IOException("HTTP ${resp.code}")
                 val ct = resp.header("Content-Type").orEmpty().lowercase()
                 if (item.kind != 0 && (ct.contains("mpegurl") || item.url.substringBefore('?').endsWith(".m3u8"))) {
                     throw IllegalStateException("hls")
+                }
+                if (item.kind == 0 && (ct.contains("text/") || ct.contains("json") || ct.contains("mpegurl"))) {
+                    throw IllegalStateException("type: $ct")
                 }
                 val append = resp.code == 206 && offset > 0
                 if (!append) { offset = 0L; written = 0L }
@@ -162,6 +165,10 @@ class DownloadService : Service() {
                 }
             }
             val w = written
+            if (item.kind == 0 && !removed && !stoppedByUser && w < 2L * 1024 * 1024) {
+                runCatching { file.delete() }
+                throw IllegalStateException("small: ${w / 1024} KB")
+            }
             when {
                 removed -> { runCatching { file.delete() } }
                 stoppedByUser && item.kind == 0 -> DownloadStore.update(ctx, id) { it.copy(state = 4, bytes = w) }
@@ -173,7 +180,8 @@ class DownloadService : Service() {
             DownloadStore.update(ctx, id) { it.copy(state = 4, bytes = written) }
             throw e
         } catch (e: IllegalStateException) {
-            DownloadStore.update(ctx, id) { it.copy(state = 3, error = e.message.orEmpty()) }
+            if (item.kind == 0 && e.message != "hls") runCatching { file.delete() }
+            DownloadStore.update(ctx, id) { it.copy(state = 3, bytes = 0L, error = e.message.orEmpty()) }
         } catch (e: Exception) {
             val w = written
             DownloadStore.update(ctx, id) { it.copy(state = 3, bytes = w, error = e.message.orEmpty()) }

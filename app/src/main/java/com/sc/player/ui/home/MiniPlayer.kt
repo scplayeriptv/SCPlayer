@@ -56,7 +56,13 @@ internal fun MiniPlayer(url: String?, modifier: Modifier = Modifier, onTap: () -
             .setConnectTimeoutMs(10_000)
             .setReadTimeoutMs(15_000)
         ExoPlayer.Builder(ctx)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(ctx).setDataSourceFactory(http))
+            .setLoadControl(
+                androidx.media3.exoplayer.DefaultLoadControl.Builder()
+                    .setBufferDurationsMs(3_000, 12_000, 500, 1_500)
+                    .setPrioritizeTimeOverSizeThresholds(true)
+                    .build(),
+            )
+            .setMediaSourceFactory(DefaultMediaSourceFactory(ctx, com.sc.player.ui.player.fastExtractors()).setDataSourceFactory(http))
             .build()
     }
     DisposableEffect(player) {

@@ -86,7 +86,7 @@ private fun DownloadRow(item: DownloadItem, onPlay: () -> Unit) {
         0 -> stringResource(R.string.dl_state_queued)
         1 -> if (item.kind == 0) "$sizeTxt" + (totalTxt?.let { " / $it" } ?: "") else stringResource(R.string.dl_recording) + " · $sizeTxt"
         2 -> stringResource(R.string.dl_state_done) + " · $sizeTxt"
-        3 -> stringResource(if (item.error == "hls") R.string.dl_hls else R.string.dl_state_failed)
+        3 -> if (item.error == "hls") stringResource(R.string.dl_hls) else stringResource(R.string.dl_state_failed) + (if (item.error.isNotBlank()) " · " + item.error else "")
         else -> stringResource(R.string.dl_state_stopped) + " · $sizeTxt"
     }
     Row(
