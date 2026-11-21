@@ -26,6 +26,7 @@ data class DownloadItem(
     val createdAt: Long,
     val error: String = "",
     val segs: Int = 0,
+    val maxHeight: Int = 0,
 )
 
 /** قائمة التحميلات/التسجيلات (محفوظة في ملف JSON). */
@@ -53,7 +54,7 @@ object DownloadStore {
                     // أي حاجة كانت شغّالة والتطبيق اتقفل = متوقفة
                     state = o.optInt("state").let { if (it == 0 || it == 1) 4 else it },
                     bytes = o.optLong("bytes"), total = o.optLong("total"), limitMin = o.optInt("limit"),
-                    createdAt = o.optLong("created"), error = o.optString("error"), segs = o.optInt("segs"),
+                    createdAt = o.optLong("created"), error = o.optString("error"), segs = o.optInt("segs"), maxHeight = o.optInt("maxh"),
                 )
             }
             _items.value = list
@@ -67,7 +68,7 @@ object DownloadStore {
                 arr.put(
                     JSONObject().put("id", it.id).put("title", it.title).put("url", it.url).put("logo", it.logo ?: "")
                         .put("kind", it.kind).put("path", it.path).put("state", it.state).put("bytes", it.bytes)
-                        .put("total", it.total).put("limit", it.limitMin).put("created", it.createdAt).put("error", it.error).put("segs", it.segs),
+                        .put("total", it.total).put("limit", it.limitMin).put("created", it.createdAt).put("error", it.error).put("segs", it.segs).put("maxh", it.maxHeight),
                 )
             }
             file(ctx).writeText(arr.toString())
@@ -109,7 +110,7 @@ object Downloads {
     }
 
     /** يضيف تحميل/تسجيل ويبدأه. بيرجّع false لو الفيلم ده متحمّل أو في الطابور بالفعل. */
-    fun enqueue(ctx: Context, title: String, url: String, logo: String?, kind: Int, limitMin: Int = 0): Boolean {
+    fun enqueue(ctx: Context, title: String, url: String, logo: String?, kind: Int, limitMin: Int = 0, maxHeight: Int = 0): Boolean {
         val app = ctx.applicationContext
         DownloadStore.load(app)
         if (kind == 0) {
@@ -124,7 +125,7 @@ object Downloads {
         val ext = if (rawExt in setOf("mp4", "mkv", "avi", "ts", "mov", "m4v")) rawExt else if (kind == 0) "mp4" else "ts"
         val safe = title.replace(Regex("[^\\p{L}\\p{N} ._-]"), "").trim().take(60).ifBlank { "video" }
         val path = File(dir(app), "$safe-$id.$ext").absolutePath
-        DownloadStore.add(app, DownloadItem(id, title, url, logo, kind, path, 0, 0L, 0L, limitMin, System.currentTimeMillis()))
+        DownloadStore.add(app, DownloadItem(id, title, url, logo, kind, path, 0, 0L, 0L, limitMin, System.currentTimeMillis(), maxHeight = maxHeight))
         send(app, DownloadService.ACTION_START, id)
         return true
     }

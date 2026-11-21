@@ -1,5 +1,19 @@
 package com.sc.player.ui.player
 
+import androidx.compose.material.icons.filled.PictureInPictureAlt
+import androidx.compose.material.icons.filled.FiberManualRecord
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Cast
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Replay10
+import androidx.compose.material.icons.filled.Forward10
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import com.sc.player.R
 import androidx.compose.ui.res.stringResource
 import com.sc.player.ui.theme.BackButton

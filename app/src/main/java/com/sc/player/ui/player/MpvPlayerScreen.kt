@@ -1,5 +1,11 @@
 package com.sc.player.ui.player
 
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Replay10
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.Forward10
+import androidx.compose.material.icons.filled.SkipNext
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -118,6 +124,8 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
     val focus = remember { FocusRequester() }
     val prefs = remember { UserPrefs(ctx) }
     var aspect by remember { mutableIntStateOf(prefs.aspectMode().coerceIn(0, 8)) }
+    var askQuality by remember { mutableStateOf(false) }
+    var askRecord by remember { mutableStateOf(false) }
     val isVod = dur >= 60f // البث المباشر بيرجّع مدة صغيرة (نافذة HLS) — مش فيلم
 
     fun saveNow() {
@@ -312,6 +320,27 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
             }
         }
 
+        if (askQuality) {
+            com.sc.player.ui.downloads.QualityDialog(
+                onPick = { h ->
+                    askQuality = false
+                    val added = com.sc.player.data.Downloads.enqueue(ctx, channel.name, channel.url, channel.logo, 0, 0, h)
+                    android.widget.Toast.makeText(ctx, if (added) R.string.dl_added else R.string.dl_exists, android.widget.Toast.LENGTH_SHORT).show()
+                },
+                onClose = { askQuality = false },
+            )
+        }
+        if (askRecord) {
+            com.sc.player.ui.downloads.RecordDialog(
+                onPick = { m ->
+                    askRecord = false
+                    com.sc.player.data.Downloads.enqueue(ctx, channel.name, channel.url, channel.logo, 1, m)
+                    android.widget.Toast.makeText(ctx, R.string.dl_added, android.widget.Toast.LENGTH_SHORT).show()
+                },
+                onClose = { askRecord = false },
+            )
+        }
+
         if (controls) {
             Row(
                 Modifier
@@ -329,6 +358,8 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
                     prefs.setAspectMode(aspect)
                     touch++
                 }
+                if (isVod) MpvPill("⬇") { askQuality = true }
+                else if (channel.url.startsWith("http")) MpvPill("⏺") { askRecord = true }
                 MpvPill(stringResource(R.string.engine_exo)) { onFail() }
                 Text("mpv", color = Cyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }

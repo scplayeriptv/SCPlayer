@@ -64,6 +64,14 @@ fun MovieDetailsScreen(
         (after + before).take(24)
     }
 
+    var askQuality by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    if (askQuality) {
+        com.sc.player.ui.downloads.QualityDialog(
+            onPick = { h -> askQuality = false; download(ctx, ch, h) },
+            onClose = { askQuality = false },
+        )
+    }
+
     androidx.compose.runtime.key(ch.url) {
     Box(Modifier.fillMaxSize()) {
         (meta.backdrop ?: meta.poster ?: ch.logo)?.let {
@@ -93,7 +101,7 @@ fun MovieDetailsScreen(
                         trailer = meta.trailer,
                         onPlay = onPlay,
                         onToggleFav = onToggleFav,
-                        onDownload = { download(ctx, ch) },
+                        onDownload = { askQuality = true },
                         wide = wide,
                     )
                 }
@@ -106,7 +114,7 @@ fun MovieDetailsScreen(
                         Modifier.fillMaxWidth(),
                         onClick = onPlay,
                     )
-                    CategoryChip(stringResource(R.string.dl_download), false) { download(ctx, ch) }
+                    CategoryChip(stringResource(R.string.dl_download), false) { askQuality = true }
                 }
             }
             if (similar.isNotEmpty()) {
@@ -158,8 +166,8 @@ private fun DetailActions(
     }
 }
 
-private fun download(ctx: android.content.Context, ch: Channel) {
-    val added = com.sc.player.data.Downloads.enqueue(ctx, ch.name, ch.url, ch.logo, 0)
+private fun download(ctx: android.content.Context, ch: Channel, maxHeight: Int) {
+    val added = com.sc.player.data.Downloads.enqueue(ctx, ch.name, ch.url, ch.logo, 0, 0, maxHeight)
     android.widget.Toast.makeText(ctx, if (added) R.string.dl_added else R.string.dl_exists, android.widget.Toast.LENGTH_SHORT).show()
 }
 

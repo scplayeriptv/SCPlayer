@@ -321,14 +321,25 @@ class DownloadService : Service() {
         var text = text0
         if (text.contains("#EXT-X-STREAM-INF")) {
             val lines = text.lines()
-            var best = -1L
-            var bestUri: String? = null
+            class Variant(val bw: Long, val h: Int, val uri: String)
+            val variants = ArrayList<Variant>()
             for (i in lines.indices) {
                 if (!lines[i].startsWith("#EXT-X-STREAM-INF")) continue
                 val bw = attr(lines[i], "BANDWIDTH")?.toLongOrNull() ?: 0L
+                val h = attr(lines[i], "RESOLUTION")?.substringAfter('x', "")?.toIntOrNull()
+                    ?: when { bw >= 4_000_000 -> 1080; bw >= 2_000_000 -> 720; bw >= 1_000_000 -> 480; else -> 360 }
                 val uri = lines.drop(i + 1).firstOrNull { it.isNotBlank() && !it.startsWith("#") }
-                if (uri != null && bw > best) { best = bw; bestUri = uri }
+                if (uri != null) variants += Variant(bw, h, uri)
             }
+            val pick = when {
+                variants.isEmpty() -> null
+                item.maxHeight == 1 -> variants.minWith(compareBy<Variant>({ it.h }, { it.bw }))
+                item.maxHeight > 1 ->
+                    variants.filter { it.h <= item.maxHeight }.maxWithOrNull(compareBy<Variant>({ it.h }, { it.bw }))
+                        ?: variants.minWith(compareBy<Variant>({ it.h }, { it.bw }))
+                else -> variants.maxWith(compareBy<Variant>({ it.h }, { it.bw }))
+            }
+            val bestUri: String? = pick?.uri
             url = resolve(url, bestUri ?: throw IOException("no variant"))
             text = fetchText(url)
         }

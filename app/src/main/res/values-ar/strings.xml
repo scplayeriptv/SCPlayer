@@ -408,4 +408,8 @@
     <string name="dl_rec_120">ساعتين</string>
     <string name="dl_rec_open">لحد ما أوقفه</string>
     <string name="dl_save_program">احفظ البرنامج ده</string>
+    <string name="dl_quality_title">جودة التحميل</string>
+    <string name="dl_q_best">أعلى جودة متاحة</string>
+    <string name="dl_q_small">أصغر حجم</string>
+    <string name="dl_q_hint">بتتطبّق لو السيرفر بيوفّر أكتر من جودة. غير كده بيتنزّل الملف الأصلي.</string>
 </resources>

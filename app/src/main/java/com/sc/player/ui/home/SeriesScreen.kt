@@ -208,12 +208,20 @@ private fun EpisodeRow(ep: Episode, ch: Channel, onClick: () -> Unit) {
             ep.duration?.let { Text(it, color = TextMuted, fontSize = 12.sp) }
         }
         val ctx = androidx.compose.ui.platform.LocalContext.current
+        var askQuality by remember { mutableStateOf(false) }
+        if (askQuality) {
+            com.sc.player.ui.downloads.QualityDialog(
+                onPick = { h ->
+                    askQuality = false
+                    val added = com.sc.player.data.Downloads.enqueue(ctx, ep.title.ifBlank { ch.name }, ep.url, ep.image, 0, 0, h)
+                    android.widget.Toast.makeText(ctx, if (added) com.sc.player.R.string.dl_added else com.sc.player.R.string.dl_exists, android.widget.Toast.LENGTH_SHORT).show()
+                },
+                onClose = { askQuality = false },
+            )
+        }
         Text(
             "⬇", color = TextMuted, fontSize = 18.sp,
-            modifier = Modifier.clickable {
-                val added = com.sc.player.data.Downloads.enqueue(ctx, ep.title.ifBlank { ch.name }, ep.url, ep.image, 0)
-                android.widget.Toast.makeText(ctx, if (added) com.sc.player.R.string.dl_added else com.sc.player.R.string.dl_exists, android.widget.Toast.LENGTH_SHORT).show()
-            }.padding(6.dp),
+            modifier = Modifier.clickable { askQuality = true }.padding(6.dp),
         )
         Text("▶", color = Cyan, fontSize = 18.sp)
     }
