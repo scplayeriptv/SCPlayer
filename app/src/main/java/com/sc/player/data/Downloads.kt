@@ -100,7 +100,11 @@ object Downloads {
 
     private fun send(ctx: Context, action: String, id: String) {
         val i = Intent(ctx.applicationContext, DownloadService::class.java).setAction(action).putExtra(DownloadService.EXTRA_ID, id)
-        ContextCompat.startForegroundService(ctx.applicationContext, i)
+        try {
+            ContextCompat.startForegroundService(ctx.applicationContext, i)
+        } catch (e: Exception) {
+            DownloadStore.update(ctx.applicationContext, id) { it.copy(state = 3, error = "service: " + (e.message ?: e.javaClass.simpleName)) }
+        }
     }
 
     /** يضيف تحميل/تسجيل ويبدأه. بيرجّع false لو الفيلم ده متحمّل أو في الطابور بالفعل. */

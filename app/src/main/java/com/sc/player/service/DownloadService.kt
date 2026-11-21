@@ -113,74 +113,93 @@ class DownloadService : Service() {
         val item = DownloadStore.get(id) ?: return
         val file = File(item.path)
         file.parentFile?.mkdirs()
-        var offset = if (item.kind == 0 && file.exists()) file.length() else 0L
+        val isVod = item.kind == 0
+        var written = if (isVod && file.exists()) file.length() else 0L
+        var total = if (isVod && written > 0) item.total else 0L
         DownloadStore.update(ctx, id) { it.copy(state = 1, error = "") }
         refreshNotification(true)
         var removed = false
         var stoppedByUser = false
-        var reachedEnd = false
         var limitHit = false
-        var written = offset
-        var total = 0L
+        val started = System.currentTimeMillis()
+        var stalls = 0
         try {
-            val rb = Request.Builder().url(item.url).header("User-Agent", "SCPlayer/0.1 (Android)")
-            if (offset > 0) rb.header("Range", "bytes=$offset-")
-            client.newCall(rb.build()).execute().use { resp ->
-                if (!resp.isSuccessful) throw IOException("HTTP ${resp.code}")
-                val ct = resp.header("Content-Type").orEmpty().lowercase()
-                if (item.kind != 0 && (ct.contains("mpegurl") || item.url.substringBefore('?').endsWith(".m3u8"))) {
-                    throw IllegalStateException("hls")
-                }
-                if (item.kind == 0 && (ct.contains("text/") || ct.contains("json") || ct.contains("mpegurl"))) {
-                    throw IllegalStateException("type: $ct")
-                }
-                val append = resp.code == 206 && offset > 0
-                if (!append) { offset = 0L; written = 0L }
-                val body = resp.body ?: throw IOException("empty body")
-                val len = body.contentLength()
-                total = if (len > 0) offset + len else 0L
-                DownloadStore.update(ctx, id, false) { it.copy(total = total, bytes = written) }
-                val started = System.currentTimeMillis()
-                var lastUi = 0L
-                val buf = ByteArray(64 * 1024)
-                FileOutputStream(file, append).use { out ->
-                    body.byteStream().use { input ->
-                        while (true) {
-                            if (stopReq.remove(id)) { stoppedByUser = true; break }
-                            if (DownloadStore.get(id) == null) { removed = true; break }
-                            if (item.limitMin > 0 && System.currentTimeMillis() - started > item.limitMin * 60_000L) { limitHit = true; break }
-                            val n = input.read(buf)
-                            if (n < 0) { reachedEnd = true; break }
-                            out.write(buf, 0, n)
-                            written += n
-                            val now = System.currentTimeMillis()
-                            if (now - lastUi > 500) {
-                                lastUi = now
-                                val w = written
-                                DownloadStore.update(ctx, id, false) { it.copy(bytes = w) }
-                                refreshNotification()
+            while (true) {
+                var reachedEnd = false
+                var progressed = false
+                val rb = Request.Builder().url(item.url).header("User-Agent", "SCPlayer/0.1 (Android)")
+                // بعض السيرفرات بتقطع الرد بعد شوية لو الطلب من غير Range، فبنطلب Range دايمًا ونكمّل من آخر نقطة
+                if (isVod) rb.header("Range", "bytes=$written-")
+                client.newCall(rb.build()).execute().use { resp ->
+                    if (!resp.isSuccessful) {
+                        if (resp.code == 416 && total > 0 && written >= total) { reachedEnd = true; return@use }
+                        throw IOException("HTTP ${resp.code}")
+                    }
+                    val ct = resp.header("Content-Type").orEmpty().lowercase()
+                    if (!isVod && (ct.contains("mpegurl") || item.url.substringBefore('?').endsWith(".m3u8"))) {
+                        throw IllegalStateException("hls")
+                    }
+                    if (isVod && (ct.contains("text/") || ct.contains("json") || ct.contains("mpegurl"))) {
+                        throw IllegalStateException("type: $ct")
+                    }
+                    val body = resp.body ?: throw IOException("empty body")
+                    if (isVod && resp.code == 200 && written > 0) written = 0L // السيرفر تجاهل Range: نبدأ من الأول
+                    val append = resp.code == 206 && written > 0
+                    val len = body.contentLength()
+                    val range = resp.header("Content-Range")?.substringAfter('/', "")?.toLongOrNull()
+                    total = when {
+                        range != null && range > 0 -> range
+                        len > 0 -> written + len
+                        else -> total
+                    }
+                    DownloadStore.update(ctx, id, false) { it.copy(total = total, bytes = written) }
+                    var lastUi = 0L
+                    val buf = ByteArray(64 * 1024)
+                    FileOutputStream(file, append).use { out ->
+                        body.byteStream().use { input ->
+                            while (true) {
+                                if (stopReq.remove(id)) { stoppedByUser = true; break }
+                                if (DownloadStore.get(id) == null) { removed = true; break }
+                                if (item.limitMin > 0 && System.currentTimeMillis() - started > item.limitMin * 60_000L) { limitHit = true; break }
+                                val n = input.read(buf)
+                                if (n < 0) { reachedEnd = true; break }
+                                out.write(buf, 0, n)
+                                written += n
+                                progressed = true
+                                val now = System.currentTimeMillis()
+                                if (now - lastUi > 500) {
+                                    lastUi = now
+                                    val w = written
+                                    DownloadStore.update(ctx, id, false) { it.copy(bytes = w) }
+                                    refreshNotification()
+                                }
                             }
                         }
                     }
                 }
+                if (removed || stoppedByUser || limitHit || !isVod) break
+                if (total > 0 && written >= total) break
+                if (total == 0L && reachedEnd) break
+                if (!progressed) {
+                    if (++stalls >= 3) throw IOException("stalled at ${written / 1024} KB")
+                } else {
+                    stalls = 0
+                }
             }
             val w = written
-            if (item.kind == 0 && !removed && !stoppedByUser && w < 2L * 1024 * 1024) {
-                runCatching { file.delete() }
+            if (isVod && !removed && !stoppedByUser && w < 2L * 1024 * 1024) {
                 throw IllegalStateException("small: ${w / 1024} KB")
             }
             when {
                 removed -> { runCatching { file.delete() } }
-                stoppedByUser && item.kind == 0 -> DownloadStore.update(ctx, id) { it.copy(state = 4, bytes = w) }
-                reachedEnd && item.kind == 0 && total > 0 && w < total ->
-                    DownloadStore.update(ctx, id) { it.copy(state = 3, bytes = w, error = "incomplete") }
-                else -> DownloadStore.update(ctx, id) { it.copy(state = 2, bytes = w, total = if (it.total == 0L) w else it.total) }
+                stoppedByUser && isVod -> DownloadStore.update(ctx, id) { it.copy(state = 4, bytes = w) }
+                else -> DownloadStore.update(ctx, id) { it.copy(state = 2, bytes = w, total = if (it.total == 0L || !isVod) w else it.total) }
             }
         } catch (e: CancellationException) {
             DownloadStore.update(ctx, id) { it.copy(state = 4, bytes = written) }
             throw e
         } catch (e: IllegalStateException) {
-            if (item.kind == 0 && e.message != "hls") runCatching { file.delete() }
+            if (isVod && e.message != "hls") runCatching { file.delete() }
             DownloadStore.update(ctx, id) { it.copy(state = 3, bytes = 0L, error = e.message.orEmpty()) }
         } catch (e: Exception) {
             val w = written
