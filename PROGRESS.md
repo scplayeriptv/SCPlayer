@@ -573,3 +573,7 @@
 - مشغل mpv: زرار ⬇ للأفلام وزرار ⏺ للقنوات المباشرة.
 - لسه: التسجيل المجدول (المرحلة الجاية).
 - لسه ماتجربش لحد ما الـ build يبقى أخضر.
+
+## إصلاح build: setValue ناقص في MovieDetailsScreen.kt
+- الخطأ: MutableState has no method setValue (delegate var) → ضفت import androidx.compose.runtime.setValue.
+- لسه ماتجربش لحد ما الـ build يبقى أخضر.
