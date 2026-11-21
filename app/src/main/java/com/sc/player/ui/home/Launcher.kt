@@ -239,15 +239,26 @@ private fun ClockBlock(modifier: Modifier = Modifier, big: Boolean = false) {
     }
 }
 
+private val expiryCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Boolean, Long?>>()
+
 /** كبسولة انتهاء الاشتراك (لو القائمة Xtream) بلون حسب الأيام المتبقية. */
 @Composable
 private fun ExpiryPill(playlistId: String, modifier: Modifier = Modifier, compact: Boolean = false) {
     val ctx = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
-    val expiry by produceState<Pair<Boolean, Long?>>(false to null, playlistId) {
+    // آخر قيمة معروفة بتتحفظ (ذاكرة + SharedPreferences) فالكبسولة تظهر فورًا من أول فريم حتى لو رجعت من الإعدادات
+    val sp = remember { ctx.applicationContext.getSharedPreferences("expiry_cache", android.content.Context.MODE_PRIVATE) }
+    val cached = expiryCache[playlistId] ?: sp.getString(playlistId, null)?.let { raw ->
+        if (raw == "u") true to null else raw.toLongOrNull()?.let { true to it }
+    }
+    val expiry by produceState<Pair<Boolean, Long?>>(cached ?: (false to null), playlistId) {
         val url = com.sc.player.data.PlaylistRepository(ctx.applicationContext).playlists()
             .firstOrNull { it.id == playlistId }?.url.orEmpty()
-        com.sc.player.data.XtreamClient(ctx.applicationContext).accountInfo(url).getOrNull()?.let { value = true to it.expires }
+        com.sc.player.data.XtreamClient(ctx.applicationContext).accountInfo(url).getOrNull()?.let {
+            value = true to it.expires
+            expiryCache[playlistId] = true to it.expires
+            sp.edit().putString(playlistId, it.expires?.toString() ?: "u").apply()
+        }
     }
     val (loaded, exp) = expiry
     if (!loaded) return

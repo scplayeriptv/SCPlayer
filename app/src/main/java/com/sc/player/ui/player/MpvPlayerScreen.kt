@@ -9,6 +9,7 @@ import android.view.SurfaceView
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -354,15 +355,15 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                    MpvPill("⏮") { prev() }
+                    MpvIcon(androidx.compose.material.icons.Icons.Filled.SkipPrevious) { prev() }
                     Box(Modifier.size(12.dp))
-                    MpvPill("⏪ 10") { engine.seekRel(-10.0); touch++ }
+                    MpvIcon(androidx.compose.material.icons.Icons.Filled.Replay10) { engine.seekRel(-10.0); touch++ }
                     Box(Modifier.size(12.dp))
-                    MpvPill(if (paused) "▶" else "⏸") { engine.setBool("pause", !paused) }
+                    MpvIcon(if (paused) androidx.compose.material.icons.Icons.Filled.PlayArrow else androidx.compose.material.icons.Icons.Filled.Pause, big = true) { engine.setBool("pause", !paused) }
                     Box(Modifier.size(12.dp))
-                    MpvPill("10 ⏩") { engine.seekRel(10.0); touch++ }
+                    MpvIcon(androidx.compose.material.icons.Icons.Filled.Forward10) { engine.seekRel(10.0); touch++ }
                     Box(Modifier.size(12.dp))
-                    MpvPill("⏭") { next() }
+                    MpvIcon(androidx.compose.material.icons.Icons.Filled.SkipNext) { next() }
                 }
             }
             }
@@ -383,4 +384,19 @@ private fun MpvPill(text: String, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 8.dp),
     )
+}
+
+@Composable
+private fun MpvIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, big: Boolean = false, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(if (big) 64.dp else 48.dp)
+            .clip(CircleShape)
+            .background(if (big) androidx.compose.ui.graphics.Color(0x40FFFFFF) else androidx.compose.ui.graphics.Color(0x66000000))
+            .border(if (big) 2.dp else 1.dp, androidx.compose.ui.graphics.Color(if (big) 0xB3FFFFFF else 0x40FFFFFF), CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        androidx.compose.material3.Icon(icon, null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(if (big) 34.dp else 24.dp))
+    }
 }

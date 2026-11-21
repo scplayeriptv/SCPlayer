@@ -60,6 +60,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -685,24 +686,24 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     }
                     Text("${index + 1} / ${queue.size}", color = TextMuted, fontSize = 13.sp)
                     if (PipState.supported(ctx)) {
-                        RoundButton("🖼", stringResource(R.string.player_pip)) { ctx.findActivity()?.let { PipState.enter(it) } }
+                        RoundButton(androidx.compose.material.icons.Icons.Filled.PictureInPictureAlt, stringResource(R.string.player_pip)) { ctx.findActivity()?.let { PipState.enter(it) } }
                     }
                     if (sleepLeft > 0) {
                         Text("⏲ ${sleepLeft}m", color = TextMain, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                     if (channel.kind() == com.sc.player.data.Kind.Live && com.sc.player.data.parseLiveRef(channel.url) != null) {
-                        if (replay != null) RoundButton("🔴", stringResource(R.string.catchup_live)) { backToLive(); poke() }
-                        RoundButton("⏪", stringResource(R.string.catchup_title)) { showCatchUp = true; poke() }
-                        RoundButton("⏺", stringResource(R.string.dl_record)) { showRecord = true; poke() }
+                        if (replay != null) RoundButton(androidx.compose.material.icons.Icons.Filled.FiberManualRecord, stringResource(R.string.catchup_live), tint = Color(0xFFEF5350)) { backToLive(); poke() }
+                        RoundButton(androidx.compose.material.icons.Icons.Filled.History, stringResource(R.string.catchup_title)) { showCatchUp = true; poke() }
+                        RoundButton(androidx.compose.material.icons.Icons.Filled.FiberManualRecord, stringResource(R.string.dl_record), tint = Color(0xFFEF5350)) { showRecord = true; poke() }
                     }
-                    RoundButton("⏲", stringResource(R.string.sleep_title)) { showSleep = true; poke() }
+                    RoundButton(androidx.compose.material.icons.Icons.Filled.Timer, stringResource(R.string.sleep_title)) { showSleep = true; poke() }
                     if (cast.supported) {
-                        RoundButton("📡", stringResource(R.string.cast_title)) { showCast = true; poke() }
+                        RoundButton(androidx.compose.material.icons.Icons.Filled.Cast, stringResource(R.string.cast_title)) { showCast = true; poke() }
                     }
                     if (queue.size > 1) {
-                        RoundButton("☰", stringResource(R.string.player_channels)) { showList = true; poke() }
+                        RoundButton(androidx.compose.material.icons.Icons.Filled.Menu, stringResource(R.string.player_channels)) { showList = true; poke() }
                     }
-                    RoundButton("⚙", stringResource(R.string.player_options)) { showOptions = true; poke() }
+                    RoundButton(androidx.compose.material.icons.Icons.Filled.Settings, stringResource(R.string.player_options)) { showOptions = true; poke() }
                 }
                 Column(
                     Modifier
@@ -742,17 +743,17 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         if (lastIndex in queue.indices) {
-                            RoundButton("↩", stringResource(R.string.player_last)) { recall() }
+                            RoundButton(androidx.compose.material.icons.Icons.Filled.SwapHoriz, stringResource(R.string.player_last)) { recall() }
                         }
-                        RoundButton("⏮", stringResource(R.string.previous)) { prev() }
-                        RoundButton("⏪", stringResource(R.string.player_back10)) { seekBy(-10_000) }
+                        RoundButton(androidx.compose.material.icons.Icons.Filled.SkipPrevious, stringResource(R.string.previous)) { prev() }
+                        RoundButton(androidx.compose.material.icons.Icons.Filled.Replay10, stringResource(R.string.player_back10)) { seekBy(-10_000) }
                         RoundButton(
-                            if (playing) "⏸" else "▶",
+                            if (playing) androidx.compose.material.icons.Icons.Filled.Pause else androidx.compose.material.icons.Icons.Filled.PlayArrow,
                             if (playing) stringResource(R.string.pause) else stringResource(R.string.resume),
                             big = true,
                         ) { toggle() }
-                        RoundButton("⏩", stringResource(R.string.player_fwd10)) { seekBy(10_000) }
-                        RoundButton("⏭", stringResource(R.string.next)) { next() }
+                        RoundButton(androidx.compose.material.icons.Icons.Filled.Forward10, stringResource(R.string.player_fwd10)) { seekBy(10_000) }
+                        RoundButton(androidx.compose.material.icons.Icons.Filled.SkipNext, stringResource(R.string.next)) { next() }
                         ZoomButton(zoomLabels[aspect.coerceIn(0, 8)]) {
                             aspect = (aspect + 1) % 9
                             prefs.setAspectMode(aspect)
@@ -927,20 +928,36 @@ private fun PillButton(text: String, primary: Boolean = false, onClick: () -> Un
 
 /** زر تحكم دائري (السابق / تشغيل-إيقاف / التالي). */
 @Composable
-private fun RoundButton(glyph: String, description: String, big: Boolean = false, onClick: () -> Unit) {
+private fun RoundButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    big: Boolean = false,
+    tint: Color = Color.White,
+    onClick: () -> Unit,
+) {
     var focused by remember { mutableStateOf(false) }
+    val scale by androidx.compose.animation.core.animateFloatAsState(if (focused) 1.08f else 1f, androidx.compose.animation.core.tween(140), label = "btnScale")
+    // لون محايد (زجاج معتم + أبيض) بيمشي مع كل الثيمات وكل خلفيات الفيديو ومريح للعين
+    val fill = when {
+        big && focused -> Color(0x66FFFFFF)
+        big -> Color(0x40FFFFFF)
+        focused -> Color(0x55FFFFFF)
+        else -> Color(0x66000000)
+    }
+    val line = if (focused) Color.White else if (big) Color(0xB3FFFFFF) else Color(0x40FFFFFF)
     Box(
         Modifier
             .size(if (big) 72.dp else 52.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
             .onFocusChanged { focused = it.isFocused }
             .clip(CircleShape)
-            .background(if (big) BrandBrush else Brush.linearGradient(listOf(Glass, Glass)))
-            .border(if (focused) 3.dp else 1.dp, if (focused) Cyan else GlassBorder, CircleShape)
+            .background(fill)
+            .border(if (focused) 3.dp else if (big) 2.dp else 1.dp, line, CircleShape)
             .semantics { contentDescription = description }
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(glyph, color = Ink, fontSize = if (big) 30.sp else 22.sp)
+        androidx.compose.material3.Icon(icon, null, tint = tint.copy(alpha = if (tint == Color.White) 0.95f else 1f), modifier = Modifier.size(if (big) 38.dp else 26.dp))
     }
 }
 
@@ -948,18 +965,14 @@ private fun RoundButton(glyph: String, description: String, big: Boolean = false
 private fun ZoomButton(label: String, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(26.dp)
-    val accent = Cyan
+    val accent = Color.White
     Row(
         Modifier
             .height(52.dp)
             .onFocusChanged { focused = it.isFocused }
             .clip(shape)
-            .background(Brush.horizontalGradient(listOf(Color(0x40FFFFFF), Color(0x14FFFFFF))))
-            .border(
-                if (focused) 3.dp else 1.dp,
-                if (focused) Brush.linearGradient(listOf(accent, accent)) else Brush.linearGradient(listOf(accent.copy(alpha = 0.7f), Color(0x26FFFFFF))),
-                shape,
-            )
+            .background(if (focused) Color(0x55FFFFFF) else Color(0x66000000))
+            .border(if (focused) 3.dp else 1.dp, if (focused) Color.White else Color(0x40FFFFFF), shape)
             .semantics { contentDescription = label }
             .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 16.dp),
@@ -977,7 +990,7 @@ private fun ZoomButton(label: String, onClick: () -> Unit) {
             }
             corner(m, m, 1f, 1f); corner(w - m, m, -1f, 1f); corner(m, w - m, 1f, -1f); corner(w - m, w - m, -1f, -1f)
         }
-        Text(label, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        Text(label, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
