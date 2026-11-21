@@ -25,6 +25,7 @@ data class DownloadItem(
     val limitMin: Int,
     val createdAt: Long,
     val error: String = "",
+    val segs: Int = 0,
 )
 
 /** قائمة التحميلات/التسجيلات (محفوظة في ملف JSON). */
@@ -52,7 +53,7 @@ object DownloadStore {
                     // أي حاجة كانت شغّالة والتطبيق اتقفل = متوقفة
                     state = o.optInt("state").let { if (it == 0 || it == 1) 4 else it },
                     bytes = o.optLong("bytes"), total = o.optLong("total"), limitMin = o.optInt("limit"),
-                    createdAt = o.optLong("created"), error = o.optString("error"),
+                    createdAt = o.optLong("created"), error = o.optString("error"), segs = o.optInt("segs"),
                 )
             }
             _items.value = list
@@ -66,7 +67,7 @@ object DownloadStore {
                 arr.put(
                     JSONObject().put("id", it.id).put("title", it.title).put("url", it.url).put("logo", it.logo ?: "")
                         .put("kind", it.kind).put("path", it.path).put("state", it.state).put("bytes", it.bytes)
-                        .put("total", it.total).put("limit", it.limitMin).put("created", it.createdAt).put("error", it.error),
+                        .put("total", it.total).put("limit", it.limitMin).put("created", it.createdAt).put("error", it.error).put("segs", it.segs),
                 )
             }
             file(ctx).writeText(arr.toString())
