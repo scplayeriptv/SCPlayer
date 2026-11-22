@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -84,6 +85,7 @@ internal fun SheetDialog(title: String, onClose: () -> Unit, content: @Composabl
                 .padding(16.dp)
                 .widthIn(max = 460.dp)
                 .fillMaxWidth(0.92f)
+                .heightIn(max = (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp - 56).dp)
                 .clip(RoundedCornerShape(28.dp))
                 .background(Panel)
                 .border(1.dp, GlassBorder, RoundedCornerShape(28.dp))
