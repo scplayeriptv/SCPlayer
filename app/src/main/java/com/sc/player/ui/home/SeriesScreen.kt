@@ -220,7 +220,7 @@ private fun EpisodeRow(ep: Episode, ch: Channel, onClick: () -> Unit) {
             )
         }
         Text(
-            "⬇", color = TextMuted, fontSize = 18.sp,
+            if (com.sc.player.data.Premium.active) "⬇" else "🔒", color = TextMuted, fontSize = 18.sp,
             modifier = Modifier.clickable { askQuality = true }.padding(6.dp),
         )
         Text("▶", color = Cyan, fontSize = 18.sp)

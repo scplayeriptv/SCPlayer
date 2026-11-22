@@ -358,8 +358,8 @@ fun MpvPlayerScreen(startIndex: Int, onBack: () -> Unit, onFail: () -> Unit) {
                     prefs.setAspectMode(aspect)
                     touch++
                 }
-                if (isVod) MpvPill("⬇") { askQuality = true }
-                else if (channel.url.startsWith("http")) MpvPill("⏺") { askRecord = true }
+                if (isVod) MpvPill(if (com.sc.player.data.Premium.active) "⬇" else "🔒") { askQuality = true }
+                else if (channel.url.startsWith("http")) MpvPill(if (com.sc.player.data.Premium.active) "⏺" else "🔒") { askRecord = true }
                 MpvPill(stringResource(R.string.engine_exo)) { onFail() }
                 Text("mpv", color = Cyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }

@@ -21,6 +21,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,18 +56,43 @@ fun DownloadsScreen(onPlay: () -> Unit, onBack: () -> Unit) {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) { DownloadStore.load(ctx.applicationContext) }
     val list by DownloadStore.items.collectAsState()
+    val sStore = remember { com.sc.player.data.ScheduleStore(ctx) }
+    var sTick by remember { mutableIntStateOf(0) }
+    val scheds = remember(sTick) { sStore.list() }
     ScreenBackground {
         Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 BackButton(onBack)
                 Text(stringResource(R.string.dl_title), color = TextMain, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             }
-            if (list.isEmpty()) {
+            var showLock by remember { mutableStateOf(false) }
+            if (!com.sc.player.data.Premium.active) {
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Glass)
+                        .border(1.dp, GlassBorder, RoundedCornerShape(14.dp))
+                        .clickable { showLock = true }.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text("🔒", fontSize = 18.sp)
+                    Text(stringResource(R.string.premium_banner), color = TextMain, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                }
+            }
+            if (showLock) ActivationDialog { showLock = false }
+            if (list.isEmpty() && scheds.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(stringResource(R.string.dl_empty), color = TextMuted, fontSize = 15.sp)
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (scheds.isNotEmpty()) {
+                        item(key = "sched_h") {
+                            Text(stringResource(R.string.rec_sched_title), color = Cyan, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
+                        items(scheds, key = { "s" + it.key }) { r ->
+                            ScheduledRow(r) { sStore.remove(r); sTick++ }
+                        }
+                    }
                     items(list, key = { it.id }) { item ->
                         DownloadRow(item, onPlay = {
                             PlayQueue.list = listOf(Channel(item.title, "file://" + item.path, "", item.logo, null))
@@ -137,5 +166,26 @@ private fun Action(glyph: String, label: String, onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Text(glyph, fontSize = 18.sp, color = TextMain)
+    }
+}
+
+@Composable
+private fun ScheduledRow(r: com.sc.player.data.ScheduledRec, onCancel: () -> Unit) {
+    val shape = RoundedCornerShape(16.dp)
+    val fmt = java.text.SimpleDateFormat("EEE HH:mm", java.util.Locale.getDefault())
+    Row(
+        Modifier.fillMaxWidth().clip(shape).background(Glass).border(1.dp, GlassBorder, shape).padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text("⏰", fontSize = 22.sp)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(r.title, color = TextMain, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                "${r.channelName} · ${fmt.format(java.util.Date(r.start))}",
+                color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Action("✕", stringResource(R.string.rec_sched_off)) { onCancel() }
     }
 }

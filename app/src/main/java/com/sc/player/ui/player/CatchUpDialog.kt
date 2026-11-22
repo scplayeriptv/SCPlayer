@@ -81,7 +81,7 @@ internal fun CatchUpDialog(channel: Channel, onPlay: (CatchUpItem) -> Unit, onSa
                                     Text(hm.format(Date(it.start)), color = TextMuted, fontSize = 12.sp)
                                     Text(it.title, color = TextMain, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                                     if (playable) {
-                                        Text("⬇", color = TextMuted, fontSize = 16.sp, modifier = Modifier.clickable { onSave(it) }.padding(horizontal = 6.dp))
+                                        Text(if (com.sc.player.data.Premium.active) "⬇" else "🔒", color = TextMuted, fontSize = 16.sp, modifier = Modifier.clickable { onSave(it) }.padding(horizontal = 6.dp))
                                         Text("▶", color = Cyan, fontSize = 14.sp)
                                     }
                                 }

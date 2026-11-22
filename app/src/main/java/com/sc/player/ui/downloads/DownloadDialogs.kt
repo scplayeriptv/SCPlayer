@@ -45,7 +45,7 @@ import com.sc.player.ui.theme.Violet
 
 /** بطاقة اختيار واحدة (بتدعم الريموت: حد مضيء عند الفوكس). */
 @Composable
-private fun ChoiceCard(
+internal fun ChoiceCard(
     title: String,
     sub: String?,
     highlight: Boolean,
@@ -77,7 +77,7 @@ private fun ChoiceCard(
 }
 
 @Composable
-private fun SheetDialog(title: String, onClose: () -> Unit, content: @Composable () -> Unit) {
+internal fun SheetDialog(title: String, onClose: () -> Unit, content: @Composable () -> Unit) {
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(
             Modifier
@@ -102,6 +102,7 @@ private fun SheetDialog(title: String, onClose: () -> Unit, content: @Composable
 /** اختيار جودة التحميل: 0 = الأعلى، غير كده أقصى ارتفاع (720/480/360)، 1 = الأصغر. */
 @Composable
 fun QualityDialog(onPick: (Int) -> Unit, onClose: () -> Unit) {
+    if (!com.sc.player.data.Premium.active) { ActivationDialog(onClose); return }
     SheetDialog(stringResource(R.string.dl_quality_title), onClose) {
         ChoiceCard(stringResource(R.string.dl_q_best), "MAX", true, Modifier.fillMaxWidth()) { onPick(0) }
         Spacer(Modifier.height(10.dp))
@@ -120,6 +121,7 @@ fun QualityDialog(onPick: (Int) -> Unit, onClose: () -> Unit) {
 /** اختيار مدة تسجيل البث الحالي (بالدقايق؛ 0 = لحد ما توقفه). */
 @Composable
 fun RecordDialog(onPick: (Int) -> Unit, onClose: () -> Unit) {
+    if (!com.sc.player.data.Premium.active) { ActivationDialog(onClose); return }
     SheetDialog(stringResource(R.string.dl_rec_title), onClose) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             ChoiceCard(stringResource(R.string.dl_rec_30), null, false, Modifier.weight(1f)) { onPick(30) }

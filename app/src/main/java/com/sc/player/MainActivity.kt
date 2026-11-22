@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
         }
         com.sc.player.ui.theme.ThemeState.current = com.sc.player.ui.theme.AppTheme.byId(com.sc.player.data.UserPrefs(this).theme())
         installImageLoader()
+        com.sc.player.data.Premium.init(this)
         readDeepLink(intent)
         setContent {
             SCPlayerTheme { AppNav() }

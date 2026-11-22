@@ -43,6 +43,7 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             ReminderStore(context).rescheduleAll()
+            com.sc.player.data.ScheduleStore(context).rescheduleAll()
         }
     }
 }

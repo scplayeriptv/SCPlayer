@@ -115,7 +115,7 @@ fun MovieDetailsScreen(
                         Modifier.fillMaxWidth(),
                         onClick = onPlay,
                     )
-                    CategoryChip(stringResource(R.string.dl_download), false) { askQuality = true }
+                    CategoryChip((if (!com.sc.player.data.Premium.active) "🔒 " else "") + stringResource(R.string.dl_download), false) { askQuality = true }
                 }
             }
             if (similar.isNotEmpty()) {

@@ -412,4 +412,16 @@
     <string name="dl_q_best">أعلى جودة متاحة</string>
     <string name="dl_q_small">أصغر حجم</string>
     <string name="dl_q_hint">بتتطبّق لو السيرفر بيوفّر أكتر من جودة. غير كده بيتنزّل الملف الأصلي.</string>
+    <string name="rec_sched">سجّل البرنامج</string>
+    <string name="rec_sched_off">إلغاء التسجيل المجدول</string>
+    <string name="rec_sched_set">تم الجدولة. التطبيق هيسجّل البرنامج لوحده (يبدأ قبله بدقيقة وينتهي بعده بـ 3 دقايق). سيب الجهاز شغّال والتطبيق مسموح له يشتغل في الخلفية.</string>
+    <string name="rec_sched_title">التسجيلات المجدولة</string>
+    <string name="premium_title">محتاج تفعيل</string>
+    <string name="premium_desc">التحميل والتسجيل ميزات مدفوعة. ابعت كود الجهاز (الماك) ده لصاحب التطبيق علشان يفعّلها.</string>
+    <string name="premium_copy">نسخ الكود</string>
+    <string name="premium_copied">تم نسخ الكود</string>
+    <string name="premium_recheck">اتفعّلت — افحص تاني</string>
+    <string name="premium_checking">بيتفحص…</string>
+    <string name="premium_offline">مقدرتش أوصل لسيرفر التفعيل. اتأكد من النت وجرّب تاني.</string>
+    <string name="premium_banner">التحميل والتسجيل مقفولين. دوس تشوف كود جهازك.</string>
 </resources>

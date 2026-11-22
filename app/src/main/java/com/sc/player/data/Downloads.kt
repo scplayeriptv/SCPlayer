@@ -112,6 +112,7 @@ object Downloads {
     /** يضيف تحميل/تسجيل ويبدأه. بيرجّع false لو الفيلم ده متحمّل أو في الطابور بالفعل. */
     fun enqueue(ctx: Context, title: String, url: String, logo: String?, kind: Int, limitMin: Int = 0, maxHeight: Int = 0): Boolean {
         val app = ctx.applicationContext
+        if (!Premium.active) return false
         DownloadStore.load(app)
         if (kind == 0) {
             val old = DownloadStore.items.value.firstOrNull { it.url == url && it.kind == 0 }

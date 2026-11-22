@@ -423,4 +423,16 @@
     <string name="dl_q_best">Best available</string>
     <string name="dl_q_small">Smallest size</string>
     <string name="dl_q_hint">Applies when the server offers several qualities. Otherwise the original file is downloaded.</string>
+    <string name="rec_sched">Schedule recording</string>
+    <string name="rec_sched_off">Cancel scheduled recording</string>
+    <string name="rec_sched_set">Scheduled. The app records this programme automatically (starts 1 min early, ends 3 min late). Keep the device on and the app allowed to run in the background.</string>
+    <string name="rec_sched_title">Scheduled recordings</string>
+    <string name="premium_title">Activation required</string>
+    <string name="premium_desc">Downloads &amp; recording are premium features. Send this device code (MAC) to the app owner to activate them.</string>
+    <string name="premium_copy">Copy code</string>
+    <string name="premium_copied">Code copied</string>
+    <string name="premium_recheck">I\'ve been activated — check again</string>
+    <string name="premium_checking">Checking…</string>
+    <string name="premium_offline">Couldn\'t reach the activation server. Check your internet and try again.</string>
+    <string name="premium_banner">Downloads and recording are locked. Tap to see your device code.</string>
 </resources>

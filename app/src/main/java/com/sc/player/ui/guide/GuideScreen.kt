@@ -82,9 +82,11 @@ fun GuideScreen(onPlay: (Int) -> Unit, onBack: () -> Unit) {
     val totalW = DP_PER_MIN * (WINDOW_MS / 60_000L).toInt()
 
     val reminders = remember { ReminderStore(ctx) }
+    val schedules = remember { com.sc.player.data.ScheduleStore(ctx) }
     var remTick by remember { mutableIntStateOf(0) }
     var selected by remember { mutableStateOf<Pair<Int, Programme>?>(null) }
     var showReminders by remember { mutableStateOf(false) }
+    var showLock by remember { mutableStateOf(false) }
     val hScroll = rememberScrollState()
 
     ScreenBackground {
@@ -187,6 +189,18 @@ fun GuideScreen(onPlay: (Int) -> Unit, onBack: () -> Unit) {
                             Text(stringResource(if (has) R.string.guide_remind_off else R.string.guide_remind))
                         }
                         if (has) Text(stringResource(R.string.guide_reminder_set), color = Cyan, fontSize = 12.sp)
+                        val sched = remTick.let { schedules.has(ch.url, p.start) }
+                        if (ch.url.startsWith("http")) {
+                            TextButton(onClick = {
+                                val sr = com.sc.player.data.ScheduledRec(ch.url, ch.name, p.title, p.start, p.stop, ch.logo)
+                                if (sched) { schedules.remove(sr); remTick++ }
+                                else if (!com.sc.player.data.Premium.active) showLock = true
+                                else { schedules.add(sr); remTick++ }
+                            }) {
+                                Text((if (!sched && !com.sc.player.data.Premium.active) "🔒 " else "") + stringResource(if (sched) R.string.rec_sched_off else R.string.rec_sched))
+                            }
+                            if (sched) Text(stringResource(R.string.rec_sched_set), color = Cyan, fontSize = 12.sp)
+                        }
                     }
                 }
             },
@@ -196,6 +210,8 @@ fun GuideScreen(onPlay: (Int) -> Unit, onBack: () -> Unit) {
             dismissButton = { TextButton(onClick = { selected = null }) { Text(stringResource(R.string.done)) } },
         )
     }
+
+    if (showLock) com.sc.player.ui.downloads.ActivationDialog { showLock = false }
 
     if (showReminders) {
         val list = remTick.let { reminders.list() }

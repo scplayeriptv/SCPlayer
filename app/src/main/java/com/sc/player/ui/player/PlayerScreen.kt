@@ -3,6 +3,7 @@ package com.sc.player.ui.player
 import androidx.compose.material.icons.filled.PictureInPictureAlt
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Cast
 import androidx.compose.material.icons.filled.Menu
@@ -159,6 +160,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     var replay by remember { mutableStateOf<com.sc.player.data.CatchUpItem?>(null) }
     var showCatchUp by remember { mutableStateOf(false) }
     var showRecord by remember { mutableStateOf(false) }
+    var showLock by remember { mutableStateOf(false) }
     var stats by remember { mutableStateOf("") }
 
     val player = remember {
@@ -708,7 +710,7 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
                     if (channel.kind() == com.sc.player.data.Kind.Live && com.sc.player.data.parseLiveRef(channel.url) != null) {
                         if (replay != null) RoundButton(androidx.compose.material.icons.Icons.Filled.FiberManualRecord, stringResource(R.string.catchup_live), tint = Color(0xFFEF5350)) { backToLive(); poke() }
                         RoundButton(androidx.compose.material.icons.Icons.Filled.History, stringResource(R.string.catchup_title)) { showCatchUp = true; poke() }
-                        RoundButton(androidx.compose.material.icons.Icons.Filled.FiberManualRecord, stringResource(R.string.dl_record), tint = Color(0xFFEF5350)) { showRecord = true; poke() }
+                        RoundButton(if (com.sc.player.data.Premium.active) androidx.compose.material.icons.Icons.Filled.FiberManualRecord else androidx.compose.material.icons.Icons.Filled.Lock, stringResource(R.string.dl_record), tint = if (com.sc.player.data.Premium.active) Color(0xFFEF5350) else Color.White) { showRecord = true; poke() }
                     }
                     RoundButton(androidx.compose.material.icons.Icons.Filled.Timer, stringResource(R.string.sleep_title)) { showSleep = true; poke() }
                     if (cast.supported) {
@@ -831,7 +833,9 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
             onPlay = { playReplay(it) },
             onSave = {
                 val u = it.url
-                if (u != null) {
+                if (u != null && !com.sc.player.data.Premium.active) {
+                    showLock = true
+                } else if (u != null) {
                     com.sc.player.data.Downloads.enqueue(ctx, channel.name + " - " + it.title, u, channel.logo, 2)
                     android.widget.Toast.makeText(ctx, R.string.dl_added, android.widget.Toast.LENGTH_SHORT).show()
                 }
@@ -841,23 +845,16 @@ fun PlayerScreen(startIndex: Int, onBack: () -> Unit) {
     }
 
     if (showRecord && !inPip) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showRecord = false },
-            title = { Text(stringResource(R.string.dl_rec_title)) },
-            text = {
-                Column {
-                    listOf(30 to R.string.dl_rec_30, 60 to R.string.dl_rec_60, 120 to R.string.dl_rec_120, 0 to R.string.dl_rec_open).forEach { (m, label) ->
-                        androidx.compose.material3.TextButton(onClick = {
-                            com.sc.player.data.Downloads.enqueue(ctx, channel.name, channel.url, channel.logo, 1, m)
-                            android.widget.Toast.makeText(ctx, R.string.dl_added, android.widget.Toast.LENGTH_SHORT).show()
-                            showRecord = false
-                        }) { Text(stringResource(label)) }
-                    }
-                }
+        com.sc.player.ui.downloads.RecordDialog(
+            onPick = { m ->
+                com.sc.player.data.Downloads.enqueue(ctx, channel.name, channel.url, channel.logo, 1, m)
+                android.widget.Toast.makeText(ctx, R.string.dl_added, android.widget.Toast.LENGTH_SHORT).show()
+                showRecord = false
             },
-            confirmButton = { androidx.compose.material3.TextButton(onClick = { showRecord = false }) { Text(stringResource(R.string.cancel)) } },
+            onClose = { showRecord = false },
         )
     }
+    if (showLock && !inPip) com.sc.player.ui.downloads.ActivationDialog { showLock = false }
 
     if (showSleep && !inPip) {
         androidx.compose.material3.AlertDialog(
