@@ -604,3 +604,13 @@
 - الأزرار المقفولة بتظهر 🔒 بدل الأيقونة/قبل النص (تحميل الفيلم، ⬇ الحلقة، ⬇ حفظ البرنامج، ⬇/⏺ في mpv، زرار التسجيل في ExoPlayer بقى أيقونة Lock، تسجيل البرنامج في الدليل). بعد التفعيل بترجع عادي.
 - لما يدوس: نافذة "محتاج تفعيل" + كود الماك + نسخ + فحص تاني (نفس ActivationDialog).
 - لسه ماتجربش لحد ما الـ build يبقى أخضر.
+
+## نسخة Google Play — المرحلة 1 (الكود)
+- build.gradle.kts: buildType جديد `play` (initWith release) فيه BuildConfig.PLAY=true؛ الـ debug/النسخة العادية بقت PLAY=false (buildConfig مفعّل). توقيع نسخة play من متغيرات بيئة: PLAY_KEYSTORE_FILE / PLAY_STORE_PASSWORD / PLAY_KEY_ALIAS / PLAY_KEY_PASSWORD (لو مش موجودة بيطلع AAB من غير توقيع). مكتبة com.android.billingclient:billing:7.1.1.
+- src/play/AndroidManifest.xml: بيشيل REQUEST_INSTALL_PACKAGES من نسخة Play بس.
+- data/PlayBilling.kt: منتجين: `premium_yearly` (اشتراك SUBS) و `premium_lifetime` (INAPP). بيجيب الأسعار، يشتري، يعمل acknowledge، ويسترجع المشتريات (Restore). النتيجة بتتخزّن في Premium (تشتغل أوفلاين).
+- Premium.kt: في نسخة Play بيستخدم PlayBilling بدل activations.txt (نسخة GitHub/debug لسه بتستخدم كود الماك).
+- ActivationDialog: في نسخة Play بتعرض اختيار "اشتراك سنوي / مدى الحياة / استرجاع الشراء" + نص تجديد الاشتراك.
+- Updater.check() بيرجّع null في نسخة Play (Google بتحدّث).
+- المرحلة 2 (لسه): workflow بناء AAB (play.yml) + مفتاح التوقيع، رفع targetSdk 35/36 + تحديث AGP، وخطوات Play Console (المنتجات، سياسة الخصوصية، قائمة المتجر). 
+- لسه ماتجربش لحد ما الـ build يبقى أخضر. ملاحظة: الشراء الحقيقي بيتجرّب بس من نسخة معمولة على Play (Internal testing).

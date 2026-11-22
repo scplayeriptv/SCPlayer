@@ -37,12 +37,19 @@ object Premium {
     fun init(ctx: Context) {
         val sp = ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         active = sp.getBoolean("on", false) && notExpired(sp.getLong("until", 0L))
-        refresh(ctx)
+        if (com.sc.player.BuildConfig.PLAY) PlayBilling.start(ctx) else refresh(ctx)
+    }
+
+    /** نتيجة Google Play: بنخزّنها علشان تشتغل أوفلاين لحد الفحص الجاي. */
+    fun applyPlay(ctx: Context, on: Boolean) {
+        ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("on", on).putLong("until", 0L).apply()
+        active = on
     }
 
     private fun notExpired(until: Long) = until == 0L || until >= System.currentTimeMillis()
 
     fun refresh(ctx: Context) {
+        if (com.sc.player.BuildConfig.PLAY) { PlayBilling.refresh(ctx); return }
         if (checking) return
         checking = true
         val app = ctx.applicationContext

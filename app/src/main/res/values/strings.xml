@@ -435,4 +435,9 @@
     <string name="premium_checking">Checking…</string>
     <string name="premium_offline">Couldn\'t reach the activation server. Check your internet and try again.</string>
     <string name="premium_banner">Downloads and recording are locked. Tap to see your device code.</string>
+    <string name="premium_play_desc">Unlock downloads and recording. Choose a yearly subscription or pay once for lifetime access.</string>
+    <string name="premium_yearly">Yearly subscription</string>
+    <string name="premium_lifetime">Lifetime (one-time payment)</string>
+    <string name="premium_restore">Restore purchase</string>
+    <string name="premium_play_terms">The yearly subscription renews automatically every year until you cancel it in Google Play &gt; Payments &amp; subscriptions.</string>
 </resources>

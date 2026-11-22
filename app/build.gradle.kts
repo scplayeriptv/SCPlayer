@@ -18,6 +18,7 @@ android {
         versionCode = buildNumber
         versionName = "0.1.$buildNumber"
         // libmpv ثقيلة: نكتفي بمعماريات الموبايل/التلفزيون الحقيقية
+        buildConfigField("boolean", "PLAY", "false")
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
 
@@ -30,19 +31,42 @@ android {
         }
     }
 
+    // توقيع نسخة Google Play: بيتقري من متغيرات البيئة (من GitHub Secrets) ومش موجود في الكود
+    val playKs = System.getenv("PLAY_KEYSTORE_FILE")
+    if (playKs != null && file(playKs).exists()) {
+        signingConfigs.create("play") {
+            storeFile = file(playKs)
+            storePassword = System.getenv("PLAY_STORE_PASSWORD")
+            keyAlias = System.getenv("PLAY_KEY_ALIAS")
+            keyPassword = System.getenv("PLAY_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release { isMinifyEnabled = false }
+        // نسخة Google Play: دفع عن طريق Play Billing، من غير تحديث ذاتي ولا إذن تثبيت APK
+        create("play") {
+            initWith(getByName("release"))
+            isMinifyEnabled = false
+            buildConfigField("boolean", "PLAY", "true")
+            signingConfigs.findByName("play")?.let { signingConfig = it }
+            matchingFallbacks += listOf("release")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
 }
 
 dependencies {
     implementation("org.apache.commons:commons-compress:1.26.2")
+    implementation("com.android.billingclient:billing:7.1.1")
     implementation(platform("androidx.compose:compose-bom:2024.09.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")

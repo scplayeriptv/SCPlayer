@@ -36,6 +36,7 @@ fun ActivationDialog(onClose: () -> Unit) {
     val code = remember { Premium.deviceCode(ctx) }
     LaunchedEffect(Unit) { Premium.refresh(ctx) }
     if (Premium.active) { onClose(); return }
+    if (com.sc.player.BuildConfig.PLAY) { PlayPurchaseDialog(onClose); return }
     SheetDialog(stringResource(R.string.premium_title), onClose) {
         Text(stringResource(R.string.premium_desc), color = TextMuted, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(14.dp))
@@ -67,5 +68,39 @@ fun ActivationDialog(onClose: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             Text(stringResource(R.string.premium_offline), color = TextMuted, fontSize = 12.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
+    }
+}
+
+/** نسخة Google Play: اختيار اشتراك سنوي أو شراء مرة واحدة. */
+@Composable
+private fun PlayPurchaseDialog(onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    LaunchedEffect(Unit) { com.sc.player.data.PlayBilling.start(ctx) }
+    val activity = remember {
+        var c: Context? = ctx
+        var a: android.app.Activity? = null
+        while (c is android.content.ContextWrapper) { if (c is android.app.Activity) { a = c; break }; c = c.baseContext }
+        a
+    }
+    val yearly = com.sc.player.data.PlayBilling.yearlyPrice
+    val life = com.sc.player.data.PlayBilling.lifetimePrice
+    SheetDialog(stringResource(R.string.premium_title), onClose) {
+        Text(stringResource(R.string.premium_play_desc), color = TextMuted, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(14.dp))
+        ChoiceCard(stringResource(R.string.premium_yearly), yearly ?: "…", true, Modifier.fillMaxWidth()) {
+            activity?.let { com.sc.player.data.PlayBilling.buy(it, com.sc.player.data.PlayBilling.SKU_YEARLY) }
+        }
+        Spacer(Modifier.height(8.dp))
+        ChoiceCard(stringResource(R.string.premium_lifetime), life ?: "…", false, Modifier.fillMaxWidth()) {
+            activity?.let { com.sc.player.data.PlayBilling.buy(it, com.sc.player.data.PlayBilling.SKU_LIFETIME) }
+        }
+        Spacer(Modifier.height(8.dp))
+        ChoiceCard(stringResource(R.string.premium_restore), null, false, Modifier.fillMaxWidth()) { com.sc.player.data.PlayBilling.refresh(ctx) }
+        com.sc.player.data.PlayBilling.error?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(it, color = TextMuted, fontSize = 12.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(stringResource(R.string.premium_play_terms), color = TextMuted, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
     }
 }

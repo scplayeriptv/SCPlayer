@@ -424,4 +424,9 @@
     <string name="premium_checking">بيتفحص…</string>
     <string name="premium_offline">مقدرتش أوصل لسيرفر التفعيل. اتأكد من النت وجرّب تاني.</string>
     <string name="premium_banner">التحميل والتسجيل مقفولين. دوس تشوف كود جهازك.</string>
+    <string name="premium_play_desc">افتح التحميل والتسجيل. اختار اشتراك سنوي أو ادفع مرة واحدة واستخدمه مدى الحياة.</string>
+    <string name="premium_yearly">اشتراك سنوي</string>
+    <string name="premium_lifetime">مدى الحياة (دفعة واحدة)</string>
+    <string name="premium_restore">استرجاع الشراء</string>
+    <string name="premium_play_terms">الاشتراك السنوي بيتجدد تلقائي كل سنة لحد ما تلغيه من Google Play ← المدفوعات والاشتراكات.</string>
 </resources>

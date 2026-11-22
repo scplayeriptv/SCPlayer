@@ -58,6 +58,7 @@ class Updater(private val context: Context) {
 
     /** يرجّع معلومات الإصدار الأحدث لو أحدث من المثبّت، وإلا null (أو لو فشل الفحص). */
     suspend fun check(): UpdateInfo? = withContext(Dispatchers.IO) {
+        if (com.sc.player.BuildConfig.PLAY) return@withContext null // Google Play بيحدّث التطبيق بنفسه
         try {
             val request = Request.Builder()
                 .url(API_URL)
