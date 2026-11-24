@@ -429,4 +429,17 @@
     <string name="premium_lifetime">مدى الحياة (دفعة واحدة)</string>
     <string name="premium_restore">استرجاع الشراء</string>
     <string name="premium_play_terms">الاشتراك السنوي بيتجدد تلقائي كل سنة لحد ما تلغيه من Google Play ← المدفوعات والاشتراكات.</string>
+    <string name="pro_headline">افتح التحميل والتسجيل</string>
+    <string name="pro_f1">تحميل الأفلام والحلقات</string>
+    <string name="pro_f2">اختيار جودة التحميل (720 / 480 / 360)</string>
+    <string name="pro_f3">تسجيل البث المباشر</string>
+    <string name="pro_f4">جدولة التسجيل من دليل البرامج</string>
+    <string name="pro_f5">حفظ البرامج اللي فاتت (catch-up)</string>
+    <string name="pro_subscribe">اشترك الآن</string>
+    <string name="pro_auto">بيتجدد تلقائي، وتقدر تلغي في أي وقت</string>
+    <string name="pro_once">دفعة واحدة، ملكك مدى الحياة</string>
+    <string name="pro_best">الأوفر</string>
+    <string name="pro_active">Pro مفعّل. شكراً ليك!</string>
+    <string name="pro_status_on">مفعّل</string>
+    <string name="pro_status_off">مقفول — دوس للتفعيل</string>
 </resources>

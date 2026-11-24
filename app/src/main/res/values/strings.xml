@@ -440,4 +440,17 @@
     <string name="premium_lifetime">Lifetime (one-time payment)</string>
     <string name="premium_restore">Restore purchase</string>
     <string name="premium_play_terms">The yearly subscription renews automatically every year until you cancel it in Google Play &gt; Payments &amp; subscriptions.</string>
+    <string name="pro_headline">Unlock downloads &amp; recording</string>
+    <string name="pro_f1">Download movies and episodes</string>
+    <string name="pro_f2">Choose download quality (720 / 480 / 360)</string>
+    <string name="pro_f3">Record live TV</string>
+    <string name="pro_f4">Schedule recordings from the guide</string>
+    <string name="pro_f5">Save past programmes (catch-up)</string>
+    <string name="pro_subscribe">Subscribe now</string>
+    <string name="pro_auto">Auto-renewable, cancel anytime</string>
+    <string name="pro_once">One-time payment, yours forever</string>
+    <string name="pro_best">Best value</string>
+    <string name="pro_active">Pro is active. Thank you!</string>
+    <string name="pro_status_on">Active</string>
+    <string name="pro_status_off">Locked — tap to unlock</string>
 </resources>

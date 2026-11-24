@@ -36,7 +36,8 @@ fun ActivationDialog(onClose: () -> Unit) {
     val code = remember { Premium.deviceCode(ctx) }
     LaunchedEffect(Unit) { Premium.refresh(ctx) }
     if (Premium.active) { onClose(); return }
-    if (com.sc.player.BuildConfig.PLAY) { PlayPurchaseDialog(onClose); return }
+    com.sc.player.ui.premium.ProSheet(onClose)
+    if (true) return
     SheetDialog(stringResource(R.string.premium_title), onClose) {
         Text(stringResource(R.string.premium_desc), color = TextMuted, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(14.dp))

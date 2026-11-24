@@ -1,5 +1,6 @@
 package com.sc.player.ui.home
 
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.runtime.produceState
 import kotlinx.coroutines.delay
@@ -142,6 +143,8 @@ internal fun Launcher(
     val downloads = stringResource(R.string.dl_title)
     val exit = stringResource(R.string.nav_exit)
     val status = stringResource(R.string.home_playlist, playlistName)
+    val proState = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val proColors = Color(0xFFFFA000) to Color(0xFF3A2400)
 
     if (wide) {
         val crimson = ThemeState.current == AppTheme.Crimson
@@ -155,7 +158,10 @@ internal fun Launcher(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Brand()
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Brand()
+                    com.sc.player.ui.premium.ProBadge()
+                }
                 TopPill(playlistId, status, profile, onProfile, Modifier.weight(1f, fill = false).padding(horizontal = 12.dp))
                 ClockBlock(big = true)
             }
@@ -171,6 +177,7 @@ internal fun Launcher(
                     }
                     Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                         val m = Modifier.weight(1f).fillMaxHeight()
+                        Tile3D("Pro", Icons.Filled.WorkspacePremium, proColors, TileStyle.Mini, m) { proState.value = true }
                         Tile3D(settings, Icons.Filled.Settings, cMini, TileStyle.Mini, m) { onOpen(Dest.Settings) }
                         Tile3D(playlists, Icons.Filled.VideoLibrary, cMini, TileStyle.Mini, m) { onOpen(Dest.Playlist) }
                         Tile3D(downloads, Icons.Filled.Download, cMini, TileStyle.Mini, m) { onDownloads() }
@@ -187,6 +194,7 @@ internal fun Launcher(
         ) {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Brand()
+                com.sc.player.ui.premium.ProBadge(Modifier.padding(top = 2.dp))
                 Text(status, color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 ProfileChip(profile, onProfile, Modifier.padding(top = 4.dp))
             }
@@ -202,12 +210,14 @@ internal fun Launcher(
                 val m = Modifier.weight(1f).height(92.dp)
                 Tile3D(reload, Icons.Filled.Refresh, Slate, TileStyle.Mini, m) { if (!reloading) onReload() }
                 Tile3D(downloads, Icons.Filled.Download, Slate, TileStyle.Mini, m) { onDownloads() }
+                Tile3D("Pro", Icons.Filled.WorkspacePremium, proColors, TileStyle.Mini, m) { proState.value = true }
                 Tile3D(settings, Icons.Filled.Settings, Slate, TileStyle.Mini, m) { onOpen(Dest.Settings) }
                 Tile3D(exit, Icons.AutoMirrored.Filled.ExitToApp, Red, TileStyle.Mini, m) { onExit() }
             }
             PhysicalLeft { ExpiryPill(playlistId) }
         }
     }
+    if (proState.value) com.sc.player.ui.premium.ProSheet { proState.value = false }
     if (reloading) ReloadOverlay()
 }
 

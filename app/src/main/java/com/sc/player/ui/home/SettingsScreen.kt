@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.DeleteForever
@@ -210,6 +211,7 @@ fun SettingsScreen(
 
     var sectionName by rememberSaveable { mutableStateOf(Section.General.name) }
     var showSection by rememberSaveable { mutableStateOf(false) }
+    var showPro by remember { mutableStateOf(false) }
     val section = Section.valueOf(sectionName)
     var autoPlay by remember { mutableStateOf(prefs.autoPlay()) }
     var hw by remember { mutableStateOf(prefs.hardwareDecoding()) }
@@ -569,6 +571,9 @@ fun SettingsScreen(
             }
         }
         val tiles = listOf(
+            TileData(Icons.Filled.WorkspacePremium, "Pro", stringResource(if (com.sc.player.data.Premium.active) R.string.pro_status_on else R.string.pro_status_off), com.sc.player.data.Premium.active) {
+                showPro = true
+            },
             TileData(Icons.Filled.Palette, stringResource(Section.General.titleRes), appLanguages.firstOrNull { it.code == savedLang }?.nativeName ?: stringResource(R.string.set_language_system), null) {
                 sectionName = Section.General.name; showSection = true
             },
@@ -641,6 +646,7 @@ fun SettingsScreen(
                 contentPadding = PaddingValues(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                item { SectionChip("👑 Pro", false) { showPro = true } }
                 items(Section.values().toList()) { s ->
                     SectionChip(stringResource(s.titleRes), s == section) { sectionName = s.name }
                 }
@@ -651,6 +657,7 @@ fun SettingsScreen(
         }
     }
 
+    if (showPro) com.sc.player.ui.premium.ProSheet { showPro = false }
     update?.let { UpdateDialog(it, onDismiss = { update = null }) }
 
     if (editingProfile != null || addingProfile) {
